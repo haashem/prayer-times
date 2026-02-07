@@ -28,18 +28,34 @@ export const PRAYER_ROW_GAP = px(12);
 export const PRAYER_START_Y = px(170);
 export const BOTTOM_PADDING = px(100);
 
-// ── City Title (button) — Title font 36px, line-height 45px ──
-export const CITY_STYLE = {
-  x: SIDE_PADDING,
-  y: px(36),
-  w: CONTENT_WIDTH,
-  h: px(60),            // 48 × 1.25
-  radius: px(8),
-  normal_color: 0x000000,
-  press_color: 0x0a1a0a, // Dimmed dark green
-  text_size: px(48),     // Title
+// ── City Title — dynamic width based on name length ──
+const CITY_FONT_SIZE = px(48);
+const CITY_H = px(60);
+const CITY_Y = px(36);
+const CITY_PAD_X = px(28);   // horizontal padding inside pill
+
+export function getCityBgStyle(textLen) {
+  const estWidth = textLen * CITY_FONT_SIZE * 0.55 + CITY_PAD_X * 2;
+  const w = Math.min(Math.max(estWidth, px(120)), CONTENT_WIDTH);
+  return {
+    x: (DEVICE_WIDTH - w) / 2,
+    y: CITY_Y,
+    w: w,
+    h: CITY_H,
+    radius: CITY_H / 2,
+    color: 0x141e14,       // Subtle dark green hint
+  };
+}
+
+export const CITY_TEXT_STYLE = {
+  x: 0,
+  y: CITY_Y,
+  w: DEVICE_WIDTH,
+  h: CITY_H,
+  text_size: CITY_FONT_SIZE,
   color: COLORS.title,
   align_h: align.CENTER_H,
+  align_v: align.CENTER_V,
 };
 
 // ── Hijri Date — Subheadline 28px, line-height 35px ──

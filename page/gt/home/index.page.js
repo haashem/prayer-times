@@ -13,7 +13,8 @@ import {
   getPrayerNameStyle,
   getPrayerTimeStyle,
   getPrayerRowBgStyle,
-  CITY_STYLE,
+  getCityBgStyle,
+  CITY_TEXT_STYLE,
   PRAYER_ROW_HEIGHT,
   PRAYER_START_Y,
   BOTTOM_PADDING,
@@ -146,13 +147,17 @@ Page(
       const cityName = this.state.activeCity.city;
 
       // City name (tappable → city list)
-      const cityWidget = createWidget(widget.BUTTON, {
-        ...CITY_STYLE,
+      const cityBg = createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length));
+      const cityText = createWidget(widget.TEXT, {
+        ...CITY_TEXT_STYLE,
         text: cityName,
-        click_func: () => {
-          push({ url: "page/gt/cityList/index.page" });
-        },
       });
+
+      const goToCityList = () => {
+        push({ url: "page/gt/cityList/index.page" });
+      };
+      cityBg.addEventListener(event.CLICK_DOWN, goToCityList);
+      cityText.addEventListener(event.CLICK_DOWN, goToCityList);
 
       // Hijri date
       const hijriText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
