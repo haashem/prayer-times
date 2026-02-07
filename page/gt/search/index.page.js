@@ -8,6 +8,7 @@ import {
     TITLE_STYLE,
     INPUT_BG_STYLE,
     INPUT_TEXT_STYLE,
+    KEYBOARD_ROWS,
     KEYBOARD_START_X,
     KEYBOARD_START_Y,
     KEY_SIZE,
@@ -29,8 +30,6 @@ import {
 } from "zosLoader:./index.page.[pf].layout.js";
 
 const logger = Logger.getLogger("search-page");
-
-const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
 Page(
     BasePage({
@@ -85,29 +84,33 @@ Page(
         },
 
         buildKeyboard() {
-            for (let i = 0; i < LETTERS.length; i++) {
-                const col = i % KEY_COLS;
-                const row = Math.floor(i / KEY_COLS);
-                const x = KEYBOARD_START_X + col * (KEY_SIZE + KEY_GAP);
-                const y = KEYBOARD_START_Y + row * (KEY_SIZE + KEY_GAP);
-                const letter = LETTERS[i];
+            // QWERTY layout — each row is centered independently
+            const fullRowWidth = KEY_COLS * KEY_SIZE + (KEY_COLS - 1) * KEY_GAP;
 
-                // Key background
-                const keyBg = createWidget(widget.FILL_RECT, getKeyStyle(x, y));
+            for (let r = 0; r < KEYBOARD_ROWS.length; r++) {
+                const row = KEYBOARD_ROWS[r];
+                const rowWidth = row.length * KEY_SIZE + (row.length - 1) * KEY_GAP;
+                // Center this row relative to the full keyboard width
+                const rowOffsetX = KEYBOARD_START_X + (fullRowWidth - rowWidth) / 2;
+                const rowY = KEYBOARD_START_Y + r * (KEY_SIZE + KEY_GAP);
 
-                // Key label
-                const keyText = createWidget(widget.TEXT, {
-                    ...getKeyTextStyle(x, y),
-                    text: letter,
-                });
+                for (let c = 0; c < row.length; c++) {
+                    const letter = row[c];
+                    const x = rowOffsetX + c * (KEY_SIZE + KEY_GAP);
 
-                // Make the key tappable
-                keyText.addEventListener(event.CLICK_DOWN, () => {
-                    this.appendLetter(letter);
-                });
-                keyBg.addEventListener(event.CLICK_DOWN, () => {
-                    this.appendLetter(letter);
-                });
+                    const keyBg = createWidget(widget.FILL_RECT, getKeyStyle(x, rowY));
+                    const keyText = createWidget(widget.TEXT, {
+                        ...getKeyTextStyle(x, rowY),
+                        text: letter,
+                    });
+
+                    keyText.addEventListener(event.CLICK_DOWN, () => {
+                        this.appendLetter(letter);
+                    });
+                    keyBg.addEventListener(event.CLICK_DOWN, () => {
+                        this.appendLetter(letter);
+                    });
+                }
             }
         },
 

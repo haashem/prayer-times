@@ -60,104 +60,110 @@ export const INPUT_TEXT_STYLE = {
     text: "",
 };
 
-// ── Keyboard Grid ──
-export const KEY_SIZE = px(40);
+// ── QWERTY Keyboard ──
+export const KEYBOARD_ROWS = [
+    ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+    ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+    ["Z", "X", "C", "V", "B", "N", "M"],
+];
+export const KEY_SIZE = px(42);
 export const KEY_GAP = px(4);
-export const KEY_COLS = 7;
-export const KEYBOARD_START_X = (DEVICE_WIDTH - (KEY_SIZE * KEY_COLS + KEY_GAP * (KEY_COLS - 1))) / 2;
+export const KEY_COLS = 10;  // Widest row
 export const KEYBOARD_START_Y = px(114);
+// Center the widest row (10 keys) on screen
+export const KEYBOARD_START_X = (DEVICE_WIDTH - (KEY_SIZE * KEY_COLS + KEY_GAP * (KEY_COLS - 1))) / 2;
 
-export function getKeyStyle(x, y) {
+export function getKeyStyle(x, y, w) {
     return {
         x,
         y,
-        w: KEY_SIZE,
+        w: w || KEY_SIZE,
         h: KEY_SIZE,
         radius: px(6),
         color: COLORS.keyBg,
     };
 }
 
-export function getKeyTextStyle(x, y) {
+export function getKeyTextStyle(x, y, w) {
     return {
         x,
         y,
-        w: KEY_SIZE,
+        w: w || KEY_SIZE,
         h: KEY_SIZE,
         color: COLORS.keyText,
-        text_size: px(24),  // Caption1 — raised from 22
+        text_size: px(26),
         align_h: align.CENTER_H,
         align_v: align.CENTER_V,
     };
 }
 
-// ── Action Buttons Row ──
-export const ACTION_ROW_Y = px(300);
+// ── Action Buttons Row (below keyboard) ──
+export const ACTION_ROW_Y = px(256);
 
-// Backspace — Caption1 24px, pressed = ~28.6% dim
+// Backspace
 export const BACKSPACE_STYLE = {
-    x: SIDE_PADDING,
+    x: KEYBOARD_START_X,
     y: ACTION_ROW_Y,
     w: px(100),
-    h: px(44),              // 24 × 1.25 + padding
+    h: px(42),
     radius: px(8),
     normal_color: COLORS.clearBtn,
-    press_color: 0x431313,  // 28.6% dimmed
+    press_color: 0x431313,
     text: "DEL",
-    text_size: px(24),      // Caption1
+    text_size: px(22),
     color: COLORS.clearBtnText,
 };
 
 // Clear
 export const CLEAR_STYLE = {
-    x: SIDE_PADDING + px(110),
+    x: KEYBOARD_START_X + px(108),
     y: ACTION_ROW_Y,
     w: px(80),
-    h: px(44),
+    h: px(42),
     radius: px(8),
     normal_color: COLORS.clearBtn,
     press_color: 0x431313,
     text: "CLR",
-    text_size: px(24),      // Caption1
+    text_size: px(22),
     color: COLORS.clearBtnText,
 };
 
 // Space
 export const SPACE_STYLE = {
-    x: SIDE_PADDING + px(200),
+    x: KEYBOARD_START_X + px(196),
     y: ACTION_ROW_Y,
-    w: CONTENT_WIDTH - px(200),
-    h: px(44),
+    w: DEVICE_WIDTH - KEYBOARD_START_X * 2 - px(196),
+    h: px(42),
     radius: px(8),
     normal_color: COLORS.keyBg,
-    press_color: 0x1e1e2d,  // 28.6% dimmed from 0x2a2a3e
+    press_color: 0x1e1e2d,
     text: "SPACE",
-    text_size: px(24),      // Caption1
+    text_size: px(22),
     color: COLORS.keyText,
 };
 
 // ── Search Button — Subheadline 28px, capsule style ──
 export const SEARCH_BTN_STYLE = {
     x: SIDE_PADDING,
-    y: px(354),
+    y: px(310),
     w: CONTENT_WIDTH,
-    h: px(52),              // 28 × 1.25 + padding
-    radius: px(26),         // Capsule (h/2)
+    h: px(52),
+    radius: px(26),
     normal_color: COLORS.searchBtn,
-    press_color: 0x134215,  // 28.6% dimmed
+    press_color: 0x134215,
     text: "Search",
-    text_size: px(28),      // Subheadline
+    text_size: px(28),
     color: COLORS.searchBtnText,
 };
 
 // ── Status — Caption1 24px ──
 export const STATUS_STYLE = {
     x: SIDE_PADDING,
-    y: px(416),
+    y: px(372),
     w: CONTENT_WIDTH,
     h: px(60),
     color: COLORS.statusText,
-    text_size: px(24),      // Caption1
+    text_size: px(24),
     align_h: align.CENTER_H,
     align_v: align.CENTER_V,
     text_style: text_style.WRAP,
@@ -169,7 +175,7 @@ export const BOTTOM_PADDING = px(60);
 // ── Result List — Body 32px rows, 8px gap ──
 export const RESULT_ROW_HEIGHT = px(56);
 export const RESULT_ROW_GAP = px(8);
-export const RESULT_START_Y = px(416);
+export const RESULT_START_Y = px(372);
 
 export function getResultRowBgStyle(y, index) {
     return {

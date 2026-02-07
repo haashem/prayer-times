@@ -60,49 +60,54 @@ export const INPUT_TEXT_STYLE = {
     text: "",
 };
 
-// ── Keyboard Grid ──
-export const KEY_SIZE = px(34);
+// ── QWERTY Keyboard ──
+export const KEYBOARD_ROWS = [
+    ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+    ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+    ["Z", "X", "C", "V", "B", "N", "M"],
+];
+export const KEY_SIZE = px(35);
 export const KEY_GAP = px(3);
-export const KEY_COLS = 7;
+export const KEY_COLS = 10;  // Widest row
+export const KEYBOARD_START_Y = px(88);
 export const KEYBOARD_START_X = (DEVICE_WIDTH - (KEY_SIZE * KEY_COLS + KEY_GAP * (KEY_COLS - 1))) / 2;
-export const KEYBOARD_START_Y = px(90);
 
-export function getKeyStyle(x, y) {
+export function getKeyStyle(x, y, w) {
     return {
         x,
         y,
-        w: KEY_SIZE,
+        w: w || KEY_SIZE,
         h: KEY_SIZE,
         radius: px(5),
         color: COLORS.keyBg,
     };
 }
 
-export function getKeyTextStyle(x, y) {
+export function getKeyTextStyle(x, y, w) {
     return {
         x,
         y,
-        w: KEY_SIZE,
+        w: w || KEY_SIZE,
         h: KEY_SIZE,
         color: COLORS.keyText,
-        text_size: px(18),
+        text_size: px(20),
         align_h: align.CENTER_H,
         align_v: align.CENTER_V,
     };
 }
 
-// ── Action Buttons Row ──
-export const ACTION_ROW_Y = px(250);
+// ── Action Buttons Row (below keyboard) ──
+export const ACTION_ROW_Y = px(207);
 
-// Backspace — pressed = ~28.6% dimmed
+// Backspace
 export const BACKSPACE_STYLE = {
-    x: SIDE_PADDING,
+    x: KEYBOARD_START_X,
     y: ACTION_ROW_Y,
-    w: px(90),
-    h: px(38),
+    w: px(84),
+    h: px(35),
     radius: px(6),
     normal_color: COLORS.clearBtn,
-    press_color: 0x431313,  // 28.6% dimmed
+    press_color: 0x431313,
     text: "DEL",
     text_size: px(18),
     color: COLORS.clearBtnText,
@@ -110,10 +115,10 @@ export const BACKSPACE_STYLE = {
 
 // Clear
 export const CLEAR_STYLE = {
-    x: SIDE_PADDING + px(96),
+    x: KEYBOARD_START_X + px(90),
     y: ACTION_ROW_Y,
-    w: px(70),
-    h: px(38),
+    w: px(68),
+    h: px(35),
     radius: px(6),
     normal_color: COLORS.clearBtn,
     press_color: 0x431313,
@@ -124,13 +129,13 @@ export const CLEAR_STYLE = {
 
 // Space
 export const SPACE_STYLE = {
-    x: SIDE_PADDING + px(172),
+    x: KEYBOARD_START_X + px(164),
     y: ACTION_ROW_Y,
-    w: CONTENT_WIDTH - px(172),
-    h: px(38),
+    w: DEVICE_WIDTH - KEYBOARD_START_X * 2 - px(164),
+    h: px(35),
     radius: px(6),
     normal_color: COLORS.keyBg,
-    press_color: 0x1e1e2d,  // 28.6% dimmed
+    press_color: 0x1e1e2d,
     text: "SPACE",
     text_size: px(18),
     color: COLORS.keyText,
@@ -139,21 +144,21 @@ export const SPACE_STYLE = {
 // ── Search Button — Caption1 24px, capsule style ──
 export const SEARCH_BTN_STYLE = {
     x: SIDE_PADDING,
-    y: px(296),
+    y: px(252),
     w: CONTENT_WIDTH,
     h: px(44),
-    radius: px(22),         // Capsule (h/2)
+    radius: px(22),
     normal_color: COLORS.searchBtn,
-    press_color: 0x134215,  // 28.6% dimmed
+    press_color: 0x134215,
     text: "Search",
-    text_size: px(24),      // Caption1
+    text_size: px(24),
     color: COLORS.searchBtnText,
 };
 
 // ── Status — Caption1 24px ──
 export const STATUS_STYLE = {
     x: SIDE_PADDING,
-    y: px(348),
+    y: px(304),
     w: CONTENT_WIDTH,
     h: px(50),
     color: COLORS.statusText,
@@ -169,7 +174,7 @@ export const BOTTOM_PADDING = px(40);
 // ── Result List — 8px gap between rows ──
 export const RESULT_ROW_HEIGHT = px(48);
 export const RESULT_ROW_GAP = px(8);
-export const RESULT_START_Y = px(348);
+export const RESULT_START_Y = px(304);
 
 export function getResultRowBgStyle(y, index) {
     return {

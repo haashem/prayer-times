@@ -17,6 +17,8 @@ export const COLORS = {
     addBtn: 0x1b5e20,
     addBtnText: 0x66bb6a,
     emptyText: 0x999999,   // Raised for contrast ≥ 3:1
+    deleteBg: 0xcc3333,
+    deleteText: 0xffffff,
 };
 
 // Row height + 8px gap between items
@@ -92,3 +94,31 @@ export const EMPTY_STYLE = {
     text_style: text_style.WRAP,
     text: "No cities yet.\nTap + to add one.",
 };
+
+// ── Delete Button (revealed on swipe left) ──
+export const DELETE_BTN_WIDTH = px(56);
+
+export function getDeleteBtnBgStyle(y) {
+    return {
+        x: DEVICE_WIDTH - SIDE_PADDING + px(4),  // Hidden off-screen right
+        y: y,
+        w: DELETE_BTN_WIDTH,
+        h: CITY_ROW_HEIGHT - CITY_ROW_GAP,
+        radius: px(10),
+        color: COLORS.deleteBg,
+    };
+}
+
+export function getDeleteBtnTextStyle(y) {
+    return {
+        x: DEVICE_WIDTH - SIDE_PADDING + px(4),
+        y: y,
+        w: DELETE_BTN_WIDTH,
+        h: CITY_ROW_HEIGHT - CITY_ROW_GAP,
+        color: COLORS.deleteText,
+        text_size: px(24),
+        align_h: align.CENTER_H,
+        align_v: align.CENTER_V,
+        text: "✕",
+    };
+}
