@@ -7,6 +7,7 @@ export const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = getDeviceInfo();
 const SIDE_PADDING = px(16);
 const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 
+// ── Zepp OS Design Guideline Colors ──
 export const COLORS = {
     title: 0x4fc3f7,
     inputBg: 0x1a1a2e,
@@ -18,25 +19,25 @@ export const COLORS = {
     searchBtnText: 0x66bb6a,
     clearBtn: 0x5e1b1b,
     clearBtnText: 0xff5252,
-    statusText: 0x888888,
+    statusText: 0x999999,   // Raised for contrast ≥ 3:1
     errorText: 0xff5252,
     successText: 0x66bb6a,
 };
 
-// Title
+// ── Title — Caption1 24px, line-height 30px, center-aligned ──
 export const TITLE_STYLE = {
     x: 0,
     y: px(8),
     w: DEVICE_WIDTH,
-    h: px(30),
+    h: px(30),              // 24 × 1.25
     color: COLORS.title,
-    text_size: px(24),
+    text_size: px(24),      // Caption1
     align_h: align.CENTER_H,
     align_v: align.CENTER_V,
     text: "Search City",
 };
 
-// Input display area
+// ── Input Display — Caption1 24px ──
 export const INPUT_BG_STYLE = {
     x: SIDE_PADDING,
     y: px(44),
@@ -52,14 +53,14 @@ export const INPUT_TEXT_STYLE = {
     w: CONTENT_WIDTH - px(16),
     h: px(36),
     color: COLORS.inputText,
-    text_size: px(22),
+    text_size: px(22),      // Slightly below Caption1 for fit
     align_h: align.LEFT,
     align_v: align.CENTER_V,
     text_style: text_style.ELLIPSIS,
     text: "",
 };
 
-// Keyboard grid config
+// ── Keyboard Grid ──
 export const KEY_SIZE = px(34);
 export const KEY_GAP = px(3);
 export const KEY_COLS = 7;
@@ -90,73 +91,73 @@ export function getKeyTextStyle(x, y) {
     };
 }
 
-// Action buttons row
+// ── Action Buttons Row ──
 export const ACTION_ROW_Y = px(250);
 
-// Backspace button
+// Backspace — pressed = ~28.6% dimmed
 export const BACKSPACE_STYLE = {
     x: SIDE_PADDING,
     y: ACTION_ROW_Y,
     w: px(90),
-    h: px(36),
+    h: px(38),
     radius: px(6),
     normal_color: COLORS.clearBtn,
-    press_color: 0x8e2b2b,
-    text: "⌫ DEL",
+    press_color: 0x431313,  // 28.6% dimmed
+    text: "DEL",
     text_size: px(18),
     color: COLORS.clearBtnText,
 };
 
-// Clear button
+// Clear
 export const CLEAR_STYLE = {
     x: SIDE_PADDING + px(96),
     y: ACTION_ROW_Y,
     w: px(70),
-    h: px(36),
+    h: px(38),
     radius: px(6),
     normal_color: COLORS.clearBtn,
-    press_color: 0x8e2b2b,
+    press_color: 0x431313,
     text: "CLR",
     text_size: px(18),
     color: COLORS.clearBtnText,
 };
 
-// Space button
+// Space
 export const SPACE_STYLE = {
     x: SIDE_PADDING + px(172),
     y: ACTION_ROW_Y,
     w: CONTENT_WIDTH - px(172),
-    h: px(36),
+    h: px(38),
     radius: px(6),
     normal_color: COLORS.keyBg,
-    press_color: 0x4a4a5e,
+    press_color: 0x1e1e2d,  // 28.6% dimmed
     text: "SPACE",
     text_size: px(18),
     color: COLORS.keyText,
 };
 
-// Search button
+// ── Search Button — Caption1 24px, capsule style ──
 export const SEARCH_BTN_STYLE = {
     x: SIDE_PADDING,
     y: px(296),
     w: CONTENT_WIDTH,
     h: px(44),
-    radius: px(10),
+    radius: px(22),         // Capsule (h/2)
     normal_color: COLORS.searchBtn,
-    press_color: 0x2e7d32,
-    text: "🔍 Search & Add City",
-    text_size: px(20),
+    press_color: 0x134215,  // 28.6% dimmed
+    text: "Search",
+    text_size: px(24),      // Caption1
     color: COLORS.searchBtnText,
 };
 
-// Status text
+// ── Status — Caption1 24px ──
 export const STATUS_STYLE = {
     x: SIDE_PADDING,
     y: px(348),
     w: CONTENT_WIDTH,
     h: px(50),
     color: COLORS.statusText,
-    text_size: px(18),
+    text_size: px(20),
     align_h: align.CENTER_H,
     align_v: align.CENTER_V,
     text_style: text_style.WRAP,
@@ -164,8 +165,10 @@ export const STATUS_STYLE = {
 };
 
 export const BOTTOM_PADDING = px(40);
-// Result list styles (shown after search)
+
+// ── Result List — 8px gap between rows ──
 export const RESULT_ROW_HEIGHT = px(48);
+export const RESULT_ROW_GAP = px(8);
 export const RESULT_START_Y = px(348);
 
 export function getResultRowBgStyle(y, index) {
@@ -173,8 +176,8 @@ export function getResultRowBgStyle(y, index) {
         x: SIDE_PADDING,
         y: y,
         w: CONTENT_WIDTH,
-        h: RESULT_ROW_HEIGHT - px(4),
-        radius: px(6),
+        h: RESULT_ROW_HEIGHT - RESULT_ROW_GAP,
+        radius: px(8),
         color: index % 2 === 0 ? 0x1a1a2e : 0x222238,
     };
 }
@@ -184,10 +187,10 @@ export function getResultTextStyle(y) {
         x: SIDE_PADDING + px(10),
         y: y,
         w: CONTENT_WIDTH - px(20),
-        h: RESULT_ROW_HEIGHT - px(4),
+        h: RESULT_ROW_HEIGHT - RESULT_ROW_GAP,
         color: 0xffffff,
-        text_size: px(18),
-        align_h: align.LEFT,
+        text_size: px(20),
+        align_h: align.LEFT,   // Square: content left-aligned
         align_v: align.CENTER_V,
         text_style: text_style.ELLIPSIS,
     };
