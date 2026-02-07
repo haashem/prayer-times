@@ -10,7 +10,7 @@
     },
     "icon": "icon.png",
     "vender": "zepp",
-    "description": "Prayer times for Crawley"
+    "description": "Prayer times with multi-city support via Aladhan API"
   },
   "permissions": [
     "data:os.device.info",
@@ -29,19 +29,25 @@
       "module": {
         "page": {
           "pages": [
-            "page/gt/home/index.page"
+            "page/gt/home/index.page",
+            "page/gt/cityList/index.page",
+            "page/gt/search/index.page"
           ]
+        },
+        "app-side": {
+          "path": "app-side/index"
         }
       },
       "platforms": [
         {
-          "st": "r"
+          "st": "r",
+          "dw": 480
         },
         {
-          "st": "s"
+          "st": "s",
+          "dw": 390
         }
-      ],
-      "designWidth": 480
+      ]
     }
   },
   "i18n": {

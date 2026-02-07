@@ -26,21 +26,18 @@ export const PRAYER_ROW_HEIGHT = px(60);
 export const PRAYER_START_Y = px(120);
 export const BOTTOM_PADDING = px(40);
 
-// City title
+// City title (button style — text set dynamically)
 export const CITY_STYLE = {
-  text: "Crawley",
-  x: px(0),
+  x: px(24),
   y: px(16),
-  w: DEVICE_WIDTH,
+  w: DEVICE_WIDTH - px(48),
   h: px(36),
-  color: COLORS.title,
+  radius: px(6),
+  normal_color: 0x000000,
+  press_color: 0x1a1a2e,
   text_size: px(30),
-  align_h: align.CENTER_H,
-  align_v: align.CENTER_V,
-  text_style: text_style.ELLIPSIS,
+  color: COLORS.title,
 };
-
-export const TITLE_STYLE = CITY_STYLE;
 
 // Hijri date
 export const HIJRI_DATE_STYLE = {
