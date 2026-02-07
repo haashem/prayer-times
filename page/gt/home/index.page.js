@@ -6,7 +6,6 @@ import {
   DEVICE_HEIGHT,
   COLORS,
   TITLE_STYLE,
-  DATE_STYLE,
   HIJRI_DATE_STYLE,
   SEPARATOR_STYLE,
   getPrayerNameStyle,
@@ -15,6 +14,7 @@ import {
   CITY_STYLE,
   PRAYER_ROW_HEIGHT,
   PRAYER_START_Y,
+  BOTTOM_PADDING,
   NO_DATA_STYLE,
 } from "zosLoader:./index.page.[pf].layout.js";
 import {
@@ -128,19 +128,10 @@ Page({
     }
 
     const currentIndex = getCurrentPrayerIndex(todayData);
-    const gregorian = todayData.date.gregorian;
     const hijri = todayData.date.hijri;
 
     // City name
     createWidget(widget.TEXT, CITY_STYLE);
-
-    // Gregorian date
-    const weekday = gregorian.weekday.en;
-    const dateText = `${weekday}, ${gregorian.day} ${gregorian.month.en} ${gregorian.year}`;
-    createWidget(widget.TEXT, {
-      ...DATE_STYLE,
-      text: dateText,
-    });
 
     // Hijri date
     const hijriText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
@@ -173,6 +164,17 @@ Page({
         text: prayerTime,
       });
     }
+
+    // Bottom spacer for scrollable padding
+    const lastRowY = PRAYER_START_Y + PRAYER_KEYS.length * PRAYER_ROW_HEIGHT;
+    createWidget(widget.FILL_RECT, {
+      x: 0,
+      y: lastRowY,
+      w: 1,
+      h: BOTTOM_PADDING,
+      color: 0x000000,
+      alpha: 0,
+    });
   },
 
   onDestroy() {

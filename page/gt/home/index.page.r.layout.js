@@ -22,8 +22,9 @@ export const COLORS = {
 const SIDE_PADDING = px(60);
 const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 
-export const PRAYER_ROW_HEIGHT = px(56);
-export const PRAYER_START_Y = px(200);
+export const PRAYER_ROW_HEIGHT = px(64);
+export const PRAYER_START_Y = px(150);
+export const BOTTOM_PADDING = px(80);
 
 // City title
 export const CITY_STYLE = {
@@ -31,9 +32,9 @@ export const CITY_STYLE = {
   x: px(0),
   y: px(36),
   w: DEVICE_WIDTH,
-  h: px(40),
+  h: px(44),
   color: COLORS.title,
-  text_size: px(32),
+  text_size: px(34),
   align_h: align.CENTER_H,
   align_v: align.CENTER_V,
   text_style: text_style.ELLIPSIS,
@@ -41,27 +42,14 @@ export const CITY_STYLE = {
 
 export const TITLE_STYLE = CITY_STYLE;
 
-// Gregorian date
-export const DATE_STYLE = {
-  x: px(0),
-  y: px(80),
-  w: DEVICE_WIDTH,
-  h: px(32),
-  color: COLORS.date,
-  text_size: px(22),
-  align_h: align.CENTER_H,
-  align_v: align.CENTER_V,
-  text_style: text_style.ELLIPSIS,
-};
-
 // Hijri date
 export const HIJRI_DATE_STYLE = {
   x: px(0),
-  y: px(116),
+  y: px(84),
   w: DEVICE_WIDTH,
   h: px(30),
   color: COLORS.hijriDate,
-  text_size: px(20),
+  text_size: px(22),
   align_h: align.CENTER_H,
   align_v: align.CENTER_V,
   text_style: text_style.ELLIPSIS,
@@ -70,7 +58,7 @@ export const HIJRI_DATE_STYLE = {
 // Separator line
 export const SEPARATOR_STYLE = {
   x: SIDE_PADDING,
-  y: px(160),
+  y: px(126),
   w: CONTENT_WIDTH,
   h: px(1),
   color: COLORS.separator,
