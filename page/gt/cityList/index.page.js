@@ -38,6 +38,9 @@ Page(
         build() {
             logger.debug("cityList page build");
 
+            // Scroll indicator
+            createWidget(widget.PAGE_SCROLLBAR);
+
             this.loadCities();
 
             // Title

@@ -39,6 +39,9 @@ Page(
     build() {
       logger.debug("prayer-times page build");
 
+      // Scroll indicator
+      createWidget(widget.PAGE_SCROLLBAR);
+
       // Load active city
       this.loadActiveCity();
 

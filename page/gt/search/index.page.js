@@ -43,6 +43,9 @@ Page(
         build() {
             logger.debug("search page build");
 
+            // Scroll indicator
+            createWidget(widget.PAGE_SCROLLBAR);
+
             // Title
             createWidget(widget.TEXT, TITLE_STYLE);
 
