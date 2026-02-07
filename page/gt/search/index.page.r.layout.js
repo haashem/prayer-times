@@ -7,31 +7,31 @@ export const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = getDeviceInfo();
 const SIDE_PADDING = px(60);
 const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 
-// ── Zepp OS Design Guideline Colors ──
+// ── Islamic-Inspired Color Palette ──
 export const COLORS = {
-    title: 0x4fc3f7,
-    inputBg: 0x1a1a2e,
-    inputText: 0xffffff,
-    keyBg: 0x2a2a3e,
-    keyText: 0xffffff,
-    keyPressed: 0x4fc3f7,
-    searchBtn: 0x1b5e20,
-    searchBtnText: 0x66bb6a,
-    clearBtn: 0x5e1b1b,
-    clearBtnText: 0xff5252,
-    statusText: 0x999999,   // Raised for contrast ≥ 3:1
-    errorText: 0xff5252,
-    successText: 0x66bb6a,
+    title: 0xd4a843,        // Gold
+    inputBg: 0x1a2a1a,      // Dark green-tinted bg
+    inputText: 0xe8dcc8,    // Warm ivory
+    keyBg: 0x1e3328,        // Deep forest green
+    keyText: 0xe8dcc8,      // Warm ivory
+    keyPressed: 0xd4a843,   // Gold highlight
+    searchBtn: 0x0d4a2e,    // Deep emerald
+    searchBtnText: 0xd4a843,// Gold
+    clearBtn: 0x4a2020,     // Dark muted red
+    clearBtnText: 0xc75050, // Muted red
+    statusText: 0xa89880,   // Warm sandstone
+    errorText: 0xc75050,    // Muted red
+    successText: 0x5dba6a,  // Soft green
 };
 
 // ── Title — Subheadline 28px, line-height 35px, center-aligned (round) ──
 export const TITLE_STYLE = {
     x: 0,
-    y: px(20),
+    y: px(24),
     w: DEVICE_WIDTH,
-    h: px(35),              // 28 × 1.25
+    h: px(50),              // 28 × 1.25
     color: COLORS.title,
-    text_size: px(28),      // Subheadline
+    text_size: px(40),      // Title
     align_h: align.CENTER_H,
     align_v: align.CENTER_V,
     text: "Search City",
@@ -40,20 +40,20 @@ export const TITLE_STYLE = {
 // ── Input Display — Caption1 24px, line-height 30px ──
 export const INPUT_BG_STYLE = {
     x: SIDE_PADDING,
-    y: px(62),
+    y: px(80),
     w: CONTENT_WIDTH,
-    h: px(42),
+    h: px(52),
     radius: px(8),
     color: COLORS.inputBg,
 };
 
 export const INPUT_TEXT_STYLE = {
     x: SIDE_PADDING + px(10),
-    y: px(62),
+    y: px(80),
     w: CONTENT_WIDTH - px(20),
-    h: px(42),
+    h: px(52),
     color: COLORS.inputText,
-    text_size: px(24),      // Caption1
+    text_size: px(32),      // Body
     align_h: align.LEFT,
     align_v: align.CENTER_V,
     text_style: text_style.ELLIPSIS,
@@ -91,79 +91,79 @@ export function getKeyTextStyle(x, y, w) {
         w: w || KEY_SIZE,
         h: KEY_SIZE,
         color: COLORS.keyText,
-        text_size: px(26),
+        text_size: px(34),
         align_h: align.CENTER_H,
         align_v: align.CENTER_V,
     };
 }
 
 // ── Action Buttons Row (below keyboard) ──
-export const ACTION_ROW_Y = px(256);
+export const ACTION_ROW_Y = px(300);
 
 // Backspace
 export const BACKSPACE_STYLE = {
     x: KEYBOARD_START_X,
     y: ACTION_ROW_Y,
-    w: px(100),
-    h: px(42),
+    w: px(110),
+    h: px(48),
     radius: px(8),
     normal_color: COLORS.clearBtn,
-    press_color: 0x431313,
+    press_color: 0x351515,
     text: "DEL",
-    text_size: px(22),
+    text_size: px(30),
     color: COLORS.clearBtnText,
 };
 
 // Clear
 export const CLEAR_STYLE = {
-    x: KEYBOARD_START_X + px(108),
+    x: KEYBOARD_START_X + px(118),
     y: ACTION_ROW_Y,
-    w: px(80),
-    h: px(42),
+    w: px(90),
+    h: px(48),
     radius: px(8),
     normal_color: COLORS.clearBtn,
-    press_color: 0x431313,
+    press_color: 0x351515,
     text: "CLR",
-    text_size: px(22),
+    text_size: px(30),
     color: COLORS.clearBtnText,
 };
 
 // Space
 export const SPACE_STYLE = {
-    x: KEYBOARD_START_X + px(196),
+    x: KEYBOARD_START_X + px(216),
     y: ACTION_ROW_Y,
-    w: DEVICE_WIDTH - KEYBOARD_START_X * 2 - px(196),
-    h: px(42),
+    w: DEVICE_WIDTH - KEYBOARD_START_X * 2 - px(216),
+    h: px(48),
     radius: px(8),
     normal_color: COLORS.keyBg,
-    press_color: 0x1e1e2d,
+    press_color: 0x14261c,
     text: "SPACE",
-    text_size: px(22),
+    text_size: px(30),
     color: COLORS.keyText,
 };
 
 // ── Search Button — Subheadline 28px, capsule style ──
 export const SEARCH_BTN_STYLE = {
     x: SIDE_PADDING,
-    y: px(310),
+    y: px(360),
     w: CONTENT_WIDTH,
-    h: px(52),
-    radius: px(26),
+    h: px(60),
+    radius: px(30),
     normal_color: COLORS.searchBtn,
-    press_color: 0x134215,
+    press_color: 0x093620,
     text: "Search",
-    text_size: px(28),
+    text_size: px(36),
     color: COLORS.searchBtnText,
 };
 
 // ── Status — Caption1 24px ──
 export const STATUS_STYLE = {
     x: SIDE_PADDING,
-    y: px(372),
+    y: px(432),
     w: CONTENT_WIDTH,
-    h: px(60),
+    h: px(70),
     color: COLORS.statusText,
-    text_size: px(24),
+    text_size: px(32),
     align_h: align.CENTER_H,
     align_v: align.CENTER_V,
     text_style: text_style.WRAP,
@@ -173,9 +173,9 @@ export const STATUS_STYLE = {
 export const BOTTOM_PADDING = px(60);
 
 // ── Result List — Body 32px rows, 8px gap ──
-export const RESULT_ROW_HEIGHT = px(56);
-export const RESULT_ROW_GAP = px(8);
-export const RESULT_START_Y = px(372);
+export const RESULT_ROW_HEIGHT = px(68);
+export const RESULT_ROW_GAP = px(12);
+export const RESULT_START_Y = px(432);
 
 export function getResultRowBgStyle(y, index) {
     return {
@@ -184,7 +184,7 @@ export function getResultRowBgStyle(y, index) {
         w: CONTENT_WIDTH,
         h: RESULT_ROW_HEIGHT - RESULT_ROW_GAP,
         radius: px(10),
-        color: index % 2 === 0 ? 0x1a1a2e : 0x222238,
+        color: index % 2 === 0 ? 0x1a2a1a : 0x223322,
     };
 }
 
@@ -194,8 +194,8 @@ export function getResultTextStyle(y) {
         y: y,
         w: CONTENT_WIDTH - px(24),
         h: RESULT_ROW_HEIGHT - RESULT_ROW_GAP,
-        color: 0xffffff,
-        text_size: px(24),  // Caption1
+        color: 0xe8dcc8,
+        text_size: px(32),  // Body
         align_h: align.CENTER_H,  // Round: center-aligned
         align_v: align.CENTER_V,
         text_style: text_style.ELLIPSIS,

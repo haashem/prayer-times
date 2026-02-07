@@ -7,34 +7,34 @@ export const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = getDeviceInfo();
 const SIDE_PADDING = px(24);
 const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 
-// ── Zepp OS Design Guideline Colors ──
+// ── Islamic-Inspired Color Palette ──
 export const COLORS = {
-    title: 0x4fc3f7,
-    cityText: 0xe0e0e0,
-    cityBg: 0x1a1a2e,
-    activeBg: 0x1b5e20,
-    activeText: 0x66bb6a,
-    addBtn: 0x1b5e20,
-    addBtnText: 0x66bb6a,
-    emptyText: 0x999999,   // Raised for contrast ≥ 3:1
-    deleteBg: 0xcc3333,
+    title: 0xd4a843,       // Gold
+    cityText: 0xe8dcc8,    // Warm ivory
+    cityBg: 0x1a2a1a,     // Dark green-tinted bg
+    activeBg: 0x0d4a2e,   // Deep emerald
+    activeText: 0xd4a843,  // Gold accent
+    addBtn: 0x0d4a2e,     // Deep emerald
+    addBtnText: 0xd4a843,  // Gold
+    emptyText: 0xa89880,   // Warm sandstone
+    deleteBg: 0x8b2e2e,   // Deep muted red
     deleteText: 0xffffff,
 };
 
 // Row height + 8px gap between items
-export const CITY_ROW_HEIGHT = px(56);
-export const CITY_ROW_GAP = px(8);
-export const CITY_START_Y = px(56);
-export const BOTTOM_PADDING = px(40);
+export const CITY_ROW_HEIGHT = px(72);
+export const CITY_ROW_GAP = px(12);
+export const CITY_START_Y = px(68);
+export const BOTTOM_PADDING = px(60);
 
-// ── Title — Caption1 24px, line-height 30px, center-aligned ──
+// ── Title ──
 export const TITLE_STYLE = {
     x: 0,
-    y: px(12),
+    y: px(14),
     w: DEVICE_WIDTH,
-    h: px(30),              // 24 × 1.25
+    h: px(46),              // 24 × 1.25
     color: COLORS.title,
-    text_size: px(24),      // Caption1
+    text_size: px(36),      // Title
     align_h: align.CENTER_H,
     align_v: align.CENTER_V,
     text: "My Cities",
@@ -45,12 +45,12 @@ export const ADD_BTN_STYLE = {
     x: SIDE_PADDING,
     y: 0, // set dynamically
     w: CONTENT_WIDTH,
-    h: px(44),
-    radius: px(22),         // Capsule (h/2)
+    h: px(52),
+    radius: px(26),         // Capsule (h/2)
     normal_color: COLORS.addBtn,
-    press_color: 0x134215,  // 28.6% dimmed
+    press_color: 0x093620,  // Dimmed emerald
     text: "+ Add City",
-    text_size: px(24),      // Caption1
+    text_size: px(32),      // Body
     color: COLORS.addBtnText,
 };
 
@@ -74,7 +74,7 @@ export function getCityTextStyle(y, isActive) {
         w: CONTENT_WIDTH - px(16),
         h: CITY_ROW_HEIGHT - CITY_ROW_GAP,
         color: isActive ? COLORS.activeText : COLORS.cityText,
-        text_size: px(24),  // Caption1
+        text_size: px(32),  // Body
         align_h: align.LEFT,   // Square: content left-aligned
         align_v: align.CENTER_V,
         text_style: text_style.ELLIPSIS,
@@ -86,9 +86,9 @@ export const EMPTY_STYLE = {
     x: SIDE_PADDING,
     y: DEVICE_HEIGHT / 2 - px(30),
     w: CONTENT_WIDTH,
-    h: px(60),               // 24 × 1.25 × 2 lines
+    h: px(80),               // 32 × 1.25 × 2 lines
     color: COLORS.emptyText,
-    text_size: px(24),       // Caption1
+    text_size: px(32),       // Body
     align_h: align.CENTER_H,
     align_v: align.CENTER_V,
     text_style: text_style.WRAP,
@@ -96,7 +96,7 @@ export const EMPTY_STYLE = {
 };
 
 // ── Delete Button (revealed on swipe left) ──
-export const DELETE_BTN_WIDTH = px(56);
+export const DELETE_BTN_WIDTH = px(72);
 
 export function getDeleteBtnBgStyle(y) {
     return {
@@ -116,7 +116,7 @@ export function getDeleteBtnTextStyle(y) {
         w: DELETE_BTN_WIDTH,
         h: CITY_ROW_HEIGHT - CITY_ROW_GAP,
         color: COLORS.deleteText,
-        text_size: px(24),
+        text_size: px(32),
         align_h: align.CENTER_H,
         align_v: align.CENTER_V,
         text: "✕",

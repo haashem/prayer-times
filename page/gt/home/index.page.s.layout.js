@@ -4,40 +4,40 @@ import { px } from "@zos/utils";
 
 export const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = getDeviceInfo();
 
-// ── Zepp OS Design Guideline Colors ──
+// ── Islamic-Inspired Color Palette ──
 export const COLORS = {
   background: 0x000000,
-  title: 0x4fc3f7,
-  hijriDate: 0x999999,   // Raised from 0x888888 for contrast ≥ 3:1
-  separator: 0x333333,
-  prayerName: 0xcccccc,
-  prayerTime: 0xcccccc,
-  activeBg: 0x1b5e20,
-  activeText: 0x66bb6a,
-  activeTime: 0xffffff,
-  noData: 0xff5252,
+  title: 0xd4a843,       // Gold — mosque dome
+  hijriDate: 0xa89880,   // Warm sandstone
+  separator: 0x2a3a2a,   // Subtle dark green
+  prayerName: 0xe8dcc8,  // Warm ivory
+  prayerTime: 0xe8dcc8,  // Warm ivory
+  activeBg: 0x0d4a2e,    // Deep emerald green
+  activeText: 0xd4a843,  // Gold accent
+  activeTime: 0xffffff,  // White
+  noData: 0xc75050,      // Muted red
 };
 
 const SIDE_PADDING = px(24);
 const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 
 // Row height includes font + padding; 8px gap between rows
-export const PRAYER_ROW_HEIGHT = px(56);
-export const PRAYER_ROW_GAP = px(8);
-export const PRAYER_START_Y = px(110);
-export const BOTTOM_PADDING = px(40);
+export const PRAYER_ROW_HEIGHT = px(72);
+export const PRAYER_ROW_GAP = px(12);
+export const PRAYER_START_Y = px(130);
+export const BOTTOM_PADDING = px(60);
 
 // ── City Title (button) — Subheadline 28px, line-height 35px ──
 // Square: title center-aligned
 export const CITY_STYLE = {
   x: SIDE_PADDING,
-  y: px(14),
+  y: px(16),
   w: CONTENT_WIDTH,
-  h: px(35),             // 28 × 1.25
+  h: px(50),             // 40 × 1.25
   radius: px(6),
   normal_color: 0x000000,
-  press_color: 0x121228,
-  text_size: px(28),     // Subheadline
+  press_color: 0x0a1a0a, // Dimmed dark green
+  text_size: px(40),     // Title
   color: COLORS.title,
   align_h: align.CENTER_H,
 };
@@ -45,11 +45,11 @@ export const CITY_STYLE = {
 // ── Hijri Date — Caption1 24px, line-height 30px ──
 export const HIJRI_DATE_STYLE = {
   x: 0,
-  y: px(52),
+  y: px(70),
   w: DEVICE_WIDTH,
-  h: px(30),             // 24 × 1.25
+  h: px(42),             // 32 × 1.25
   color: COLORS.hijriDate,
-  text_size: px(24),     // Caption1
+  text_size: px(32),     // Subheadline
   align_h: align.CENTER_H,
   align_v: align.CENTER_V,
   text_style: text_style.ELLIPSIS,
@@ -58,7 +58,7 @@ export const HIJRI_DATE_STYLE = {
 // ── Separator ──
 export const SEPARATOR_STYLE = {
   x: SIDE_PADDING,
-  y: px(90),
+  y: px(116),
   w: CONTENT_WIDTH,
   h: px(1),
   color: COLORS.separator,
@@ -86,22 +86,22 @@ export function getPrayerNameStyle(y, isActive) {
     w: CONTENT_WIDTH / 2,
     h: PRAYER_ROW_HEIGHT,  // Match row height for vertical centering
     color: isActive ? COLORS.activeText : COLORS.prayerName,
-    text_size: px(28),     // Subheadline (consistent)
+    text_size: px(36),     // Body
     align_h: align.LEFT,
     align_v: align.CENTER_V,
     text_style: text_style.ELLIPSIS,
   };
 }
 
-// ── Prayer Time — Subheadline 28px, centered in row ──
+// ── Prayer Time — Body 36px, centered in row ──
 export function getPrayerTimeStyle(y, isActive) {
   return {
     x: DEVICE_WIDTH / 2,
-    y: y - px(4),          // Align with row background origin
+    y: y - px(4),
     w: DEVICE_WIDTH / 2 - SIDE_PADDING,
-    h: PRAYER_ROW_HEIGHT,  // Match row height for vertical centering
+    h: PRAYER_ROW_HEIGHT,
     color: isActive ? COLORS.activeTime : COLORS.prayerTime,
-    text_size: px(28),     // Subheadline (consistent)
+    text_size: px(36),     // Body
     align_h: align.RIGHT,
     align_v: align.CENTER_V,
     text_style: text_style.ELLIPSIS,
@@ -114,9 +114,9 @@ export const NO_DATA_STYLE = {
   x: SIDE_PADDING,
   y: DEVICE_HEIGHT / 2 - px(30),
   w: CONTENT_WIDTH,
-  h: px(60),               // 24 × 1.25 × 2 lines
+  h: px(80),               // 32 × 1.25 × 2 lines
   color: COLORS.noData,
-  text_size: px(24),       // Caption1
+  text_size: px(32),       // Body
   align_h: align.CENTER_H,
   align_v: align.CENTER_V,
   text_style: text_style.WRAP,
