@@ -380,10 +380,9 @@ Page(
       const cells = [];
 
       if (info.isNextDay) {
-        // After Isha: show tomorrow's Fajr and Sunrise
+        // After Isha: hero already shows tomorrow's Fajr, just show Sunrise
         const tmrw = info.tomorrowData;
         if (tmrw) {
-          cells.push({ label: "Fajr", time: this.formatTime(tmrw.timings["Fajr"]) });
           cells.push({ label: "Sunrise", time: this.formatTime(tmrw.timings["Sunrise"]) });
         }
       } else {
