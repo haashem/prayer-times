@@ -34,6 +34,7 @@ Page(
       location: null,
       prayerData: null,
       loadingWidget: null,
+      uiWidgets: [],
     },
 
     onInit() {
@@ -291,39 +292,52 @@ Page(
 
     // ── Render ──
 
+    trackWidget(w) {
+      this.state.uiWidgets.push(w);
+      return w;
+    },
+
+    clearUI() {
+      for (const w of this.state.uiWidgets) {
+        deleteWidget(w);
+      }
+      this.state.uiWidgets = [];
+    },
+
     renderUI(todayData) {
+      this.clearUI();
       const cityName = this.state.location.city;
       const info = this.getNextPrayerInfo(todayData);
 
       // ── Header: City with pill background ──
-      const cityBg = createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length));
+      const cityBg = this.trackWidget(createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length)));
       cityBg.addEventListener(event.CLICK_DOWN, () => this.onLocationTap());
 
-      const cityText = createWidget(widget.TEXT, {
+      const cityText = this.trackWidget(createWidget(widget.TEXT, {
         ...getCityTextStyle(cityName.length),
         text: cityName,
-      });
+      }));
       cityText.addEventListener(event.CLICK_DOWN, () => this.onLocationTap());
 
       // ── "Next prayer" label ──
-      createWidget(widget.TEXT, {
+      this.trackWidget(createWidget(widget.TEXT, {
         ...NEXT_LABEL_STYLE,
         text: "Next prayer",
-      });
+      }));
 
       // ── Next prayer name ──
-      createWidget(widget.TEXT, {
+      this.trackWidget(createWidget(widget.TEXT, {
         ...NEXT_NAME_STYLE,
         text: info.nextPrayer.label,
-      });
+      }));
 
       // ── Countdown (only if < 60 minutes) ──
       const remaining = info.nextPrayer.minutes - info.nowMinutes;
       if (remaining > 0 && remaining <= 60) {
-        createWidget(widget.TEXT, {
+        this.trackWidget(createWidget(widget.TEXT, {
           ...COUNTDOWN_STYLE,
           text: remaining === 1 ? "In 1 minute" : `In ${remaining} minutes`,
-        });
+        }));
       }
 
       // ── Large next prayer time ──
@@ -333,10 +347,10 @@ Page(
         )
         : this.formatTime(todayData.timings[info.nextPrayer.key]);
 
-      createWidget(widget.TEXT, {
+      this.trackWidget(createWidget(widget.TEXT, {
         ...NEXT_TIME_STYLE,
         text: nextTimeStr,
-      });
+      }));
 
       // ── Upcoming prayer cells ──
       this.renderUpcomingCells(todayData, info);
@@ -364,21 +378,21 @@ Page(
 
       let y = CELL_START_Y;
       for (const cell of cells) {
-        createWidget(widget.FILL_RECT, getCellBgStyle(y));
-        createWidget(widget.TEXT, { ...getCellNameStyle(y), text: cell.label });
-        createWidget(widget.TEXT, { ...getCellTimeStyle(y), text: cell.time });
+        this.trackWidget(createWidget(widget.FILL_RECT, getCellBgStyle(y)));
+        this.trackWidget(createWidget(widget.TEXT, { ...getCellNameStyle(y), text: cell.label }));
+        this.trackWidget(createWidget(widget.TEXT, { ...getCellTimeStyle(y), text: cell.time }));
         y += CELL_HEIGHT + CELL_GAP;
       }
 
       // Bottom spacer
-      createWidget(widget.FILL_RECT, {
+      this.trackWidget(createWidget(widget.FILL_RECT, {
         x: 0,
         y: y,
         w: 1,
         h: BOTTOM_PADDING,
         color: 0x000000,
         alpha: 0,
-      });
+      }));
     },
 
     onLocationTap() {
