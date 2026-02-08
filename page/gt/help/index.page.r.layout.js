@@ -12,7 +12,7 @@ const COLORS = {
 };
 
 export const PARA_START_Y = px(46);
-export const PARA_HEIGHT = px(200);
+export const PARA_HEIGHT = px(320);
 export const PARA_GAP = px(12);
 export const TITLE_FONT_SIZE = px(40);
 export const TITLE_HEIGHT = px(66);
@@ -23,7 +23,7 @@ export function getParaStyle(y) {
         y: y,
         w: CONTENT_WIDTH,
         h: PARA_HEIGHT,
-        text_size: px(26),
+        text_size: px(36),
         color: COLORS.text,
         align_h: align.LEFT,
         align_v: align.TOP,

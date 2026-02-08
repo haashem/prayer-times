@@ -25,8 +25,8 @@ Page(
             });
 
             const body = [
-                "This app detects your location using your phone's IP address, then fetches accurate prayer times for your city.\nFor the best results:",
-                "• Connect to Wi-Fi\n• Disconnect from VPN\n• Turn off iCloud Private Relay",
+                "This app detects your location using your phone's IP address, then fetches accurate prayer times for your city.",
+                "For the best results:\n\n• Connect to Wi-Fi\n• Disconnect from VPN\n• Turn off iCloud Private Relay",
             ];
 
             let y = PARA_START_Y + TITLE_HEIGHT + PARA_GAP;
