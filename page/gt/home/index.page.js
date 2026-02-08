@@ -394,8 +394,6 @@ Page(
     },
 
     onLocationTap() {
-      localStorage.removeItem("location");
-      localStorage.removeItem("prayerData");
       this.showLoading("Detecting location...");
       this.detectLocation();
     },
