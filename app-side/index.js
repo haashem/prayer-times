@@ -1,17 +1,12 @@
 import { BaseSideService } from "@zeppos/zml/base-side";
 
-// Get your free API key at https://api-ninjas.com/register
-const API_NINJAS_KEY = "7sqocH3iwCBEAYEskxHjNIkwKJVKQO0LXPPoOCxY";
-
-async function searchCity(query, res) {
+async function getPhoneLocation(res) {
     try {
-        const url = `https://api.api-ninjas.com/v1/city?name=${encodeURIComponent(query)}`;
-        console.log("Searching city: " + url);
+        console.log("Getting location via IP geolocation...");
 
         const response = await fetch({
-            url,
+            url: "http://ip-api.com/json/?fields=status,city,country,lat,lon",
             method: "GET",
-            headers: { "X-Api-Key": API_NINJAS_KEY },
         });
 
         const resBody =
@@ -19,41 +14,36 @@ async function searchCity(query, res) {
                 ? JSON.parse(response.body)
                 : response.body;
 
-        console.log("Search result count: " + (resBody ? resBody.length : 0));
+        console.log("IP geolocation result: " + JSON.stringify(resBody));
 
-        if (Array.isArray(resBody) && resBody.length > 0) {
-            // Return list of matching cities
-            const cities = resBody.map(function (c) {
-                return {
-                    name: c.name,
-                    country: c.country,
-                    latitude: c.latitude,
-                    longitude: c.longitude,
-                    population: c.population,
-                };
+        if (resBody && resBody.status === "success") {
+            res(null, {
+                result: {
+                    valid: true,
+                    city: resBody.city,
+                    country: resBody.country,
+                    latitude: resBody.lat,
+                    longitude: resBody.lon,
+                },
             });
-            console.log("Cities found: " + JSON.stringify(cities));
-            res(null, { result: { valid: true, cities: cities } });
         } else {
-            console.log("No cities found for: " + query);
-            res(null, { result: { valid: false } });
+            console.log("IP geolocation failed");
+            res(null, { result: { valid: false, error: "Location not found" } });
         }
     } catch (e) {
-        console.log("Error searching city: " + e.message);
+        console.log("Error getting location: " + e.message);
         res(null, { result: { valid: false, error: e.message } });
     }
 }
 
 async function fetchPrayerTimes(params, res) {
     try {
-        // Fetch only today's prayer times (small response)
         const today = new Date();
-        const dd = String(today.getDate()).padStart(2, "0");
-        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const mm = String(today.getMonth() + 1);
         const yyyy = today.getFullYear();
-        const dateStr = dd + "-" + mm + "-" + yyyy;
 
-        const url = `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${params.latitude}&longitude=${params.longitude}&method=${params.method}`;
+        // Fetch full month of prayer times
+        const url = `https://api.aladhan.com/v1/calendar/${yyyy}/${mm}?latitude=${params.latitude}&longitude=${params.longitude}&method=${params.method}`;
         console.log("Fetching prayer times: " + url);
 
         const response = await fetch({ url, method: "GET" });
@@ -83,9 +73,8 @@ AppSideService(
         },
 
         onRequest(req, res) {
-            if (req.method === "SEARCH_CITY") {
-                const { query } = req.params;
-                searchCity(query, res);
+            if (req.method === "GET_PHONE_LOCATION") {
+                getPhoneLocation(res);
             } else if (req.method === "FETCH_PRAYER_TIMES") {
                 fetchPrayerTimes(req.params, res);
             }

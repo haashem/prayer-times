@@ -29,9 +29,7 @@
       "module": {
         "page": {
           "pages": [
-            "page/gt/home/index.page",
-            "page/gt/cityList/index.page",
-            "page/gt/search/index.page"
+            "page/gt/home/index.page"
           ]
         },
         "app-side": {

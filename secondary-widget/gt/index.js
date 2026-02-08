@@ -26,7 +26,7 @@ const PRAYER_LABELS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 SecondaryWidget({
     state: {
-        activeCity: null,
+        location: null,
         prayerData: null,
     },
 
@@ -40,7 +40,7 @@ SecondaryWidget({
 
             this.loadData();
 
-            if (!this.state.activeCity || !this.state.prayerData) {
+            if (!this.state.location || !this.state.prayerData) {
                 this.renderNoData();
                 return;
             }
@@ -65,23 +65,28 @@ SecondaryWidget({
 
     loadData() {
         try {
-            const storedCity = localStorage.getItem("activeCity");
-            if (storedCity) {
-                this.state.activeCity = JSON.parse(storedCity);
+            const storedLoc = localStorage.getItem("location");
+            if (storedLoc) {
+                this.state.location = JSON.parse(storedLoc);
             }
 
             const storedData = localStorage.getItem("prayerData");
             if (storedData) {
                 const cached = JSON.parse(storedData);
-                if (cached && cached.data && cached.data.date && cached.data.date.gregorian) {
+                if (cached && Array.isArray(cached.data)) {
                     const time = new Time();
                     const day = String(time.getDate()).padStart(2, "0");
                     const month = String(time.getMonth()).padStart(2, "0");
                     const year = String(time.getFullYear());
                     const todayStr = day + "-" + month + "-" + year;
 
-                    if (cached.data.date.gregorian.date === todayStr) {
-                        this.state.prayerData = cached.data;
+                    if (cached.month === month && cached.year === year) {
+                        const todayEntry = cached.data.find(
+                            (d) => d.date && d.date.gregorian && d.date.gregorian.date === todayStr
+                        );
+                        if (todayEntry) {
+                            this.state.prayerData = todayEntry;
+                        }
                     }
                 }
             }
@@ -131,7 +136,7 @@ SecondaryWidget({
         // City name
         createWidget(widget.TEXT, {
             ...CITY_STYLE,
-            text: this.state.activeCity.city,
+            text: this.state.location.city,
         });
 
         // ── Current Prayer ──

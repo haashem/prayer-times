@@ -27,35 +27,44 @@ export const PRAYER_ROW_GAP = px(12);
 export const PRAYER_START_Y = px(130);
 export const BOTTOM_PADDING = px(60);
 
-// ── City Title — dynamic width based on name length ──
-const CITY_FONT_SIZE = px(40);
-const CITY_H = px(50);
+// ── Location Icon ──
+const ICON_SIZE = px(40);
 const CITY_Y = px(16);
-const CITY_PAD_X = px(24);   // horizontal padding inside pill
+const CITY_H = px(50);
 
-export function getCityBgStyle(textLen) {
-  const estWidth = textLen * CITY_FONT_SIZE * 0.55 + CITY_PAD_X * 2;
-  const w = Math.min(Math.max(estWidth, px(100)), CONTENT_WIDTH);
+// ── City + Location Icon — centered as a group ──
+const CITY_FONT_SIZE = px(40);
+const ICON_GAP = px(8);
+
+export function getCityTextStyle(textLen) {
+  const textW = Math.ceil(textLen * CITY_FONT_SIZE * 0.55);
+  const groupW = textW + ICON_GAP + ICON_SIZE;
+  const startX = (DEVICE_WIDTH - groupW) / 2;
   return {
-    x: (DEVICE_WIDTH - w) / 2,
+    x: startX,
     y: CITY_Y,
-    w: w,
+    w: textW,
     h: CITY_H,
-    radius: CITY_H / 2,
-    color: 0x141e14,       // Subtle dark green hint
+    text_size: CITY_FONT_SIZE,
+    color: COLORS.title,
+    align_h: align.LEFT,
+    align_v: align.CENTER_V,
+    text_style: text_style.ELLIPSIS,
   };
 }
 
-export const CITY_TEXT_STYLE = {
-  x: 0,
-  y: CITY_Y,
-  w: DEVICE_WIDTH,
-  h: CITY_H,
-  text_size: CITY_FONT_SIZE,
-  color: COLORS.title,
-  align_h: align.CENTER_H,
-  align_v: align.CENTER_V,
-};
+export function getLocationIconStyle(textLen) {
+  const textW = Math.ceil(textLen * CITY_FONT_SIZE * 0.55);
+  const groupW = textW + ICON_GAP + ICON_SIZE;
+  const startX = (DEVICE_WIDTH - groupW) / 2;
+  return {
+    src: "image/location.png",
+    x: startX + textW + ICON_GAP,
+    y: CITY_Y + (CITY_H - ICON_SIZE) / 2,
+    w: ICON_SIZE,
+    h: ICON_SIZE,
+  };
+}
 
 // ── Hijri Date — Caption1 24px, line-height 30px ──
 export const HIJRI_DATE_STYLE = {
