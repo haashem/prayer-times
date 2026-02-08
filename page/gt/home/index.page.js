@@ -11,8 +11,6 @@ import {
   NEXT_NAME_STYLE,
   COUNTDOWN_STYLE,
   NEXT_TIME_STYLE,
-  PROGRESS_BG_STYLE,
-  getProgressFillStyle,
   getCityTextStyle,
   getCityBgStyle,
   CELL_START_Y,
@@ -339,16 +337,6 @@ Page(
         ...NEXT_TIME_STYLE,
         text: nextTimeStr,
       });
-
-      // ── Progress bar ──
-      let fraction = 0;
-      if (info.prevPrayer) {
-        const elapsed = info.nowMinutes - info.prevPrayer.minutes;
-        const total = info.nextPrayer.minutes - info.prevPrayer.minutes;
-        fraction = total > 0 ? elapsed / total : 0;
-      }
-      createWidget(widget.FILL_RECT, PROGRESS_BG_STYLE);
-      createWidget(widget.FILL_RECT, getProgressFillStyle(fraction));
 
       // ── Upcoming prayer cells ──
       this.renderUpcomingCells(todayData, info);

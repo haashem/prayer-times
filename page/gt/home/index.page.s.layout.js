@@ -13,8 +13,7 @@ export const COLORS = {
   nextName: 0xe8dcc8,
   countdown: 0xd4a843,
   nextTime: 0xffffff,
-  progressBg: 0x2a4a2a,
-  progressFill: 0xd4a843,
+
   cellBg: 0x2a4a2a,
   cellName: 0xa89880,
   cellTime: 0xe8dcc8,
@@ -108,30 +107,8 @@ export const NEXT_TIME_STYLE = {
   text_style: text_style.ELLIPSIS,
 };
 
-// ── Progress Bar ──
-export const PROGRESS_BG_STYLE = {
-  x: SIDE_PADDING,
-  y: px(246),
-  w: CONTENT_WIDTH,
-  h: px(6),
-  radius: px(3),
-  color: COLORS.progressBg,
-};
-
-export function getProgressFillStyle(fraction) {
-  const fillW = Math.max(px(6), Math.round(CONTENT_WIDTH * Math.min(1, fraction)));
-  return {
-    x: SIDE_PADDING,
-    y: px(246),
-    w: fillW,
-    h: px(6),
-    radius: px(3),
-    color: COLORS.progressFill,
-  };
-}
-
 // ── Upcoming Prayer Cells ──
-export const CELL_START_Y = px(270);
+export const CELL_START_Y = px(248);
 export const CELL_HEIGHT = px(60);
 export const CELL_GAP = px(8);
 export const CELL_RADIUS = px(12);
