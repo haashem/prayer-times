@@ -172,6 +172,6 @@ export const NO_DATA_STYLE = {
 export const HELP_ICON_STYLE = {
   x: (DEVICE_WIDTH - px(32)) / 2,
   y: 0, // set dynamically
-  w: px(32),
-  h: px(32),
+  w: px(40),
+  h: px(40),
 };

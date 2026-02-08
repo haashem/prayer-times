@@ -427,7 +427,7 @@ Page(
       const helpIcon = this.trackWidget(createWidget(widget.IMG, {
         ...HELP_ICON_STYLE,
         y: y + px(20),
-        src: "image/ic_QA_32px.png",
+        src: "image/ic_QA_40px.png",
       }));
       helpIcon.addEventListener(event.CLICK_DOWN, () => {
         helpIcon.setProperty(prop.MORE, { alpha: 120 });
