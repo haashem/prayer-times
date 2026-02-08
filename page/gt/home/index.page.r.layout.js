@@ -4,36 +4,30 @@ import { px } from "@zos/utils";
 
 export const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = getDeviceInfo();
 
-// ── Islamic-Inspired Color Palette ──
-// Emerald green, gold accents, warm ivory text
+// ── Color Palette ──
 export const COLORS = {
   background: 0x000000,
-  title: 0xd4a843,       // Gold — city name (mosque dome gold)
-  hijriDate: 0xa89880,   // Warm sandstone secondary text
-  separator: 0x2a3a2a,   // Subtle dark green separator
-  prayerName: 0xe8dcc8,  // Warm ivory — prayer name
-  prayerTime: 0xe8dcc8,  // Warm ivory — prayer time
-  activeBg: 0x0d4a2e,    // Deep emerald green highlight
-  activeText: 0xd4a843,  // Gold text for active prayer
-  activeTime: 0xffffff,  // White time for active prayer
-  noData: 0xc75050,      // Muted red for error
+  title: 0xd4a843,        // Gold — city name
+  subtitle: 0xa89880,     // Warm sandstone — secondary text
+  nextLabel: 0xa89880,    // "Next prayer" label
+  nextName: 0xe8dcc8,     // Next prayer name — warm ivory
+  countdown: 0xd4a843,    // "In X minutes" — gold accent
+  nextTime: 0xffffff,     // Large next time — white
+  progressBg: 0x2a4a2a,   // Progress track — dark green
+  progressFill: 0xd4a843, // Progress fill — gold
+  cellBg: 0x1a3a1a,       // Upcoming cell background
+  cellName: 0xa89880,     // Upcoming cell prayer name
+  cellTime: 0xe8dcc8,     // Upcoming cell time
+  noData: 0xc75050,       // Error
 };
 
 const SIDE_PADDING = px(60);
 const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 
-// Row height = font (32px Body) + vertical padding; 8px gap between rows
-export const PRAYER_ROW_HEIGHT = px(80);
-export const PRAYER_ROW_GAP = px(12);
-export const PRAYER_START_Y = px(170);
-export const BOTTOM_PADDING = px(100);
-
 // ── Location Icon ──
 const ICON_SIZE = px(48);
 const CITY_Y = px(36);
 const CITY_H = px(60);
-
-// ── City + Location Icon — centered as a group ──
 const CITY_FONT_SIZE = px(48);
 const ICON_GAP = px(10);
 
@@ -67,80 +61,132 @@ export function getLocationIconStyle(textLen) {
   };
 }
 
-// ── Hijri Date — Subheadline 28px, line-height 35px ──
-export const HIJRI_DATE_STYLE = {
+// ── Next Prayer Section ──
+export const NEXT_LABEL_STYLE = {
   x: 0,
-  y: px(102),
+  y: px(110),
   w: DEVICE_WIDTH,
-  h: px(48),             // 36 × 1.25
-  color: COLORS.hijriDate,
-  text_size: px(36),     // Subheadline
+  h: px(36),
+  color: COLORS.nextLabel,
+  text_size: px(28),
   align_h: align.CENTER_H,
   align_v: align.CENTER_V,
   text_style: text_style.ELLIPSIS,
 };
 
-// ── Separator ──
-export const SEPARATOR_STYLE = {
-  x: SIDE_PADDING,
-  y: px(156),
-  w: CONTENT_WIDTH,
-  h: px(1),
-  color: COLORS.separator,
+export const NEXT_NAME_STYLE = {
+  x: 0,
+  y: px(144),
+  w: DEVICE_WIDTH,
+  h: px(56),
+  color: COLORS.nextName,
+  text_size: px(46),
+  align_h: align.CENTER_H,
+  align_v: align.CENTER_V,
+  text_style: text_style.ELLIPSIS,
 };
 
-// ── Prayer Row Background ──
-export function getPrayerRowBgStyle(y, isActive) {
+export const COUNTDOWN_STYLE = {
+  x: 0,
+  y: px(198),
+  w: DEVICE_WIDTH,
+  h: px(34),
+  color: COLORS.countdown,
+  text_size: px(26),
+  align_h: align.CENTER_H,
+  align_v: align.CENTER_V,
+  text_style: text_style.ELLIPSIS,
+};
+
+export const NEXT_TIME_STYLE = {
+  x: 0,
+  y: px(228),
+  w: DEVICE_WIDTH,
+  h: px(80),
+  color: COLORS.nextTime,
+  text_size: px(72),
+  align_h: align.CENTER_H,
+  align_v: align.CENTER_V,
+  text_style: text_style.ELLIPSIS,
+};
+
+// ── Progress Bar ──
+export const PROGRESS_BG_STYLE = {
+  x: SIDE_PADDING,
+  y: px(318),
+  w: CONTENT_WIDTH,
+  h: px(8),
+  radius: px(4),
+  color: COLORS.progressBg,
+};
+
+export function getProgressFillStyle(fraction) {
+  const fillW = Math.max(px(8), Math.round(CONTENT_WIDTH * Math.min(1, fraction)));
   return {
-    x: SIDE_PADDING - px(10),
-    y: y - px(4),
-    w: CONTENT_WIDTH + px(20),
-    h: PRAYER_ROW_HEIGHT,
-    radius: px(12),
-    color: isActive ? COLORS.activeBg : 0x000000,
-    alpha: isActive ? 255 : 0,
+    x: SIDE_PADDING,
+    y: px(318),
+    w: fillW,
+    h: px(8),
+    radius: px(4),
+    color: COLORS.progressFill,
   };
 }
 
-// ── Prayer Name — Body 32px, centered in row ──
-export function getPrayerNameStyle(y, isActive) {
+// ── Upcoming Prayer Cells ──
+export const CELL_START_Y = px(350);
+export const CELL_HEIGHT = px(72);
+export const CELL_GAP = px(10);
+export const CELL_RADIUS = px(16);
+export const BOTTOM_PADDING = px(100);
+
+export function getCellBgStyle(y) {
   return {
-    x: SIDE_PADDING,
-    y: y - px(4),          // Align with row background origin
+    x: SIDE_PADDING - px(10),
+    y: y,
+    w: CONTENT_WIDTH + px(20),
+    h: CELL_HEIGHT,
+    radius: CELL_RADIUS,
+    color: COLORS.cellBg,
+  };
+}
+
+export function getCellNameStyle(y) {
+  return {
+    x: SIDE_PADDING + px(8),
+    y: y,
     w: CONTENT_WIDTH / 2,
-    h: PRAYER_ROW_HEIGHT,  // Match row height for vertical centering
-    color: isActive ? COLORS.activeText : COLORS.prayerName,
-    text_size: px(42),     // Body
+    h: CELL_HEIGHT,
+    color: COLORS.cellName,
+    text_size: px(34),
     align_h: align.LEFT,
     align_v: align.CENTER_V,
     text_style: text_style.ELLIPSIS,
   };
 }
 
-// ── Prayer Time — Body 42px, centered in row ──
-export function getPrayerTimeStyle(y, isActive) {
+export function getCellTimeStyle(y) {
   return {
     x: DEVICE_WIDTH / 2,
-    y: y - px(4),
-    w: DEVICE_WIDTH / 2 - SIDE_PADDING,
-    h: PRAYER_ROW_HEIGHT,
-    color: isActive ? COLORS.activeTime : COLORS.prayerTime,
-    text_size: px(42),     // Body
+    y: y,
+    w: DEVICE_WIDTH / 2 - SIDE_PADDING - px(8),
+    h: CELL_HEIGHT,
+    color: COLORS.cellTime,
+    text_size: px(34),
     align_h: align.RIGHT,
     align_v: align.CENTER_V,
     text_style: text_style.ELLIPSIS,
   };
 }
 
-// ── No Data — Subheadline 28px ──
+// ── No Data ──
 export const NO_DATA_STYLE = {
-  text: "No prayer data\nfor today",
+  text: "No prayer data",
   x: SIDE_PADDING,
   y: DEVICE_HEIGHT / 2 - px(35),
   w: CONTENT_WIDTH,
-  h: px(90),               // 36 × 1.25 × 2 lines
+  h: px(90),
   color: COLORS.noData,
-  text_size: px(36),       // Subheadline
+  text_size: px(36),
   align_h: align.CENTER_H,
   align_v: align.CENTER_V,
   text_style: text_style.WRAP,

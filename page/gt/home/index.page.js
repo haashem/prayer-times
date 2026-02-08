@@ -8,15 +8,20 @@ import {
   DEVICE_WIDTH,
   DEVICE_HEIGHT,
   COLORS,
-  HIJRI_DATE_STYLE,
-  SEPARATOR_STYLE,
-  getPrayerNameStyle,
-  getPrayerTimeStyle,
-  getPrayerRowBgStyle,
+  NEXT_LABEL_STYLE,
+  NEXT_NAME_STYLE,
+  COUNTDOWN_STYLE,
+  NEXT_TIME_STYLE,
+  PROGRESS_BG_STYLE,
+  getProgressFillStyle,
   getCityTextStyle,
   getLocationIconStyle,
-  PRAYER_ROW_HEIGHT,
-  PRAYER_START_Y,
+  CELL_START_Y,
+  CELL_HEIGHT,
+  CELL_GAP,
+  getCellBgStyle,
+  getCellNameStyle,
+  getCellTimeStyle,
   BOTTOM_PADDING,
   NO_DATA_STYLE,
 } from "zosLoader:./index.page.[pf].layout.js";
@@ -40,24 +45,19 @@ Page(
     build() {
       logger.debug("prayer-times page build");
 
-      // Scroll indicator
       createWidget(widget.PAGE_SCROLLBAR);
 
-      // Load saved location
       this.loadLocation();
 
       if (!this.state.location) {
-        // First launch — auto-detect location
         this.showLoading("Detecting location...");
         this.detectLocation();
         return;
       }
 
-      // Try to load cached prayer data for today
       const todayData = this.loadTodayData();
-
       if (todayData) {
-        this.renderPrayerTimes(todayData);
+        this.renderUI(todayData);
       } else {
         this.showLoading("Loading prayer times...");
         this.fetchFromApi();
@@ -83,16 +83,13 @@ Page(
         const cached = JSON.parse(stored);
         if (!cached || !Array.isArray(cached.data)) return null;
 
-        // Find today's entry in the monthly data
         const time = new Time();
         const day = String(time.getDate()).padStart(2, "0");
         const month = String(time.getMonth()).padStart(2, "0");
         const year = String(time.getFullYear());
         const todayStr = `${day}-${month}-${year}`;
 
-        // Check if cached data has matching month/year
         if (cached.month !== month || cached.year !== year) {
-          logger.debug("Cache stale: different month/year");
           return null;
         }
 
@@ -100,14 +97,41 @@ Page(
           (d) => d.date && d.date.gregorian && d.date.gregorian.date === todayStr
         );
 
-        if (todayEntry) {
-          logger.debug("Cache hit for today: " + todayStr);
-          return todayEntry;
-        } else {
-          logger.debug("No cache entry for today: " + todayStr);
-        }
+        return todayEntry || null;
       } catch (e) {
         logger.error("Error loading prayer data: " + e.message);
+      }
+      return null;
+    },
+
+    loadTomorrowData() {
+      try {
+        const stored = localStorage.getItem("prayerData");
+        if (!stored) return null;
+
+        const cached = JSON.parse(stored);
+        if (!cached || !Array.isArray(cached.data)) return null;
+
+        const time = new Time();
+        const tomorrow = new Date(
+          time.getFullYear(),
+          time.getMonth() - 1,
+          time.getDate() + 1
+        );
+        const day = String(tomorrow.getDate()).padStart(2, "0");
+        const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+        const year = String(tomorrow.getFullYear());
+        const tomorrowStr = `${day}-${month}-${year}`;
+
+        if (cached.month !== month || cached.year !== year) {
+          return null;
+        }
+
+        return cached.data.find(
+          (d) => d.date && d.date.gregorian && d.date.gregorian.date === tomorrowStr
+        ) || null;
+      } catch (e) {
+        logger.error("Error loading tomorrow data: " + e.message);
       }
       return null;
     },
@@ -116,16 +140,13 @@ Page(
       createWidget(widget.TEXT, {
         ...NO_DATA_STYLE,
         text: message,
-        color: COLORS.hijriDate,
+        color: COLORS.subtitle,
       });
     },
 
     detectLocation() {
-      this.request({
-        method: "GET_PHONE_LOCATION",
-      })
+      this.request({ method: "GET_PHONE_LOCATION" })
         .then((data) => {
-          logger.debug("Location result: " + JSON.stringify(data));
           if (data && data.result && data.result.valid) {
             const loc = {
               city: data.result.city,
@@ -136,8 +157,6 @@ Page(
             };
             localStorage.setItem("location", JSON.stringify(loc));
             localStorage.removeItem("prayerData");
-
-            // Reload page with new location
             replace({ url: "page/gt/home/index.page" });
           } else {
             logger.error("Location detection failed");
@@ -153,8 +172,6 @@ Page(
       const loc = this.state.location;
       if (!loc) return;
 
-      logger.debug("Fetching API for location: " + JSON.stringify(loc));
-
       this.request({
         method: "FETCH_PRAYER_TIMES",
         params: {
@@ -164,25 +181,19 @@ Page(
         },
       })
         .then((data) => {
-          logger.debug("Received prayer data");
           if (data && data.result && data.result.code === 200 && data.result.data) {
-            // Cache the monthly data
             const time = new Time();
             const month = String(time.getMonth()).padStart(2, "0");
             const year = String(time.getFullYear());
 
             localStorage.setItem(
               "prayerData",
-              JSON.stringify({
-                month: month,
-                year: year,
-                data: data.result.data,
-              })
+              JSON.stringify({ month, year, data: data.result.data })
             );
 
             replace({ url: "page/gt/home/index.page" });
           } else {
-            logger.error("API response invalid: " + JSON.stringify(data));
+            logger.error("API response invalid");
           }
         })
         .catch((err) => {
@@ -190,65 +201,162 @@ Page(
         });
     },
 
-    renderPrayerTimes(todayData) {
-      const currentIndex = this.getCurrentPrayerIndex(todayData);
-      const hijri = todayData.date.hijri;
-      const cityName = this.state.location.city;
+    // ── Helpers ──
 
-      // Location icon (tappable — re-detect location)
+    formatTime(timeStr) {
+      if (!timeStr) return "--:--";
+      return timeStr.replace(/\s*\(.*\)/, "").trim();
+    },
+
+    timeToMinutes(timeStr) {
+      const t = this.formatTime(timeStr);
+      const parts = t.split(":");
+      return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    },
+
+    getNextPrayerInfo(todayData) {
+      const time = new Time();
+      const nowMinutes = time.getHours() * 60 + time.getMinutes();
+
+      // Build array of { key, label, minutes } for today
+      const prayers = PRAYER_KEYS.map((key, i) => ({
+        key,
+        label: PRAYER_LABELS[i],
+        minutes: this.timeToMinutes(todayData.timings[key]),
+      }));
+
+      // Find next prayer (first one whose time is in the future)
+      for (let i = 0; i < prayers.length; i++) {
+        if (nowMinutes < prayers[i].minutes) {
+          return {
+            nextIndex: i,
+            prevIndex: i > 0 ? i - 1 : null,
+            nextPrayer: prayers[i],
+            prevPrayer: i > 0 ? prayers[i - 1] : null,
+            nowMinutes,
+            isNextDay: false,
+          };
+        }
+      }
+
+      // All prayers passed → next is tomorrow's Fajr
+      const tomorrowData = this.loadTomorrowData();
+      const tomorrowFajr = tomorrowData
+        ? this.timeToMinutes(tomorrowData.timings["Fajr"])
+        : prayers[0].minutes;
+
+      return {
+        nextIndex: PRAYER_KEYS.length, // past all today
+        prevIndex: prayers.length - 1,
+        nextPrayer: {
+          key: "Fajr",
+          label: "Fajr",
+          minutes: tomorrowFajr + 24 * 60, // offset for math
+        },
+        prevPrayer: prayers[prayers.length - 1],
+        nowMinutes,
+        isNextDay: true,
+        tomorrowData,
+      };
+    },
+
+    // ── Render ──
+
+    renderUI(todayData) {
+      const cityName = this.state.location.city;
+      const info = this.getNextPrayerInfo(todayData);
+
+      // ── Header: City + Location Icon ──
       const locIcon = createWidget(widget.IMG, {
         ...getLocationIconStyle(cityName.length),
       });
-      locIcon.addEventListener(event.CLICK_DOWN, () => {
-        this.onLocationTap();
-      });
+      locIcon.addEventListener(event.CLICK_DOWN, () => this.onLocationTap());
 
-      // City name
       const cityText = createWidget(widget.TEXT, {
         ...getCityTextStyle(cityName.length),
         text: cityName,
       });
-      cityText.addEventListener(event.CLICK_DOWN, () => {
-        this.onLocationTap();
-      });
+      cityText.addEventListener(event.CLICK_DOWN, () => this.onLocationTap());
 
-      // Hijri date
-      const hijriText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
+      // ── "Next prayer" label ──
       createWidget(widget.TEXT, {
-        ...HIJRI_DATE_STYLE,
-        text: hijriText,
+        ...NEXT_LABEL_STYLE,
+        text: "Next prayer",
       });
 
-      // Separator line
-      createWidget(widget.FILL_RECT, SEPARATOR_STYLE);
+      // ── Next prayer name ──
+      createWidget(widget.TEXT, {
+        ...NEXT_NAME_STYLE,
+        text: info.nextPrayer.label,
+      });
 
-      // Prayer rows
-      for (let i = 0; i < PRAYER_KEYS.length; i++) {
-        const isActive = i === currentIndex;
-        const prayerTime = this.formatTime(todayData.timings[PRAYER_KEYS[i]]);
-        const rowY = PRAYER_START_Y + i * PRAYER_ROW_HEIGHT;
-
-        // Row background
-        createWidget(widget.FILL_RECT, getPrayerRowBgStyle(rowY, isActive));
-
-        // Prayer name
+      // ── Countdown (only if < 60 minutes) ──
+      const remaining = info.nextPrayer.minutes - info.nowMinutes;
+      if (remaining > 0 && remaining <= 60) {
         createWidget(widget.TEXT, {
-          ...getPrayerNameStyle(rowY, isActive),
-          text: PRAYER_LABELS[i],
-        });
-
-        // Prayer time
-        createWidget(widget.TEXT, {
-          ...getPrayerTimeStyle(rowY, isActive),
-          text: prayerTime,
+          ...COUNTDOWN_STYLE,
+          text: remaining === 1 ? "In 1 minute" : `In ${remaining} minutes`,
         });
       }
 
+      // ── Large next prayer time ──
+      const nextTimeStr = info.isNextDay
+        ? this.formatTime(
+          (info.tomorrowData || todayData).timings[info.nextPrayer.key]
+        )
+        : this.formatTime(todayData.timings[info.nextPrayer.key]);
+
+      createWidget(widget.TEXT, {
+        ...NEXT_TIME_STYLE,
+        text: nextTimeStr,
+      });
+
+      // ── Progress bar ──
+      let fraction = 0;
+      if (info.prevPrayer) {
+        const elapsed = info.nowMinutes - info.prevPrayer.minutes;
+        const total = info.nextPrayer.minutes - info.prevPrayer.minutes;
+        fraction = total > 0 ? elapsed / total : 0;
+      }
+      createWidget(widget.FILL_RECT, PROGRESS_BG_STYLE);
+      createWidget(widget.FILL_RECT, getProgressFillStyle(fraction));
+
+      // ── Upcoming prayer cells ──
+      this.renderUpcomingCells(todayData, info);
+    },
+
+    renderUpcomingCells(todayData, info) {
+      const cells = [];
+
+      if (info.isNextDay) {
+        // After Isha: show tomorrow's Fajr and Sunrise
+        const tmrw = info.tomorrowData;
+        if (tmrw) {
+          cells.push({ label: "Fajr", time: this.formatTime(tmrw.timings["Fajr"]) });
+          cells.push({ label: "Sunrise", time: this.formatTime(tmrw.timings["Sunrise"]) });
+        }
+      } else {
+        // Show remaining prayers after the next one
+        for (let i = info.nextIndex + 1; i < PRAYER_KEYS.length; i++) {
+          cells.push({
+            label: PRAYER_LABELS[i],
+            time: this.formatTime(todayData.timings[PRAYER_KEYS[i]]),
+          });
+        }
+      }
+
+      let y = CELL_START_Y;
+      for (const cell of cells) {
+        createWidget(widget.FILL_RECT, getCellBgStyle(y));
+        createWidget(widget.TEXT, { ...getCellNameStyle(y), text: cell.label });
+        createWidget(widget.TEXT, { ...getCellTimeStyle(y), text: cell.time });
+        y += CELL_HEIGHT + CELL_GAP;
+      }
+
       // Bottom spacer
-      const lastRowY = PRAYER_START_Y + PRAYER_KEYS.length * PRAYER_ROW_HEIGHT;
       createWidget(widget.FILL_RECT, {
         x: 0,
-        y: lastRowY,
+        y: y,
         w: 1,
         h: BOTTOM_PADDING,
         color: 0x000000,
@@ -257,42 +365,9 @@ Page(
     },
 
     onLocationTap() {
-      // Clear cached data and re-detect location
       localStorage.removeItem("location");
       localStorage.removeItem("prayerData");
       replace({ url: "page/gt/home/index.page" });
-    },
-
-    formatTime(timeStr) {
-      if (!timeStr) return "--:--";
-      return timeStr.replace(/\s*\(.*\)/, "").trim();
-    },
-
-    getCurrentPrayerIndex(todayData) {
-      if (!todayData || !todayData.timings) return -1;
-
-      const time = new Time();
-      const nowMinutes = time.getHours() * 60 + time.getMinutes();
-
-      const prayerMinutes = PRAYER_KEYS.map((key) => {
-        const t = this.formatTime(todayData.timings[key]);
-        const parts = t.split(":");
-        return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-      });
-
-      let currentIndex = -1;
-      for (let i = PRAYER_KEYS.length - 1; i >= 0; i--) {
-        if (nowMinutes >= prayerMinutes[i]) {
-          currentIndex = i;
-          break;
-        }
-      }
-
-      if (currentIndex === -1) {
-        currentIndex = 0;
-      }
-
-      return currentIndex;
     },
 
     onDestroy() {
