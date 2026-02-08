@@ -7,22 +7,21 @@ import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
     COLORS,
-    CITY_STYLE,
-    CURRENT_LABEL_STYLE,
-    CURRENT_BG_STYLE,
-    CURRENT_NAME_STYLE,
-    CURRENT_TIME_STYLE,
-    SEPARATOR_STYLE,
+    getCityBgStyle,
+    getCityTextStyle,
     NEXT_LABEL_STYLE,
     NEXT_NAME_STYLE,
     NEXT_TIME_STYLE,
+    getCellBgStyle,
+    getCellNameStyle,
+    getCellTimeStyle,
     NO_DATA_STYLE,
 } from "zosLoader:./index.[pf].layout.js";
 
 const logger = Logger.getLogger("prayer-widget");
 
-const PRAYER_KEYS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
-const PRAYER_LABELS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+const PRAYER_KEYS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+const PRAYER_LABELS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 SecondaryWidget({
     state: {
@@ -87,6 +86,26 @@ SecondaryWidget({
                         if (todayEntry) {
                             this.state.prayerData = todayEntry;
                         }
+
+                        // Also try to load tomorrow's data
+                        const tomorrow = new Date(
+                            time.getFullYear(),
+                            time.getMonth() - 1,
+                            time.getDate() + 1
+                        );
+                        const tDay = String(tomorrow.getDate()).padStart(2, "0");
+                        const tMonth = String(tomorrow.getMonth() + 1).padStart(2, "0");
+                        const tYear = String(tomorrow.getFullYear());
+                        const tomorrowStr = tDay + "-" + tMonth + "-" + tYear;
+
+                        if (cached.month === tMonth && cached.year === tYear) {
+                            const tomorrowEntry = cached.data.find(
+                                (d) => d.date && d.date.gregorian && d.date.gregorian.date === tomorrowStr
+                            );
+                            if (tomorrowEntry) {
+                                this.state.tomorrowData = tomorrowEntry;
+                            }
+                        }
                     }
                 }
             }
@@ -117,8 +136,7 @@ SecondaryWidget({
 
     renderWidget() {
         const data = this.state.prayerData;
-        const currentIndex = this.getCurrentPrayerIndex(data);
-        const nextIndex = this.getNextPrayerIndex(currentIndex);
+        const info = this.getNextPrayerInfo(data);
 
         // Tappable background to open app
         const bg = createWidget(widget.FILL_RECT, {
@@ -133,49 +151,76 @@ SecondaryWidget({
             push({ url: "page/gt/home/index.page" });
         });
 
-        // City name
+        // ── City pill ──
+        const cityName = this.state.location.city;
+        createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length));
         createWidget(widget.TEXT, {
-            ...CITY_STYLE,
-            text: this.state.location.city,
+            ...getCityTextStyle(cityName.length),
+            text: cityName,
         });
 
-        // ── Current Prayer ──
-        createWidget(widget.TEXT, {
-            ...CURRENT_LABEL_STYLE,
-            text: "Current Prayer",
-        });
-
-        createWidget(widget.FILL_RECT, CURRENT_BG_STYLE);
-
-        createWidget(widget.TEXT, {
-            ...CURRENT_NAME_STYLE,
-            text: PRAYER_LABELS[currentIndex],
-        });
-
-        createWidget(widget.TEXT, {
-            ...CURRENT_TIME_STYLE,
-            text: this.formatTime(data.timings[PRAYER_KEYS[currentIndex]]),
-        });
-
-        // ── Separator ──
-        createWidget(widget.FILL_RECT, SEPARATOR_STYLE);
-
-        // ── Next Prayer ──
-        const nextLabel = nextIndex === currentIndex ? "Next (tomorrow)" : "Next Prayer";
+        // ── "Next prayer" label ──
         createWidget(widget.TEXT, {
             ...NEXT_LABEL_STYLE,
-            text: nextLabel,
+            text: "Next prayer",
         });
 
+        // ── Next prayer name ──
         createWidget(widget.TEXT, {
             ...NEXT_NAME_STYLE,
-            text: PRAYER_LABELS[nextIndex],
+            text: info.nextPrayer.label,
         });
+
+        // ── Large next prayer time ──
+        const nextTimeStr = info.isNextDay
+            ? this.formatTime(
+                (this.state.tomorrowData || data).timings[info.nextPrayer.key]
+            )
+            : this.formatTime(data.timings[info.nextPrayer.key]);
 
         createWidget(widget.TEXT, {
             ...NEXT_TIME_STYLE,
-            text: this.formatTime(data.timings[PRAYER_KEYS[nextIndex]]),
+            text: nextTimeStr,
         });
+
+        // ── Upcoming prayer cell (one row) ──
+        const upcoming = this.getUpcomingPrayer(data, info);
+        if (upcoming) {
+            createWidget(widget.FILL_RECT, getCellBgStyle());
+            createWidget(widget.TEXT, { ...getCellNameStyle(), text: upcoming.label });
+            createWidget(widget.TEXT, { ...getCellTimeStyle(), text: upcoming.time });
+        }
+    },
+
+    getUpcomingPrayer(todayData, info) {
+        if (info.isNextDay) {
+            // After Isha → next is tomorrow's Fajr, upcoming is tomorrow's Sunrise
+            const tmrw = this.state.tomorrowData;
+            if (tmrw) {
+                return { label: "Sunrise", time: this.formatTime(tmrw.timings["Sunrise"]) };
+            }
+            return null;
+        }
+
+        // When next is Isha → upcoming is tomorrow's Fajr
+        if (info.nextPrayer.key === "Isha") {
+            const tmrw = this.state.tomorrowData;
+            if (tmrw) {
+                return { label: "Fajr", time: this.formatTime(tmrw.timings["Fajr"]) };
+            }
+            return null;
+        }
+
+        // Otherwise show the prayer after next
+        const afterNextIndex = info.nextIndex + 1;
+        if (afterNextIndex < PRAYER_KEYS.length) {
+            return {
+                label: PRAYER_LABELS[afterNextIndex],
+                time: this.formatTime(todayData.timings[PRAYER_KEYS[afterNextIndex]]),
+            };
+        }
+
+        return null;
     },
 
     formatTime(timeStr) {
@@ -183,31 +228,44 @@ SecondaryWidget({
         return timeStr.replace(/\s*\(.*\)/, "").trim();
     },
 
-    getCurrentPrayerIndex(todayData) {
-        if (!todayData || !todayData.timings) return 0;
+    timeToMinutes(timeStr) {
+        const t = this.formatTime(timeStr);
+        const parts = t.split(":");
+        return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    },
+
+    getNextPrayerInfo(todayData) {
+        if (!todayData || !todayData.timings) {
+            return { nextIndex: 0, nextPrayer: { key: "Fajr", label: "Fajr" }, isNextDay: false };
+        }
 
         const time = new Time();
         const nowMinutes = time.getHours() * 60 + time.getMinutes();
 
-        const prayerMinutes = PRAYER_KEYS.map((key) => {
-            const t = this.formatTime(todayData.timings[key]);
-            const parts = t.split(":");
-            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-        });
+        const prayers = PRAYER_KEYS.map((key, i) => ({
+            key,
+            label: PRAYER_LABELS[i],
+            minutes: this.timeToMinutes(todayData.timings[key]),
+        }));
 
-        let currentIndex = 0;
-        for (let i = PRAYER_KEYS.length - 1; i >= 0; i--) {
-            if (nowMinutes >= prayerMinutes[i]) {
-                currentIndex = i;
-                break;
+        // Find next prayer (first one whose time is in the future)
+        for (let i = 0; i < prayers.length; i++) {
+            if (nowMinutes < prayers[i].minutes) {
+                return {
+                    nextIndex: i,
+                    nextPrayer: prayers[i],
+                    nowMinutes,
+                    isNextDay: false,
+                };
             }
         }
 
-        return currentIndex;
-    },
-
-    getNextPrayerIndex(currentIndex) {
-        if (currentIndex >= PRAYER_KEYS.length - 1) return 0; // Isha → Fajr
-        return currentIndex + 1;
+        // All prayers passed → next is tomorrow's Fajr
+        return {
+            nextIndex: 0,
+            nextPrayer: { key: "Fajr", label: "Fajr" },
+            nowMinutes,
+            isNextDay: true,
+        };
     },
 });
