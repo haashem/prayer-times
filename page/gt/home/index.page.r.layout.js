@@ -166,3 +166,11 @@ export const NO_DATA_STYLE = {
   align_v: align.CENTER_V,
   text_style: text_style.WRAP,
 };
+
+// ── Help Icon ──
+export const HELP_ICON_STYLE = {
+  x: (DEVICE_WIDTH - px(32)) / 2,
+  y: 0, // set dynamically
+  w: px(32),
+  h: px(32),
+};

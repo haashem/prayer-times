@@ -1,7 +1,8 @@
 import { createWidget, deleteWidget, widget, align, text_style, prop, event } from "@zos/ui";
+import { push } from "@zos/router";
 import { Time } from "@zos/sensor";
 import { localStorage } from "@zos/storage";
-import { log as Logger } from "@zos/utils";
+import { log as Logger, px } from "@zos/utils";
 import { BasePage } from "@zeppos/zml/base-page";
 import {
   DEVICE_WIDTH,
@@ -21,6 +22,7 @@ import {
   getCellTimeStyle,
   BOTTOM_PADDING,
   NO_DATA_STYLE,
+  HELP_ICON_STYLE,
 } from "zosLoader:./index.page.[pf].layout.js";
 
 const logger = Logger.getLogger("prayer-times");
@@ -402,6 +404,16 @@ Page(
         color: 0x000000,
         alpha: 0,
       }));
+
+      // Help icon
+      const helpIcon = this.trackWidget(createWidget(widget.IMG, {
+        ...HELP_ICON_STYLE,
+        y: y + px(20),
+        src: "image/ic_QA_32px.png",
+      }));
+      helpIcon.addEventListener(event.CLICK_DOWN, () => {
+        push({ url: "page/gt/help/index.page" });
+      });
     },
 
     onLocationTap() {

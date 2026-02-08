@@ -29,7 +29,8 @@
       "module": {
         "page": {
           "pages": [
-            "page/gt/home/index.page"
+            "page/gt/home/index.page",
+            "page/gt/help/index.page"
           ]
         },
         "app-side": {
