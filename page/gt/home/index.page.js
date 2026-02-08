@@ -374,6 +374,15 @@ Page(
             time: this.formatTime(todayData.timings[PRAYER_KEYS[i]]),
           });
         }
+
+        // When next is Isha, append tomorrow's Fajr & Sunrise
+        if (info.nextPrayer.key === "Isha") {
+          const tmrw = this.loadTomorrowData();
+          if (tmrw) {
+            cells.push({ label: "Fajr", time: this.formatTime(tmrw.timings["Fajr"]) });
+            cells.push({ label: "Sunrise", time: this.formatTime(tmrw.timings["Sunrise"]) });
+          }
+        }
       }
 
       let y = CELL_START_Y;
