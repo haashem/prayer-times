@@ -24,40 +24,38 @@ export const COLORS = {
 const SIDE_PADDING = px(60);
 const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 
-// ── Location Icon ──
-const ICON_SIZE = px(48);
+// ── City Header ──
 const CITY_Y = px(36);
-const CITY_H = px(60);
-const CITY_FONT_SIZE = px(48);
-const ICON_GAP = px(10);
+const CITY_H = px(56);
+const CITY_FONT_SIZE = px(42);
+const CITY_PAD_H = px(24); // horizontal padding inside pill
 
-export function getCityTextStyle(textLen) {
+export function getCityBgStyle(textLen) {
   const textW = Math.ceil(textLen * CITY_FONT_SIZE * 0.55);
-  const groupW = textW + ICON_GAP + ICON_SIZE;
-  const startX = (DEVICE_WIDTH - groupW) / 2;
+  const pillW = textW + CITY_PAD_H * 2;
   return {
-    x: startX,
+    x: (DEVICE_WIDTH - pillW) / 2,
     y: CITY_Y,
-    w: textW,
+    w: pillW,
     h: CITY_H,
-    text_size: CITY_FONT_SIZE,
-    color: COLORS.title,
-    align_h: align.LEFT,
-    align_v: align.CENTER_V,
-    text_style: text_style.ELLIPSIS,
+    radius: CITY_H / 2,
+    color: COLORS.cellBg,
   };
 }
 
-export function getLocationIconStyle(textLen) {
+export function getCityTextStyle(textLen) {
   const textW = Math.ceil(textLen * CITY_FONT_SIZE * 0.55);
-  const groupW = textW + ICON_GAP + ICON_SIZE;
-  const startX = (DEVICE_WIDTH - groupW) / 2;
+  const pillW = textW + CITY_PAD_H * 2;
   return {
-    src: "image/location.png",
-    x: startX + textW + ICON_GAP,
-    y: CITY_Y + (CITY_H - ICON_SIZE) / 2,
-    w: ICON_SIZE,
-    h: ICON_SIZE,
+    x: (DEVICE_WIDTH - pillW) / 2,
+    y: CITY_Y,
+    w: pillW,
+    h: CITY_H,
+    text_size: CITY_FONT_SIZE,
+    color: COLORS.title,
+    align_h: align.CENTER_H,
+    align_v: align.CENTER_V,
+    text_style: text_style.ELLIPSIS,
   };
 }
 

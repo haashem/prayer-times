@@ -1,6 +1,5 @@
-import { createWidget, widget, align, text_style, prop, event } from "@zos/ui";
+import { createWidget, deleteWidget, widget, align, text_style, prop, event } from "@zos/ui";
 import { Time } from "@zos/sensor";
-import { replace } from "@zos/router";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
 import { BasePage } from "@zeppos/zml/base-page";
@@ -15,7 +14,7 @@ import {
   PROGRESS_BG_STYLE,
   getProgressFillStyle,
   getCityTextStyle,
-  getLocationIconStyle,
+  getCityBgStyle,
   CELL_START_Y,
   CELL_HEIGHT,
   CELL_GAP,
@@ -36,6 +35,7 @@ Page(
     state: {
       location: null,
       prayerData: null,
+      loadingWidget: null,
     },
 
     onInit() {
@@ -137,11 +137,30 @@ Page(
     },
 
     showLoading(message) {
-      createWidget(widget.TEXT, {
+      this.clearLoading();
+      this.state.loadingBg = createWidget(widget.FILL_RECT, {
+        x: 0,
+        y: 0,
+        w: DEVICE_WIDTH,
+        h: DEVICE_HEIGHT,
+        color: COLORS.background,
+      });
+      this.state.loadingWidget = createWidget(widget.TEXT, {
         ...NO_DATA_STYLE,
         text: message,
         color: COLORS.subtitle,
       });
+    },
+
+    clearLoading() {
+      if (this.state.loadingBg) {
+        deleteWidget(this.state.loadingBg);
+        this.state.loadingBg = null;
+      }
+      if (this.state.loadingWidget) {
+        deleteWidget(this.state.loadingWidget);
+        this.state.loadingWidget = null;
+      }
     },
 
     detectLocation() {
@@ -155,12 +174,16 @@ Page(
               longitude: data.result.longitude,
               method: 3,
             };
+            this.state.location = loc;
             localStorage.setItem("location", JSON.stringify(loc));
             localStorage.removeItem("prayerData");
-            replace({ url: "page/gt/home/index.page" });
+
+            this.showLoading("Loading prayer times...");
+            this.fetchFromApi();
           } else {
             logger.error("Location detection failed");
-            replace({ url: "page/gt/home/index.page" });
+            this.clearLoading();
+            this.showLoading("Location detection failed");
           }
         })
         .catch((err) => {
@@ -191,9 +214,17 @@ Page(
               JSON.stringify({ month, year, data: data.result.data })
             );
 
-            replace({ url: "page/gt/home/index.page" });
+            this.clearLoading();
+            const todayData = this.loadTodayData();
+            if (todayData) {
+              this.renderUI(todayData);
+            } else {
+              this.showLoading("No data for today");
+            }
           } else {
             logger.error("API response invalid");
+            this.clearLoading();
+            this.showLoading("Failed to load data");
           }
         })
         .catch((err) => {
@@ -266,11 +297,9 @@ Page(
       const cityName = this.state.location.city;
       const info = this.getNextPrayerInfo(todayData);
 
-      // ── Header: City + Location Icon ──
-      const locIcon = createWidget(widget.IMG, {
-        ...getLocationIconStyle(cityName.length),
-      });
-      locIcon.addEventListener(event.CLICK_DOWN, () => this.onLocationTap());
+      // ── Header: City with pill background ──
+      const cityBg = createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length));
+      cityBg.addEventListener(event.CLICK_DOWN, () => this.onLocationTap());
 
       const cityText = createWidget(widget.TEXT, {
         ...getCityTextStyle(cityName.length),
@@ -367,7 +396,8 @@ Page(
     onLocationTap() {
       localStorage.removeItem("location");
       localStorage.removeItem("prayerData");
-      replace({ url: "page/gt/home/index.page" });
+      this.showLoading("Detecting location...");
+      this.detectLocation();
     },
 
     onDestroy() {
