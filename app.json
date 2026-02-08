@@ -36,6 +36,19 @@
         },
         "app-side": {
           "path": "app-side/index"
+        },
+        "secondary-widget": {
+          "widgets": [
+            {
+              "path": "secondary-widget/gt/index",
+              "icon": "icon.png",
+              "preview": "preview.png",
+              "name": "Prayer Times",
+              "runtime": {
+                "type": "js"
+              }
+            }
+          ]
         }
       },
       "platforms": [
