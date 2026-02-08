@@ -15,6 +15,7 @@ export const COLORS = {
   nextTime: 0xffffff,
 
   cellBg: 0x2a4a2a,
+  cellBgPressed: 0x3a6a3a,
   cellName: 0xa89880,
   cellTime: 0xe8dcc8,
   noData: 0xc75050,

@@ -15,6 +15,7 @@ export const COLORS = {
   nextTime: 0xffffff,     // Large next time — white
 
   cellBg: 0x1a3a1a,       // Upcoming cell background
+  cellBgPressed: 0x2a5a2a, // Pressed state
   cellName: 0xa89880,     // Upcoming cell prayer name
   cellTime: 0xe8dcc8,     // Upcoming cell time
   noData: 0xc75050,       // Error

@@ -313,13 +313,31 @@ Page(
 
       // ── Header: City with pill background ──
       const cityBg = this.trackWidget(createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length)));
-      cityBg.addEventListener(event.CLICK_DOWN, () => this.onLocationTap());
 
       const cityText = this.trackWidget(createWidget(widget.TEXT, {
         ...getCityTextStyle(cityName.length),
         text: cityName,
       }));
-      cityText.addEventListener(event.CLICK_DOWN, () => this.onLocationTap());
+
+      // Press feedback + action on release
+      const onCityDown = () => {
+        cityBg.setProperty(prop.MORE, { alpha: 120 });
+        cityText.setProperty(prop.MORE, { alpha: 120 });
+      };
+      const onCityReset = () => {
+        cityBg.setProperty(prop.MORE, { alpha: 255 });
+        cityText.setProperty(prop.MORE, { alpha: 255 });
+      };
+      const onCitySelect = () => {
+        onCityReset();
+        this.onLocationTap();
+      };
+      cityBg.addEventListener(event.CLICK_DOWN, onCityDown);
+      cityBg.addEventListener(event.MOVE, onCityReset);
+      cityBg.addEventListener(event.SELECT, onCitySelect);
+      cityText.addEventListener(event.CLICK_DOWN, onCityDown);
+      cityText.addEventListener(event.MOVE, onCityReset);
+      cityText.addEventListener(event.SELECT, onCitySelect);
 
       // ── "Next prayer" label ──
       this.trackWidget(createWidget(widget.TEXT, {
@@ -412,6 +430,13 @@ Page(
         src: "image/ic_QA_32px.png",
       }));
       helpIcon.addEventListener(event.CLICK_DOWN, () => {
+        helpIcon.setProperty(prop.MORE, { alpha: 120 });
+      });
+      helpIcon.addEventListener(event.MOVE, () => {
+        helpIcon.setProperty(prop.MORE, { alpha: 255 });
+      });
+      helpIcon.addEventListener(event.SELECT, () => {
+        helpIcon.setProperty(prop.MORE, { alpha: 255 });
         push({ url: "page/gt/help/index.page" });
       });
     },
