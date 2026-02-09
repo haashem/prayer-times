@@ -79,6 +79,9 @@ SecondaryWidget({
 
     trackWidget(w) {
         this.state.uiWidgets.push(w);
+        w.addEventListener(event.SELECT, () => {
+            push({ url: "page/gt/home/index.page" });
+        });
         return w;
     },
 
@@ -155,10 +158,6 @@ SecondaryWidget({
             ...NO_DATA_STYLE,
             text: "Tap to set up\nPrayer Times",
         }));
-
-        bg.addEventListener(event.CLICK_DOWN, () => {
-            push({ url: "page/gt/home/index.page" });
-        });
     },
 
     renderWidget() {
@@ -166,7 +165,7 @@ SecondaryWidget({
         const info = this.getNextPrayerInfo(data);
 
         // Tappable background to open app
-        const bg = this.trackWidget(createWidget(widget.FILL_RECT, {
+        this.trackWidget(createWidget(widget.FILL_RECT, {
             x: 0,
             y: 0,
             w: DEVICE_WIDTH,
@@ -174,9 +173,6 @@ SecondaryWidget({
             color: 0x000000,
             alpha: 0,
         }));
-        bg.addEventListener(event.CLICK_DOWN, () => {
-            push({ url: "page/gt/home/index.page" });
-        });
 
         // ── City pill ──
         const cityName = this.state.location.city;
