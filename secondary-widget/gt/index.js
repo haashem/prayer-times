@@ -1,4 +1,4 @@
-import { createWidget, widget, align, text_style, event } from "@zos/ui";
+import { createWidget, deleteWidget, widget, align, text_style, event } from "@zos/ui";
 import { Time } from "@zos/sensor";
 import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
@@ -27,6 +27,7 @@ SecondaryWidget({
     state: {
         location: null,
         prayerData: null,
+        uiWidgets: [],
     },
 
     onInit() {
@@ -52,6 +53,19 @@ SecondaryWidget({
 
     onResume() {
         logger.debug("prayer widget onResume");
+        try {
+            this.clearUI();
+            this.loadData();
+
+            if (!this.state.location || !this.state.prayerData) {
+                this.renderNoData();
+                return;
+            }
+
+            this.renderWidget();
+        } catch (e) {
+            logger.error("Widget onResume error: " + e.message);
+        }
     },
 
     onPause() {
@@ -59,7 +73,20 @@ SecondaryWidget({
     },
 
     onDestroy() {
+        this.clearUI();
         logger.debug("prayer widget onDestroy");
+    },
+
+    trackWidget(w) {
+        this.state.uiWidgets.push(w);
+        return w;
+    },
+
+    clearUI() {
+        for (const w of this.state.uiWidgets) {
+            deleteWidget(w);
+        }
+        this.state.uiWidgets = [];
     },
 
     loadData() {
@@ -115,19 +142,19 @@ SecondaryWidget({
     },
 
     renderNoData() {
-        const bg = createWidget(widget.FILL_RECT, {
+        const bg = this.trackWidget(createWidget(widget.FILL_RECT, {
             x: 0,
             y: 0,
             w: DEVICE_WIDTH,
             h: DEVICE_HEIGHT,
             color: 0x000000,
             alpha: 0,
-        });
+        }));
 
-        createWidget(widget.TEXT, {
+        this.trackWidget(createWidget(widget.TEXT, {
             ...NO_DATA_STYLE,
             text: "Tap to set up\nPrayer Times",
-        });
+        }));
 
         bg.addEventListener(event.CLICK_DOWN, () => {
             push({ url: "page/gt/home/index.page" });
@@ -139,37 +166,37 @@ SecondaryWidget({
         const info = this.getNextPrayerInfo(data);
 
         // Tappable background to open app
-        const bg = createWidget(widget.FILL_RECT, {
+        const bg = this.trackWidget(createWidget(widget.FILL_RECT, {
             x: 0,
             y: 0,
             w: DEVICE_WIDTH,
             h: DEVICE_HEIGHT,
             color: 0x000000,
             alpha: 0,
-        });
+        }));
         bg.addEventListener(event.CLICK_DOWN, () => {
             push({ url: "page/gt/home/index.page" });
         });
 
         // ── City pill ──
         const cityName = this.state.location.city;
-        createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length));
-        createWidget(widget.TEXT, {
+        this.trackWidget(createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length)));
+        this.trackWidget(createWidget(widget.TEXT, {
             ...getCityTextStyle(cityName.length),
             text: cityName,
-        });
+        }));
 
         // ── "Next prayer" label ──
-        createWidget(widget.TEXT, {
+        this.trackWidget(createWidget(widget.TEXT, {
             ...NEXT_LABEL_STYLE,
             text: "Next prayer",
-        });
+        }));
 
         // ── Next prayer name ──
-        createWidget(widget.TEXT, {
+        this.trackWidget(createWidget(widget.TEXT, {
             ...NEXT_NAME_STYLE,
             text: info.nextPrayer.label,
-        });
+        }));
 
         // ── Large next prayer time ──
         const nextTimeStr = info.isNextDay
@@ -178,17 +205,17 @@ SecondaryWidget({
             )
             : this.formatTime(data.timings[info.nextPrayer.key]);
 
-        createWidget(widget.TEXT, {
+        this.trackWidget(createWidget(widget.TEXT, {
             ...NEXT_TIME_STYLE,
             text: nextTimeStr,
-        });
+        }));
 
         // ── Upcoming prayer cell (one row) ──
         const upcoming = this.getUpcomingPrayer(data, info);
         if (upcoming) {
-            createWidget(widget.FILL_RECT, getCellBgStyle());
-            createWidget(widget.TEXT, { ...getCellNameStyle(), text: upcoming.label });
-            createWidget(widget.TEXT, { ...getCellTimeStyle(), text: upcoming.time });
+            this.trackWidget(createWidget(widget.FILL_RECT, getCellBgStyle()));
+            this.trackWidget(createWidget(widget.TEXT, { ...getCellNameStyle(), text: upcoming.label }));
+            this.trackWidget(createWidget(widget.TEXT, { ...getCellTimeStyle(), text: upcoming.time }));
         }
     },
 
