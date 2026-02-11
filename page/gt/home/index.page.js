@@ -23,6 +23,7 @@ import {
   BOTTOM_PADDING,
   NO_DATA_STYLE,
   HELP_ICON_STYLE,
+  QIBLA_ICON_STYLE,
 } from "zosLoader:./index.page.[pf].layout.js";
 
 const logger = Logger.getLogger("prayer-times");
@@ -422,6 +423,23 @@ Page(
         color: 0x000000,
         alpha: 0,
       }));
+
+      // Qibla icon
+      const qiblaIcon = this.trackWidget(createWidget(widget.IMG, {
+        ...QIBLA_ICON_STYLE,
+        y: y + px(20),
+        src: "image/ic_qibla_40px.png",
+      }));
+      qiblaIcon.addEventListener(event.CLICK_DOWN, () => {
+        qiblaIcon.setProperty(prop.MORE, { alpha: 120 });
+      });
+      qiblaIcon.addEventListener(event.MOVE, () => {
+        qiblaIcon.setProperty(prop.MORE, { alpha: 255 });
+      });
+      qiblaIcon.addEventListener(event.SELECT, () => {
+        qiblaIcon.setProperty(prop.MORE, { alpha: 255 });
+        push({ url: "page/gt/qibla/index.page" });
+      });
 
       // Help icon
       const helpIcon = this.trackWidget(createWidget(widget.IMG, {

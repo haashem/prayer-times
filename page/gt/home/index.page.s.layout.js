@@ -170,7 +170,15 @@ export const NO_DATA_STYLE = {
 
 // ── Help Icon ──
 export const HELP_ICON_STYLE = {
-  x: (DEVICE_WIDTH - px(32)) / 2,
+  x: DEVICE_WIDTH / 2 + px(14),
+  y: 0, // set dynamically
+  w: px(42),
+  h: px(42),
+};
+
+// ── Qibla Icon ──
+export const QIBLA_ICON_STYLE = {
+  x: DEVICE_WIDTH / 2 - px(14) - px(42),
   y: 0, // set dynamically
   w: px(42),
   h: px(42),
