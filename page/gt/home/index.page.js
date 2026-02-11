@@ -138,6 +138,7 @@ Page(
     },
 
     showLoading(message) {
+      this.clearUI();
       this.clearLoading();
       this.state.loadingBg = createWidget(widget.FILL_RECT, {
         x: 0,
