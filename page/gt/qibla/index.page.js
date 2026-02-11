@@ -6,12 +6,10 @@ import { log as Logger } from "@zos/utils";
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
-    COLORS,
     COMPASS_RING_STYLE,
     ARROW_STYLE,
     KAABA_DOT_STYLE,
     DOT_ORBIT_RADIUS,
-    DIRECTION_STYLE,
     CALIBRATE_STYLE,
     NO_DATA_STYLE,
 } from "zosLoader:./index.page.[pf].layout.js";
@@ -33,7 +31,6 @@ Page({
         ringWidget: null,
         arrowWidget: null,
         dotWidget: null,
-        directionWidget: null,
         calibrateWidget: null,
         isCalibrated: false,
         facingQibla: false,
@@ -195,13 +192,6 @@ Page({
             });
         }
 
-        // Update direction label
-        if (this.state.directionWidget) {
-            this.state.directionWidget.setProperty(prop.MORE, {
-                text: this.getDirectionLabel(this.state.qiblaBearing),
-            });
-        }
-
         // Gentle vibration when facing Qibla (within ±5°)
         const diff = Math.abs(arrowAngle <= 180 ? arrowAngle : 360 - arrowAngle);
         const isFacing = diff < 5;
@@ -218,12 +208,6 @@ Page({
             }
         }
         this.state.facingQibla = isFacing;
-    },
-
-    getDirectionLabel(bearing) {
-        const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-        const index = Math.round(bearing / 45) % 8;
-        return dirs[index];
     },
 
     // ── Render ──
@@ -290,14 +274,6 @@ Page({
             createWidget(widget.IMG, {
                 ...ARROW_STYLE,
                 angle: 0,
-            })
-        );
-
-        // Direction label
-        this.state.directionWidget = this.trackWidget(
-            createWidget(widget.TEXT, {
-                ...DIRECTION_STYLE,
-                text: this.getDirectionLabel(this.state.qiblaBearing),
             })
         );
     },

@@ -7,10 +7,6 @@ export const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = getDeviceInfo();
 // ── Color Palette (matches home page) ──
 export const COLORS = {
     background: 0x000000,
-    title: 0xd4a843,       // Gold
-    subtitle: 0xa89880,    // Warm sandstone
-    heading: 0xe8dcc8,     // Warm ivory
-    degrees: 0xffffff,     // White
     noData: 0xc75050,      // Error
     calibrate: 0xd4a843,   // Gold accent
 };
@@ -51,32 +47,6 @@ export const KAABA_DOT_STYLE = {
 
 // Radius at which kaaba dot orbits
 export const DOT_ORBIT_RADIUS = px(195);
-
-// ── Degree Text (below compass) ──
-export const DEGREE_STYLE = {
-    x: 0,
-    y: DEVICE_HEIGHT - px(90),
-    w: DEVICE_WIDTH,
-    h: px(40),
-    color: COLORS.degrees,
-    text_size: px(34),
-    align_h: align.CENTER_H,
-    align_v: align.CENTER_V,
-    text_style: text_style.ELLIPSIS,
-};
-
-// ── Direction Label (below degrees) ──
-export const DIRECTION_STYLE = {
-    x: 0,
-    y: DEVICE_HEIGHT - px(56),
-    w: DEVICE_WIDTH,
-    h: px(30),
-    color: COLORS.subtitle,
-    text_size: px(24),
-    align_h: align.CENTER_H,
-    align_v: align.CENTER_V,
-    text_style: text_style.ELLIPSIS,
-};
 
 // ── Calibration Message ──
 export const CALIBRATE_STYLE = {

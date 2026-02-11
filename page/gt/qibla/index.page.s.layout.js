@@ -52,32 +52,6 @@ export const KAABA_DOT_STYLE = {
 // Radius at which kaaba dot orbits
 export const DOT_ORBIT_RADIUS = px(155);
 
-// ── Degree Text (below compass) ──
-export const DEGREE_STYLE = {
-    x: 0,
-    y: DEVICE_HEIGHT - px(72),
-    w: DEVICE_WIDTH,
-    h: px(34),
-    color: COLORS.degrees,
-    text_size: px(28),
-    align_h: align.CENTER_H,
-    align_v: align.CENTER_V,
-    text_style: text_style.ELLIPSIS,
-};
-
-// ── Direction Label (below degrees) ──
-export const DIRECTION_STYLE = {
-    x: 0,
-    y: DEVICE_HEIGHT - px(42),
-    w: DEVICE_WIDTH,
-    h: px(26),
-    color: COLORS.subtitle,
-    text_size: px(20),
-    align_h: align.CENTER_H,
-    align_v: align.CENTER_V,
-    text_style: text_style.ELLIPSIS,
-};
-
 // ── Calibration Message ──
 export const CALIBRATE_STYLE = {
     x: px(24),
