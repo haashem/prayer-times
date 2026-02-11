@@ -1,6 +1,6 @@
 import { createWidget, deleteWidget, widget, prop, event } from "@zos/ui";
 import { back } from "@zos/router";
-import { Compass } from "@zos/sensor";
+import { Compass, Vibrator, VIBRATOR_SCENE_SHORT_MIDDLE } from "@zos/sensor";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
 import {
@@ -25,6 +25,7 @@ const KAABA_LON = 39.8262;
 Page({
     state: {
         compass: null,
+        vibrate: null,
         location: null,
         qiblaBearing: 0,
         uiWidgets: [],
@@ -35,6 +36,8 @@ Page({
         directionWidget: null,
         calibrateWidget: null,
         isCalibrated: false,
+        facingQibla: false,
+        lastVibrateTime: 0,
     },
 
     onInit() {
@@ -67,6 +70,13 @@ Page({
 
         // Render UI
         this.renderCompass();
+
+        // Create vibration motor
+        try {
+            this.state.vibrate = new Vibrator();
+        } catch (e) {
+            logger.error("Vibrate init error: " + e.message);
+        }
 
         // Start compass
         this.startCompass();
@@ -191,6 +201,23 @@ Page({
                 text: this.getDirectionLabel(this.state.qiblaBearing),
             });
         }
+
+        // Gentle vibration when facing Qibla (within ±5°)
+        const diff = Math.abs(arrowAngle <= 180 ? arrowAngle : 360 - arrowAngle);
+        const isFacing = diff < 5;
+
+        if (isFacing && !this.state.facingQibla) {
+            const now = Date.now();
+            if (now - this.state.lastVibrateTime > 2000) {
+                this.state.lastVibrateTime = now;
+                if (this.state.vibrate) {
+                    this.state.vibrate.stop();
+                    this.state.vibrate.setMode(VIBRATOR_SCENE_SHORT_LIGHT);
+                    this.state.vibrate.start();
+                }
+            }
+        }
+        this.state.facingQibla = isFacing;
     },
 
     getDirectionLabel(bearing) {
@@ -286,6 +313,9 @@ Page({
 
     onDestroy() {
         this.stopCompass();
+        if (this.state.vibrate) {
+            this.state.vibrate.stop();
+        }
         this.clearUI();
         logger.debug("qibla page onDestroy");
     },
