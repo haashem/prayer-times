@@ -11,7 +11,6 @@ import {
     ARROW_STYLE,
     KAABA_DOT_STYLE,
     DOT_ORBIT_RADIUS,
-    DEGREE_STYLE,
     DIRECTION_STYLE,
     CALIBRATE_STYLE,
     NO_DATA_STYLE,
@@ -33,7 +32,6 @@ Page({
         ringWidget: null,
         arrowWidget: null,
         dotWidget: null,
-        degreeWidget: null,
         directionWidget: null,
         calibrateWidget: null,
         isCalibrated: false,
@@ -187,13 +185,6 @@ Page({
             });
         }
 
-        // Update degree text
-        if (this.state.degreeWidget) {
-            this.state.degreeWidget.setProperty(prop.MORE, {
-                text: `${Math.round(this.state.qiblaBearing)}°`,
-            });
-        }
-
         // Update direction label
         if (this.state.directionWidget) {
             this.state.directionWidget.setProperty(prop.MORE, {
@@ -272,14 +263,6 @@ Page({
             createWidget(widget.IMG, {
                 ...ARROW_STYLE,
                 angle: 0,
-            })
-        );
-
-        // Degree text
-        this.state.degreeWidget = this.trackWidget(
-            createWidget(widget.TEXT, {
-                ...DEGREE_STYLE,
-                text: `${Math.round(this.state.qiblaBearing)}°`,
             })
         );
 
