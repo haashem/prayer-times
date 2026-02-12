@@ -170,16 +170,66 @@ export const NO_DATA_STYLE = {
 
 // ── Help Icon ──
 export const HELP_ICON_STYLE = {
-  x: DEVICE_WIDTH / 2 + px(14),
+  x: DEVICE_WIDTH / 2 - px(21),
   y: 0, // set dynamically
   w: px(42),
   h: px(42),
 };
 
-// ── Qibla Icon ──
-export const QIBLA_ICON_STYLE = {
-  x: DEVICE_WIDTH / 2 - px(14) - px(42),
-  y: 0, // set dynamically
-  w: px(42),
-  h: px(42),
+// ── Qibla Compass (page 1) ──
+const RING_SIZE = px(370);
+export const COMPASS_RING_STYLE = {
+  x: (DEVICE_WIDTH - RING_SIZE) / 2,
+  y: (DEVICE_HEIGHT - RING_SIZE) / 2,
+  w: RING_SIZE,
+  h: RING_SIZE,
+  src: "image/compass_ring.png",
+};
+
+const ARROW_SIZE = px(80);
+export const ARROW_STYLE = {
+  x: (DEVICE_WIDTH - ARROW_SIZE) / 2,
+  y: (DEVICE_HEIGHT - ARROW_SIZE) / 2,
+  w: ARROW_SIZE,
+  h: ARROW_SIZE,
+  center_x: ARROW_SIZE / 2,
+  center_y: ARROW_SIZE / 2,
+  src: "image/qibla_arrow.png",
+};
+
+const DOT_SIZE = px(22);
+export const KAABA_DOT_STYLE = {
+  x: (DEVICE_WIDTH - DOT_SIZE) / 2,
+  y: (DEVICE_HEIGHT - DOT_SIZE) / 2,
+  w: DOT_SIZE,
+  h: DOT_SIZE,
+  center_x: DOT_SIZE / 2,
+  center_y: DOT_SIZE / 2,
+  src: "image/kaaba_dot.png",
+};
+
+export const DOT_ORBIT_RADIUS = px(155);
+
+export const CALIBRATE_STYLE = {
+  x: px(24),
+  y: DEVICE_HEIGHT / 2 - px(34),
+  w: DEVICE_WIDTH - px(48),
+  h: px(68),
+  color: COLORS.title,
+  text_size: px(24),
+  align_h: align.CENTER_H,
+  align_v: align.CENTER_V,
+  text_style: text_style.WRAP,
+};
+
+export const QIBLA_NO_DATA_STYLE = {
+  x: px(24),
+  y: DEVICE_HEIGHT / 2 - px(30),
+  w: DEVICE_WIDTH - px(48),
+  h: px(80),
+  color: COLORS.noData,
+  text_size: px(26),
+  align_h: align.CENTER_H,
+  align_v: align.CENTER_V,
+  text_style: text_style.WRAP,
 };

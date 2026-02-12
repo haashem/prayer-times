@@ -1,9 +1,11 @@
-import { createWidget, deleteWidget, widget, align, text_style, prop, event } from "@zos/ui";
+import { createWidget, deleteWidget, widget, prop, event } from "@zos/ui";
 import { push } from "@zos/router";
+import { setScrollMode, SCROLL_MODE_SWIPER_HORIZONTAL } from "@zos/page";
 import { Time } from "@zos/sensor";
 import { localStorage } from "@zos/storage";
 import { log as Logger, px } from "@zos/utils";
 import { BasePage } from "@zeppos/zml/base-page";
+import { createQiblaCompass } from "./qibla";
 import {
   DEVICE_WIDTH,
   DEVICE_HEIGHT,
@@ -23,7 +25,6 @@ import {
   BOTTOM_PADDING,
   NO_DATA_STYLE,
   HELP_ICON_STYLE,
-  QIBLA_ICON_STYLE,
 } from "zosLoader:./index.page.[pf].layout.js";
 
 const logger = Logger.getLogger("prayer-times");
@@ -38,6 +39,11 @@ Page(
       prayerData: null,
       loadingWidget: null,
       uiWidgets: [],
+      // View containers for horizontal swipe
+      prayerContainer: null,
+      qiblaContainer: null,
+      // Qibla compass module
+      qibla: null,
     },
 
     onInit() {
@@ -47,12 +53,53 @@ Page(
     build() {
       logger.debug("prayer-times page build");
 
-      createWidget(widget.PAGE_SCROLLBAR);
+      // Enable horizontal swipe between 2 pages
+      setScrollMode({
+        mode: SCROLL_MODE_SWIPER_HORIZONTAL,
+        options: {
+          width: DEVICE_WIDTH,
+          count: 2,
+          modeParams: {
+            on_page: (pageIndex) => {
+              if (!this.state.qibla) return;
+              if (pageIndex === 1) {
+                this.state.qibla.startCompass();
+              } else {
+                this.state.qibla.stopCompass();
+              }
+            },
+          },
+        },
+      });
+
+      // Page 0: Prayer Times (vertically scrollable)
+      this.state.prayerContainer = createWidget(widget.VIEW_CONTAINER, {
+        x: 0,
+        y: 0,
+        w: DEVICE_WIDTH,
+        h: DEVICE_HEIGHT,
+        scroll_enable: 1,
+        page: 0,
+      });
+
+      // Page 1: Qibla Compass
+      this.state.qiblaContainer = createWidget(widget.VIEW_CONTAINER, {
+        x: 0,
+        y: 0,
+        w: DEVICE_WIDTH,
+        h: DEVICE_HEIGHT,
+        scroll_enable: 0,
+        page: 1,
+      });
+
+      // Create qibla compass module
+      this.state.qibla = createQiblaCompass(this.state.qiblaContainer);
 
       this.loadLocation();
 
       if (!this.state.location) {
         this.showLoading("Detecting location...");
+        this.state.qibla.build(null);
         this.detectLocation();
         return;
       }
@@ -64,6 +111,9 @@ Page(
         this.showLoading("Loading prayer times...");
         this.fetchFromApi();
       }
+
+      // Build Qibla compass UI (sensor starts lazily on swipe)
+      this.state.qibla.build(this.state.location);
     },
 
     loadLocation() {
@@ -141,14 +191,15 @@ Page(
     showLoading(message) {
       this.clearUI();
       this.clearLoading();
-      this.state.loadingBg = createWidget(widget.FILL_RECT, {
+      const container = this.state.prayerContainer;
+      this.state.loadingBg = container.createWidget(widget.FILL_RECT, {
         x: 0,
         y: 0,
         w: DEVICE_WIDTH,
         h: DEVICE_HEIGHT,
         color: COLORS.background,
       });
-      this.state.loadingWidget = createWidget(widget.TEXT, {
+      this.state.loadingWidget = container.createWidget(widget.TEXT, {
         ...NO_DATA_STYLE,
         text: message,
         color: COLORS.subtitle,
@@ -183,6 +234,9 @@ Page(
 
             this.showLoading("Loading prayer times...");
             this.fetchFromApi();
+
+            // Build Qibla now that we have location
+            this.state.qibla.build(this.state.location);
           } else {
             logger.error("Location detection failed");
             this.clearLoading();
@@ -252,14 +306,12 @@ Page(
       const time = new Time();
       const nowMinutes = time.getHours() * 60 + time.getMinutes();
 
-      // Build array of { key, label, minutes } for today
       const prayers = PRAYER_KEYS.map((key, i) => ({
         key,
         label: PRAYER_LABELS[i],
         minutes: this.timeToMinutes(todayData.timings[key]),
       }));
 
-      // Find next prayer (first one whose time is in the future)
       for (let i = 0; i < prayers.length; i++) {
         if (nowMinutes < prayers[i].minutes) {
           return {
@@ -273,19 +325,18 @@ Page(
         }
       }
 
-      // All prayers passed → next is tomorrow's Fajr
       const tomorrowData = this.loadTomorrowData();
       const tomorrowFajr = tomorrowData
         ? this.timeToMinutes(tomorrowData.timings["Fajr"])
         : prayers[0].minutes;
 
       return {
-        nextIndex: PRAYER_KEYS.length, // past all today
+        nextIndex: PRAYER_KEYS.length,
         prevIndex: prayers.length - 1,
         nextPrayer: {
           key: "Fajr",
           label: "Fajr",
-          minutes: tomorrowFajr + 24 * 60, // offset for math
+          minutes: tomorrowFajr + 24 * 60,
         },
         prevPrayer: prayers[prayers.length - 1],
         nowMinutes,
@@ -310,13 +361,14 @@ Page(
 
     renderUI(todayData) {
       this.clearUI();
+      const container = this.state.prayerContainer;
       const cityName = this.state.location.city;
       const info = this.getNextPrayerInfo(todayData);
 
       // ── Header: City with pill background ──
-      const cityBg = this.trackWidget(createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length)));
+      const cityBg = this.trackWidget(container.createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length)));
 
-      const cityText = this.trackWidget(createWidget(widget.TEXT, {
+      const cityText = this.trackWidget(container.createWidget(widget.TEXT, {
         ...getCityTextStyle(cityName.length),
         text: cityName,
       }));
@@ -342,13 +394,13 @@ Page(
       cityText.addEventListener(event.SELECT, onCitySelect);
 
       // ── "Next prayer" label ──
-      this.trackWidget(createWidget(widget.TEXT, {
+      this.trackWidget(container.createWidget(widget.TEXT, {
         ...NEXT_LABEL_STYLE,
         text: "Next prayer",
       }));
 
       // ── Next prayer name ──
-      this.trackWidget(createWidget(widget.TEXT, {
+      this.trackWidget(container.createWidget(widget.TEXT, {
         ...NEXT_NAME_STYLE,
         text: info.nextPrayer.label,
       }));
@@ -356,7 +408,7 @@ Page(
       // ── Countdown (only if < 60 minutes) ──
       const remaining = info.nextPrayer.minutes - info.nowMinutes;
       if (remaining > 0 && remaining <= 60) {
-        this.trackWidget(createWidget(widget.TEXT, {
+        this.trackWidget(container.createWidget(widget.TEXT, {
           ...COUNTDOWN_STYLE,
           text: remaining === 1 ? "In 1 minute" : `In ${remaining} minutes`,
         }));
@@ -369,7 +421,7 @@ Page(
         )
         : this.formatTime(todayData.timings[info.nextPrayer.key]);
 
-      this.trackWidget(createWidget(widget.TEXT, {
+      this.trackWidget(container.createWidget(widget.TEXT, {
         ...NEXT_TIME_STYLE,
         text: nextTimeStr,
       }));
@@ -379,16 +431,15 @@ Page(
     },
 
     renderUpcomingCells(todayData, info) {
+      const container = this.state.prayerContainer;
       const cells = [];
 
       if (info.isNextDay) {
-        // After Isha: hero already shows tomorrow's Fajr, just show Sunrise
         const tmrw = info.tomorrowData;
         if (tmrw) {
           cells.push({ label: "Sunrise", time: this.formatTime(tmrw.timings["Sunrise"]) });
         }
       } else {
-        // Show remaining prayers after the next one
         for (let i = info.nextIndex + 1; i < PRAYER_KEYS.length; i++) {
           cells.push({
             label: PRAYER_LABELS[i],
@@ -396,7 +447,6 @@ Page(
           });
         }
 
-        // When next is Isha, append tomorrow's Fajr & Sunrise
         if (info.nextPrayer.key === "Isha") {
           const tmrw = this.loadTomorrowData();
           if (tmrw) {
@@ -408,14 +458,14 @@ Page(
 
       let y = CELL_START_Y;
       for (const cell of cells) {
-        this.trackWidget(createWidget(widget.FILL_RECT, getCellBgStyle(y)));
-        this.trackWidget(createWidget(widget.TEXT, { ...getCellNameStyle(y), text: cell.label }));
-        this.trackWidget(createWidget(widget.TEXT, { ...getCellTimeStyle(y), text: cell.time }));
+        this.trackWidget(container.createWidget(widget.FILL_RECT, getCellBgStyle(y)));
+        this.trackWidget(container.createWidget(widget.TEXT, { ...getCellNameStyle(y), text: cell.label }));
+        this.trackWidget(container.createWidget(widget.TEXT, { ...getCellTimeStyle(y), text: cell.time }));
         y += CELL_HEIGHT + CELL_GAP;
       }
 
       // Bottom spacer
-      this.trackWidget(createWidget(widget.FILL_RECT, {
+      this.trackWidget(container.createWidget(widget.FILL_RECT, {
         x: 0,
         y: y,
         w: 1,
@@ -424,25 +474,8 @@ Page(
         alpha: 0,
       }));
 
-      // Qibla icon
-      const qiblaIcon = this.trackWidget(createWidget(widget.IMG, {
-        ...QIBLA_ICON_STYLE,
-        y: y + px(20),
-        src: "image/ic_qibla_40px.png",
-      }));
-      qiblaIcon.addEventListener(event.CLICK_DOWN, () => {
-        qiblaIcon.setProperty(prop.MORE, { alpha: 120 });
-      });
-      qiblaIcon.addEventListener(event.MOVE, () => {
-        qiblaIcon.setProperty(prop.MORE, { alpha: 255 });
-      });
-      qiblaIcon.addEventListener(event.SELECT, () => {
-        qiblaIcon.setProperty(prop.MORE, { alpha: 255 });
-        push({ url: "page/gt/qibla/index.page" });
-      });
-
       // Help icon
-      const helpIcon = this.trackWidget(createWidget(widget.IMG, {
+      const helpIcon = this.trackWidget(container.createWidget(widget.IMG, {
         ...HELP_ICON_STYLE,
         y: y + px(20),
         src: "image/ic_QA_40px.png",
@@ -465,6 +498,10 @@ Page(
     },
 
     onDestroy() {
+      if (this.state.qibla) {
+        this.state.qibla.destroy();
+      }
+      this.clearUI();
       logger.debug("prayer-times page onDestroy");
     },
   })
