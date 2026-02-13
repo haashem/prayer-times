@@ -312,11 +312,21 @@ Page(
       const container = this.state.prayerContainer;
       const cityName = this.state.location.city;
 
-      // ── Header: City with pill background ──
-      const cityBg = this.trackWidget(container.createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length)));
+      // ── Header: City with fixed width ──
+      const fixedCityW = DEVICE_WIDTH / 2;
+      const cityBgStyle = getCityBgStyle(1);
+      const cityTextStyle = getCityTextStyle(1);
+
+      const cityBg = this.trackWidget(container.createWidget(widget.FILL_RECT, {
+        ...cityBgStyle,
+        w: fixedCityW,
+        x: (DEVICE_WIDTH - fixedCityW) / 2,
+      }));
 
       const cityText = this.trackWidget(container.createWidget(widget.TEXT, {
-        ...getCityTextStyle(cityName.length),
+        ...cityTextStyle,
+        w: fixedCityW,
+        x: (DEVICE_WIDTH - fixedCityW) / 2,
         text: cityName,
       }));
 

@@ -55,7 +55,7 @@ export function getCityTextStyle(textLen) {
     color: COLORS.title,
     align_h: align.CENTER_H,
     align_v: align.CENTER_V,
-    text_style: text_style.ELLIPSIS,
+    text_style: text_style.NONE,
   };
 }
 
