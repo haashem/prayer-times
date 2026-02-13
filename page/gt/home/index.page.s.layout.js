@@ -59,96 +59,50 @@ export function getCityTextStyle(textLen) {
   };
 }
 
-// ── Next Prayer Section ──
-export const NEXT_LABEL_STYLE = {
-  x: 0,
-  y: px(76),
-  w: DEVICE_WIDTH,
-  h: px(30),
-  color: COLORS.nextLabel,
-  text_size: px(24),
-  align_h: align.CENTER_H,
-  align_v: align.CENTER_V,
-  text_style: text_style.ELLIPSIS,
-};
+// ── Prayer List ──
+export const GRID_START_X = SIDE_PADDING;
+export const GRID_START_Y = px(76);
+export const GRID_COL_GAP = px(8);
+export const GRID_ROW_GAP = px(10);
+export const GRID_CELL_W = (CONTENT_WIDTH - GRID_COL_GAP) / 2;
+export const GRID_CELL_H = px(76);
+const GRID_RADIUS = px(12);
 
-export const NEXT_NAME_STYLE = {
-  x: 0,
-  y: px(104),
-  w: DEVICE_WIDTH,
-  h: px(46),
-  color: COLORS.nextName,
-  text_size: px(38),
-  align_h: align.CENTER_H,
-  align_v: align.CENTER_V,
-  text_style: text_style.ELLIPSIS,
-};
 
-export const COUNTDOWN_STYLE = {
-  x: 0,
-  y: px(148),
-  w: DEVICE_WIDTH,
-  h: px(28),
-  color: COLORS.countdown,
-  text_size: px(22),
-  align_h: align.CENTER_H,
-  align_v: align.CENTER_V,
-  text_style: text_style.ELLIPSIS,
-};
-
-export const NEXT_TIME_STYLE = {
-  x: 0,
-  y: px(172),
-  w: DEVICE_WIDTH,
-  h: px(64),
-  color: COLORS.nextTime,
-  text_size: px(60),
-  align_h: align.CENTER_H,
-  align_v: align.CENTER_V,
-  text_style: text_style.ELLIPSIS,
-};
-
-// ── Upcoming Prayer Cells ──
-export const CELL_START_Y = px(248);
-export const CELL_HEIGHT = px(60);
-export const CELL_GAP = px(8);
-export const CELL_RADIUS = px(12);
-export const BOTTOM_PADDING = px(60);
-
-export function getCellBgStyle(y) {
+export function getPrayerCellBgStyle(x, y, isActive) {
   return {
-    x: SIDE_PADDING - px(8),
-    y: y,
-    w: CONTENT_WIDTH + px(16),
-    h: CELL_HEIGHT,
-    radius: CELL_RADIUS,
-    color: COLORS.cellBg,
+    x,
+    y,
+    w: GRID_CELL_W,
+    h: GRID_CELL_H,
+    radius: GRID_RADIUS,
+    color: isActive ? COLORS.cellBgPressed : COLORS.cellBg,
   };
 }
 
-export function getCellNameStyle(y) {
+export function getPrayerLabelStyle(x, y, isActive) {
   return {
-    x: SIDE_PADDING + px(6),
-    y: y,
-    w: CONTENT_WIDTH / 2,
-    h: CELL_HEIGHT,
-    color: COLORS.cellName,
-    text_size: px(28),
-    align_h: align.LEFT,
+    x,
+    y,
+    w: GRID_CELL_W,
+    h: GRID_CELL_H / 2,
+    color: isActive ? COLORS.title : COLORS.cellName,
+    text_size: px(24),
+    align_h: align.CENTER_H,
     align_v: align.CENTER_V,
     text_style: text_style.ELLIPSIS,
   };
 }
 
-export function getCellTimeStyle(y) {
+export function getPrayerTimeStyle(x, y, isActive) {
   return {
-    x: DEVICE_WIDTH / 2,
-    y: y,
-    w: DEVICE_WIDTH / 2 - SIDE_PADDING - px(6),
-    h: CELL_HEIGHT,
-    color: COLORS.cellTime,
-    text_size: px(28),
-    align_h: align.RIGHT,
+    x,
+    y: y + GRID_CELL_H / 2,
+    w: GRID_CELL_W,
+    h: GRID_CELL_H / 2,
+    color: isActive ? COLORS.nextTime : COLORS.cellTime,
+    text_size: px(32),
+    align_h: align.CENTER_H,
     align_v: align.CENTER_V,
     text_style: text_style.ELLIPSIS,
   };
@@ -171,7 +125,7 @@ export const NO_DATA_STYLE = {
 // ── Help Icon ──
 export const HELP_ICON_STYLE = {
   x: DEVICE_WIDTH / 2 - px(21),
-  y: 0, // set dynamically
+  y: DEVICE_HEIGHT - px(60),
   w: px(42),
   h: px(42),
 };

@@ -166,7 +166,7 @@ export function createQiblaCompass(container) {
                 state.lastVibrateTime = now;
                 if (state.vibrate) {
                     state.vibrate.stop();
-                    state.vibrate.setMode(VIBRATOR_SCENE_SHORT_MIDDLE);
+                    state.vibrate.setMode(VIBRATOR_SCENE_SHORT_LIGHT);
                     state.vibrate.start();
                 }
             }
@@ -272,6 +272,7 @@ export function createQiblaCompass(container) {
             } catch (e) {
                 logger.error("Vibrate init error: " + e.message);
             }
+
         },
 
         startCompass,
