@@ -10,10 +10,12 @@ const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 // ── Color Palette (matches home page) ──
 export const COLORS = {
     title: 0xd4a843,       // Gold — city name
+    subtitle: 0xa89880,    // Warm sandstone — secondary text
     nextLabel: 0xa89880,   // Warm sandstone — "Next prayer"
     nextName: 0xe8dcc8,    // Warm ivory — prayer name
     nextTime: 0xffffff,    // White — large time
     cellBg: 0x1a3a1a,      // Dark green cell bg
+    cellBgPressed: 0x2a5a2a, // Active cell bg
     cellName: 0xa89880,    // Sandstone — cell prayer name
     cellTime: 0xe8dcc8,    // Warm ivory — cell time
     noData: 0xc75050,      // Error red
@@ -50,7 +52,7 @@ export function getCityTextStyle(textLen) {
         color: COLORS.title,
         align_h: align.CENTER_H,
         align_v: align.CENTER_V,
-        text_style: text_style.ELLIPSIS,
+        text_style: text_style.NONE,
     };
 }
 
@@ -91,45 +93,49 @@ export const NEXT_TIME_STYLE = {
     text_style: text_style.ELLIPSIS,
 };
 
-// ── Upcoming Prayer Cell ──
-const CELL_Y = px(320);
-const CELL_HEIGHT = px(72);
-const CELL_RADIUS = px(16);
+// ── Prayer Grid ──
+export const GRID_START_X = SIDE_PADDING;
+export const GRID_START_Y = px(110);
+export const GRID_COL_GAP = px(10);
+export const GRID_ROW_GAP = px(12);
+export const GRID_CELL_W = (CONTENT_WIDTH - GRID_COL_GAP) / 2;
+export const GRID_CELL_H = px(88);
+const GRID_RADIUS = px(16);
 
-export function getCellBgStyle() {
+export function getPrayerCellBgStyle(x, y, isActive) {
     return {
-        x: SIDE_PADDING - px(10),
-        y: CELL_Y,
-        w: CONTENT_WIDTH + px(20),
-        h: CELL_HEIGHT,
-        radius: CELL_RADIUS,
-        color: COLORS.cellBg,
+        x,
+        y,
+        w: GRID_CELL_W,
+        h: GRID_CELL_H,
+        radius: GRID_RADIUS,
+        color: isActive ? COLORS.cellBgPressed : COLORS.cellBg,
     };
 }
 
-export function getCellNameStyle() {
+export function getPrayerLabelStyle(x, y, isActive) {
     return {
-        x: SIDE_PADDING + px(8),
-        y: CELL_Y,
-        w: CONTENT_WIDTH / 2,
-        h: CELL_HEIGHT,
-        color: COLORS.cellName,
-        text_size: px(34),
-        align_h: align.LEFT,
+        x,
+        y,
+        w: GRID_CELL_W,
+        h: GRID_CELL_H / 2,
+        color: isActive ? COLORS.title : COLORS.subtitle,
+        text_size: px(28),
+        align_h: align.CENTER_H,
         align_v: align.CENTER_V,
         text_style: text_style.ELLIPSIS,
     };
 }
 
-export function getCellTimeStyle() {
+export function getPrayerTimeStyle(x, y, isActive) {
     return {
-        x: DEVICE_WIDTH / 2,
-        y: CELL_Y,
-        w: DEVICE_WIDTH / 2 - SIDE_PADDING - px(8),
-        h: CELL_HEIGHT,
-        color: COLORS.cellTime,
-        text_size: px(34),
-        align_h: align.RIGHT,
+        x,
+        y: y + GRID_CELL_H / 2,
+        w: GRID_CELL_W,
+        h: GRID_CELL_H / 2,
+        color: isActive ? COLORS.nextTime : COLORS.subtitle,
+        text_size: px(38),
+        align_h: align.CENTER_H,
         align_v: align.CENTER_V,
         text_style: text_style.ELLIPSIS,
     };

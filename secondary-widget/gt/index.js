@@ -1,4 +1,4 @@
-import { createWidget, deleteWidget, widget, align, text_style, event } from "@zos/ui";
+import { createWidget, deleteWidget, widget, event } from "@zos/ui";
 import { Time } from "@zos/sensor";
 import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
@@ -6,15 +6,17 @@ import { log as Logger } from "@zos/utils";
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
-    COLORS,
     getCityBgStyle,
     getCityTextStyle,
-    NEXT_LABEL_STYLE,
-    NEXT_NAME_STYLE,
-    NEXT_TIME_STYLE,
-    getCellBgStyle,
-    getCellNameStyle,
-    getCellTimeStyle,
+    GRID_START_Y,
+    GRID_START_X,
+    GRID_COL_GAP,
+    GRID_ROW_GAP,
+    GRID_CELL_W,
+    GRID_CELL_H,
+    getPrayerCellBgStyle,
+    getPrayerLabelStyle,
+    getPrayerTimeStyle,
     NO_DATA_STYLE,
 } from "zosLoader:./index.[pf].layout.js";
 
@@ -162,7 +164,6 @@ SecondaryWidget({
 
     renderWidget() {
         const data = this.state.prayerData;
-        const info = this.getNextPrayerInfo(data);
 
         // Tappable background to open app
         this.trackWidget(createWidget(widget.FILL_RECT, {
@@ -176,74 +177,41 @@ SecondaryWidget({
 
         // ── City pill ──
         const cityName = this.state.location.city;
-        this.trackWidget(createWidget(widget.FILL_RECT, getCityBgStyle(cityName.length)));
+        const fixedCityW = DEVICE_WIDTH / 2;
+        const cityTextPad = 8;
+        const cityBgStyle = getCityBgStyle(1);
+        const cityTextStyle = getCityTextStyle(1);
+
+        this.trackWidget(createWidget(widget.FILL_RECT, {
+            ...cityBgStyle,
+            w: fixedCityW,
+            x: (DEVICE_WIDTH - fixedCityW) / 2,
+        }));
         this.trackWidget(createWidget(widget.TEXT, {
-            ...getCityTextStyle(cityName.length),
+            ...cityTextStyle,
+            w: fixedCityW - cityTextPad * 2,
+            x: (DEVICE_WIDTH - fixedCityW) / 2 + cityTextPad,
             text: cityName,
         }));
 
-        // ── "Next prayer" label ──
-        this.trackWidget(createWidget(widget.TEXT, {
-            ...NEXT_LABEL_STYLE,
-            text: "Next prayer",
-        }));
-
-        // ── Next prayer name ──
-        this.trackWidget(createWidget(widget.TEXT, {
-            ...NEXT_NAME_STYLE,
-            text: info.nextPrayer.label,
-        }));
-
-        // ── Large next prayer time ──
-        const nextTimeStr = info.isNextDay
-            ? this.formatTime(
-                (this.state.tomorrowData || data).timings[info.nextPrayer.key]
-            )
-            : this.formatTime(data.timings[info.nextPrayer.key]);
-
-        this.trackWidget(createWidget(widget.TEXT, {
-            ...NEXT_TIME_STYLE,
-            text: nextTimeStr,
-        }));
-
-        // ── Upcoming prayer cell (one row) ──
-        const upcoming = this.getUpcomingPrayer(data, info);
-        if (upcoming) {
-            this.trackWidget(createWidget(widget.FILL_RECT, getCellBgStyle()));
-            this.trackWidget(createWidget(widget.TEXT, { ...getCellNameStyle(), text: upcoming.label }));
-            this.trackWidget(createWidget(widget.TEXT, { ...getCellTimeStyle(), text: upcoming.time }));
+        // ── Prayer grid ──
+        const currentIndex = this.getCurrentPrayerIndex(data);
+        for (let i = 0; i < PRAYER_KEYS.length; i++) {
+            const row = Math.floor(i / 2);
+            const col = i % 2;
+            const x = GRID_START_X + col * (GRID_CELL_W + GRID_COL_GAP);
+            const y = GRID_START_Y + row * (GRID_CELL_H + GRID_ROW_GAP);
+            const isActive = i === currentIndex;
+            this.trackWidget(createWidget(widget.FILL_RECT, getPrayerCellBgStyle(x, y, isActive)));
+            this.trackWidget(createWidget(widget.TEXT, {
+                ...getPrayerLabelStyle(x, y, isActive),
+                text: PRAYER_LABELS[i],
+            }));
+            this.trackWidget(createWidget(widget.TEXT, {
+                ...getPrayerTimeStyle(x, y, isActive),
+                text: this.formatTime(data.timings[PRAYER_KEYS[i]]),
+            }));
         }
-    },
-
-    getUpcomingPrayer(todayData, info) {
-        if (info.isNextDay) {
-            // After Isha → next is tomorrow's Fajr, upcoming is tomorrow's Sunrise
-            const tmrw = this.state.tomorrowData;
-            if (tmrw) {
-                return { label: "Sunrise", time: this.formatTime(tmrw.timings["Sunrise"]) };
-            }
-            return null;
-        }
-
-        // When next is Isha → upcoming is tomorrow's Fajr
-        if (info.nextPrayer.key === "Isha") {
-            const tmrw = this.state.tomorrowData;
-            if (tmrw) {
-                return { label: "Fajr", time: this.formatTime(tmrw.timings["Fajr"]) };
-            }
-            return null;
-        }
-
-        // Otherwise show the prayer after next
-        const afterNextIndex = info.nextIndex + 1;
-        if (afterNextIndex < PRAYER_KEYS.length) {
-            return {
-                label: PRAYER_LABELS[afterNextIndex],
-                time: this.formatTime(todayData.timings[PRAYER_KEYS[afterNextIndex]]),
-            };
-        }
-
-        return null;
     },
 
     formatTime(timeStr) {
@@ -257,38 +225,26 @@ SecondaryWidget({
         return parseInt(parts[0]) * 60 + parseInt(parts[1]);
     },
 
-    getNextPrayerInfo(todayData) {
-        if (!todayData || !todayData.timings) {
-            return { nextIndex: 0, nextPrayer: { key: "Fajr", label: "Fajr" }, isNextDay: false };
-        }
-
+    getCurrentPrayerIndex(todayData) {
         const time = new Time();
         const nowMinutes = time.getHours() * 60 + time.getMinutes();
 
-        const prayers = PRAYER_KEYS.map((key, i) => ({
-            key,
-            label: PRAYER_LABELS[i],
-            minutes: this.timeToMinutes(todayData.timings[key]),
-        }));
+        const fajr = this.timeToMinutes(todayData.timings["Fajr"]);
+        const sunrise = this.timeToMinutes(todayData.timings["Sunrise"]);
+        const dhuhr = this.timeToMinutes(todayData.timings["Dhuhr"]);
+        const asr = this.timeToMinutes(todayData.timings["Asr"]);
+        const maghrib = this.timeToMinutes(todayData.timings["Maghrib"]);
+        const isha = this.timeToMinutes(todayData.timings["Isha"]);
 
-        // Find next prayer (first one whose time is in the future)
-        for (let i = 0; i < prayers.length; i++) {
-            if (nowMinutes < prayers[i].minutes) {
-                return {
-                    nextIndex: i,
-                    nextPrayer: prayers[i],
-                    nowMinutes,
-                    isNextDay: false,
-                };
-            }
-        }
+        let activeKey = "Isha";
+        if (nowMinutes < fajr) activeKey = "Isha";
+        else if (nowMinutes < sunrise) activeKey = "Fajr";
+        else if (nowMinutes < dhuhr) activeKey = "Dhuhr";
+        else if (nowMinutes < asr) activeKey = "Dhuhr";
+        else if (nowMinutes < maghrib) activeKey = "Asr";
+        else if (nowMinutes < isha) activeKey = "Maghrib";
+        else activeKey = "Isha";
 
-        // All prayers passed → next is tomorrow's Fajr
-        return {
-            nextIndex: 0,
-            nextPrayer: { key: "Fajr", label: "Fajr" },
-            nowMinutes,
-            isNextDay: true,
-        };
+        return PRAYER_KEYS.indexOf(activeKey);
     },
 });

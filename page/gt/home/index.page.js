@@ -313,6 +313,7 @@ Page(
 
       // ── Header: City with fixed width ──
       const fixedCityW = DEVICE_WIDTH / 2;
+      const cityTextPad = 8;
       const cityBgStyle = getCityBgStyle(1);
       const cityTextStyle = getCityTextStyle(1);
 
@@ -324,8 +325,8 @@ Page(
 
       const cityText = this.trackWidget(container.createWidget(widget.TEXT, {
         ...cityTextStyle,
-        w: fixedCityW,
-        x: (DEVICE_WIDTH - fixedCityW) / 2,
+        w: fixedCityW - cityTextPad * 2,
+        x: (DEVICE_WIDTH - fixedCityW) / 2 + cityTextPad,
         text: cityName,
       }));
 
