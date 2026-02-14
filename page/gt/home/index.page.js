@@ -273,24 +273,23 @@ Page(
     getCurrentPrayerIndex(todayData) {
       const time = new Time();
       const nowMinutes = time.getHours() * 60 + time.getMinutes();
-      const prayerMinutes = PRAYER_KEYS.map((key) =>
-        this.timeToMinutes(todayData.timings[key])
-      );
+      const fajr = this.timeToMinutes(todayData.timings["Fajr"]);
+      const sunrise = this.timeToMinutes(todayData.timings["Sunrise"]);
+      const dhuhr = this.timeToMinutes(todayData.timings["Dhuhr"]);
+      const asr = this.timeToMinutes(todayData.timings["Asr"]);
+      const maghrib = this.timeToMinutes(todayData.timings["Maghrib"]);
+      const isha = this.timeToMinutes(todayData.timings["Isha"]);
 
-      let currentIndex = prayerMinutes.length - 1;
-      for (let i = 0; i < prayerMinutes.length; i++) {
-        if (nowMinutes === prayerMinutes[i]) {
-          currentIndex = i;
-          break;
-        }
-        if (nowMinutes < prayerMinutes[i]) {
-          currentIndex = i - 1;
-          break;
-        }
-      }
+      let activeKey = "Isha";
+      if (nowMinutes < fajr) activeKey = "Isha";
+      else if (nowMinutes < sunrise) activeKey = "Fajr";
+      else if (nowMinutes < dhuhr) activeKey = "Dhuhr";
+      else if (nowMinutes < asr) activeKey = "Dhuhr";
+      else if (nowMinutes < maghrib) activeKey = "Asr";
+      else if (nowMinutes < isha) activeKey = "Maghrib";
+      else activeKey = "Isha";
 
-      if (currentIndex < 0) currentIndex = prayerMinutes.length - 1;
-      return currentIndex;
+      return PRAYER_KEYS.indexOf(activeKey);
     },
 
     // ── Render ──
