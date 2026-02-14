@@ -259,6 +259,7 @@ export function createQiblaCompass(container) {
          * Compass sensor is NOT started — call startCompass() separately.
          */
         build(location) {
+            clearUI();
             if (!location) {
                 renderNoData();
                 return;
