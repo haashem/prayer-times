@@ -17,7 +17,28 @@ SIZE = 248
 
 
 def draw_icon(size: int) -> Image.Image:
-    img = Image.new("RGBA", (size, size), BG)
+    # Gradient background (masked to circle)
+    bg = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    top = (0x2A, 0x2A, 0x3E, 255)
+    bottom = (0x3A, 0x3A, 0x52, 255)
+    for y in range(size):
+        t = y / (size - 1)
+        r = int(top[0] * (1 - t) + bottom[0] * t)
+        g = int(top[1] * (1 - t) + bottom[1] * t)
+        b = int(top[2] * (1 - t) + bottom[2] * t)
+        bg.putpixel((0, y), (r, g, b, 255))
+    bg = bg.resize((size, size))
+    # Expand gradient line to full image
+    for x in range(1, size):
+        bg.paste(bg.crop((0, 0, 1, size)), (x, 0))
+
+    # Apply circular mask so icon is round
+    mask = Image.new("L", (size, size), 0)
+    mdraw = ImageDraw.Draw(mask)
+    mdraw.ellipse([0, 0, size - 1, size - 1], fill=255)
+    bg.putalpha(mask)
+
+    img = bg
     draw = ImageDraw.Draw(img)
 
     cx = cy = size / 2
@@ -25,13 +46,13 @@ def draw_icon(size: int) -> Image.Image:
     # Crescent moon (primary) — large, touching edge
     crescent = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     cdraw = ImageDraw.Draw(crescent)
-    r = size * 0.46
+    r = size * 0.34
     cdraw.ellipse([
         cx - r, cy - r,
         cx + r, cy + r,
     ], fill=PRIMARY)
     # subtract circle to form crescent
-    offset = size * 0.14
+    offset = size * 0.10
     cut = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     cut_draw = ImageDraw.Draw(cut)
     cut_draw.ellipse([
@@ -42,8 +63,8 @@ def draw_icon(size: int) -> Image.Image:
     img.alpha_composite(crescent)
 
     # Clock hands — larger to reach toward edge
-    hand_len = size * 0.32
-    hand_w = max(3, size // 70)
+    hand_len = size * 0.22
+    hand_w = max(5, size // 55)
     # minute hand
     draw.line([(cx, cy), (cx, cy - hand_len)], fill=TERTIARY, width=hand_w)
     # hour hand
