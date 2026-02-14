@@ -109,7 +109,7 @@ export function getPrayerCellBgStyle(x, y, isActive) {
         w: GRID_CELL_W,
         h: GRID_CELL_H,
         radius: GRID_RADIUS,
-        color: isActive ? COLORS.cellBgPressed : COLORS.cellBg,
+        color: isActive ? COLORS.cellBgPressed : 0x000000,
     };
 }
 
