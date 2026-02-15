@@ -37,7 +37,7 @@ Page(
       prayerData: null,
       loadingWidget: null,
       uiWidgets: [],
-      // Page containers
+      // Page groups
       prayerContainer: null,
       qiblaContainer: null,
       // Qibla compass module
@@ -50,8 +50,6 @@ Page(
 
     build() {
       logger.debug("prayer-times page build");
-
-      createWidget(widget.PAGE_SCROLLBAR);
 
       // Page-level swiper (snapping between two vertical pages)
       setScrollMode({
@@ -74,25 +72,23 @@ Page(
       });
 
       // Page 0: Prayer Times
-      this.state.prayerContainer = createWidget(widget.VIEW_CONTAINER, {
+      this.state.prayerContainer = createWidget(widget.GROUP, {
         x: 0,
         y: 0,
         w: DEVICE_WIDTH,
         h: DEVICE_HEIGHT,
-        scroll_enable: 0,
-        page: 0,
       });
 
-      // Create qibla compass module
-      this.state.qiblaContainer = createWidget(widget.VIEW_CONTAINER, {
+      // Page 1: Qibla Compass
+      this.state.qiblaContainer = createWidget(widget.GROUP, {
         x: 0,
-        y: 0,
+        y: DEVICE_HEIGHT,
         w: DEVICE_WIDTH,
         h: DEVICE_HEIGHT,
-        scroll_enable: 0,
-        page: 1,
       });
       this.state.qibla = createQiblaCompass(this.state.qiblaContainer);
+
+      createWidget(widget.PAGE_SCROLLBAR);
 
       this.loadLocation();
 
