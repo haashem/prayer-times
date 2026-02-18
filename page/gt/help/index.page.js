@@ -35,7 +35,7 @@ Page(
                     "• Connect to Wi-Fi\n" +
                     "• Disconnect from VPN\n" +
                     "• Turn off iCloud Private\n" +
-                    "  Relay",
+                    "  Relay on iPhone",
             });
             y += PARA_HEIGHT + PARA_GAP;
 
