@@ -20,20 +20,24 @@ Page(
                 ...getParaStyle(PARA_START_Y),
                 text: "Prayer Times",
                 text_size: TITLE_FONT_SIZE,
+                color: 0xffffff,
                 h: TITLE_HEIGHT,
                 align_h: align.CENTER_H,
             });
 
-            const body = [
-                "This app detects your location using your phone's IP address, then fetches accurate prayer times for your city.",
-                "For the best results:\n\n• Connect to Wi-Fi\n• Disconnect from VPN\n• Turn off iCloud Private Relay",
-            ];
-
             let y = PARA_START_Y + TITLE_HEIGHT + PARA_GAP;
-            for (const text of body) {
-                createWidget(widget.TEXT, { ...getParaStyle(y), text });
-                y += PARA_HEIGHT + PARA_GAP;
-            }
+            createWidget(widget.TEXT, {
+                ...getParaStyle(y),
+                h: PARA_HEIGHT,
+                text:
+                    "This app detects your location and fetches accurate local prayer times.\n\n" +
+                    "For the best results:\n" +
+                    "• Connect to Wi-Fi\n" +
+                    "• Disconnect from VPN\n" +
+                    "• Turn off iCloud Private\n" +
+                    "  Relay",
+            });
+            y += PARA_HEIGHT + PARA_GAP;
 
             // Bottom spacer
             createWidget(widget.FILL_RECT, {

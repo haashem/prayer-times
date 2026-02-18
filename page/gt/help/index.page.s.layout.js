@@ -8,12 +8,12 @@ const SIDE_PADDING = px(20);
 const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 
 const COLORS = {
-    text: 0xffffff,
+    text: 0xa89880,
 };
 
 export const PARA_START_Y = px(20);
-export const PARA_HEIGHT = px(300);
-export const PARA_GAP = px(10);
+export const PARA_HEIGHT = px(500);
+export const PARA_GAP = px(6);
 export const TITLE_FONT_SIZE = px(34);
 export const TITLE_HEIGHT = px(56);
 
