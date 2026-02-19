@@ -1,9 +1,10 @@
-import { createWidget, deleteWidget, widget, prop, event } from "@zos/ui";
+import { createWidget, deleteWidget, widget, prop, event, setStatusBarVisible } from "@zos/ui";
 import { push } from "@zos/router";
 import { setScrollMode, SCROLL_MODE_SWIPER } from "@zos/page";
 import { Time } from "@zos/sensor";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
+import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { BasePage } from "@zeppos/zml/base-page";
 import { createQiblaCompass } from "./qibla";
 import {
@@ -50,6 +51,12 @@ Page(
 
     build() {
       logger.debug("prayer-times page build");
+      const { screenShape } = getDeviceInfo();
+
+      // Hide system title bar on square watches to avoid overlay on app content.
+      if (screenShape === SCREEN_SHAPE_SQUARE) {
+        setStatusBarVisible(false);
+      }
 
       // Page-level swiper (snapping between two vertical pages)
       setScrollMode({

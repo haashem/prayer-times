@@ -1,4 +1,5 @@
-import { createWidget, widget, align } from "@zos/ui";
+import { createWidget, widget, align, setStatusBarVisible } from "@zos/ui";
+import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { BasePage } from "@zeppos/zml/base-page";
 import {
     getParaStyle,
@@ -13,6 +14,13 @@ import {
 Page(
     BasePage({
         build() {
+            const { screenShape } = getDeviceInfo();
+
+            // Hide system title bar on square watches to avoid overlay on app content.
+            if (screenShape === SCREEN_SHAPE_SQUARE) {
+                setStatusBarVisible(false);
+            }
+
             createWidget(widget.PAGE_SCROLLBAR);
 
             // Title
