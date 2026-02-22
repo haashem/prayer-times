@@ -216,6 +216,8 @@ Page(
         })
         .catch((err) => {
           logger.error("Location error: " + JSON.stringify(err));
+          this.clearLoading();
+          this.showLoading("Check watch is connected to phone");
         });
     },
 
