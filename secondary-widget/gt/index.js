@@ -177,8 +177,8 @@ SecondaryWidget({
 
         // ── City pill ──
         const cityName = this.state.location.city;
-        const fixedCityW = DEVICE_WIDTH / 2;
-        const cityTextPad = 8;
+        const fixedCityW = DEVICE_WIDTH / 2.4;
+        const cityTextPad = 6;
         const cityBgStyle = getCityBgStyle(1);
         const cityTextStyle = getCityTextStyle(1);
 

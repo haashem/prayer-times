@@ -23,9 +23,9 @@ export const COLORS = {
 
 // ── City Header (pill) ──
 const CITY_Y = px(16);
-const CITY_H = px(46);
-const CITY_FONT_SIZE = px(36);
-const CITY_PAD_H = px(20);
+const CITY_H = px(44);
+const CITY_FONT_SIZE = px(32);
+const CITY_PAD_H = px(16);
 
 export function getCityBgStyle(textLen) {
     const textW = Math.ceil(textLen * CITY_FONT_SIZE * 0.55);

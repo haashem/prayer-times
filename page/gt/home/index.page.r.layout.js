@@ -26,9 +26,9 @@ const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 
 // ── City Header ──
 const CITY_Y = px(36);
-const CITY_H = px(56);
-const CITY_FONT_SIZE = px(42);
-const CITY_PAD_H = px(24); // horizontal padding inside pill
+const CITY_H = px(52);
+const CITY_FONT_SIZE = px(36);
+const CITY_PAD_H = px(20); // horizontal padding inside pill
 
 export function getCityBgStyle(textLen) {
   const textW = Math.ceil(textLen * CITY_FONT_SIZE * 0.55);
