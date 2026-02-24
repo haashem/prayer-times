@@ -56,6 +56,21 @@ export function getCityTextStyle(textLen) {
     };
 }
 
+// ── Next Prayer Summary ──
+export const NEXT_SUMMARY_STYLE = {
+    x: 0,
+    y: px(54),
+    w: DEVICE_WIDTH,
+    h: px(44),
+    color: COLORS.nextName,
+    text_size: px(38),
+    align_h: align.CENTER_H,
+    align_v: align.CENTER_V,
+    text_style: text_style.NONE,
+};
+
+export const NEXT_SUMMARY_URGENT_COLOR = COLORS.nextTime;
+
 // ── Next Prayer Section ──
 export const NEXT_LABEL_STYLE = {
     x: 0,
@@ -95,7 +110,7 @@ export const NEXT_TIME_STYLE = {
 
 // ── Prayer Grid ──
 export const GRID_START_X = SIDE_PADDING;
-export const GRID_START_Y = px(110);
+export const GRID_START_Y = px(132);
 export const GRID_COL_GAP = px(10);
 export const GRID_ROW_GAP = px(12);
 export const GRID_CELL_W = (CONTENT_WIDTH - GRID_COL_GAP) / 2;

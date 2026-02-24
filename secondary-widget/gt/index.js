@@ -6,8 +6,8 @@ import { log as Logger } from "@zos/utils";
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
-    getCityBgStyle,
-    getCityTextStyle,
+    NEXT_SUMMARY_STYLE,
+    NEXT_SUMMARY_URGENT_COLOR,
     GRID_START_Y,
     GRID_START_X,
     GRID_COL_GAP,
@@ -24,11 +24,13 @@ const logger = Logger.getLogger("prayer-widget");
 
 const PRAYER_KEYS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 const PRAYER_LABELS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+const NEXT_EVENT_KEYS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 SecondaryWidget({
     state: {
         location: null,
         prayerData: null,
+        tomorrowData: null,
         uiWidgets: [],
     },
 
@@ -42,7 +44,7 @@ SecondaryWidget({
 
             this.loadData();
 
-            if (!this.state.location || !this.state.prayerData) {
+            if (!this.state.prayerData) {
                 this.renderNoData();
                 return;
             }
@@ -59,7 +61,7 @@ SecondaryWidget({
             this.clearUI();
             this.loadData();
 
-            if (!this.state.location || !this.state.prayerData) {
+            if (!this.state.prayerData) {
                 this.renderNoData();
                 return;
             }
@@ -96,6 +98,10 @@ SecondaryWidget({
 
     loadData() {
         try {
+            this.state.location = null;
+            this.state.prayerData = null;
+            this.state.tomorrowData = null;
+
             const storedLoc = localStorage.getItem("location");
             if (storedLoc) {
                 this.state.location = JSON.parse(storedLoc);
@@ -175,24 +181,16 @@ SecondaryWidget({
             alpha: 0,
         }));
 
-        // ── City pill ──
-        const cityName = this.state.location.city;
-        const fixedCityW = DEVICE_WIDTH / 2.4;
-        const cityTextPad = 6;
-        const cityBgStyle = getCityBgStyle(1);
-        const cityTextStyle = getCityTextStyle(1);
-
-        this.trackWidget(createWidget(widget.FILL_RECT, {
-            ...cityBgStyle,
-            w: fixedCityW,
-            x: (DEVICE_WIDTH - fixedCityW) / 2,
-        }));
-        this.trackWidget(createWidget(widget.TEXT, {
-            ...cityTextStyle,
-            w: fixedCityW - cityTextPad * 2,
-            x: (DEVICE_WIDTH - fixedCityW) / 2 + cityTextPad,
-            text: cityName,
-        }));
+        const nextInfo = this.getNextPrayerInfo(data, this.state.tomorrowData);
+        if (nextInfo) {
+            this.trackWidget(createWidget(widget.TEXT, {
+                ...NEXT_SUMMARY_STYLE,
+                color: nextInfo.remainingMinutes <= 60
+                    ? NEXT_SUMMARY_URGENT_COLOR
+                    : NEXT_SUMMARY_STYLE.color,
+                text: `${nextInfo.label} in ${this.formatRemaining(nextInfo.remainingMinutes)}`,
+            }));
+        }
 
         // ── Prayer grid ──
         const currentIndex = this.getCurrentPrayerIndex(data);
@@ -212,6 +210,37 @@ SecondaryWidget({
                 text: this.formatTime(data.timings[PRAYER_KEYS[i]]),
             }));
         }
+    },
+
+    getNextPrayerInfo(todayData, tomorrowData) {
+        const time = new Time();
+        const nowMinutes = time.getHours() * 60 + time.getMinutes();
+
+        for (const key of NEXT_EVENT_KEYS) {
+            const prayerMinutes = this.timeToMinutes(todayData.timings[key]);
+            if (nowMinutes < prayerMinutes) {
+                return {
+                    label: key,
+                    remainingMinutes: prayerMinutes - nowMinutes,
+                };
+            }
+        }
+
+        const tomorrowFajr = tomorrowData && tomorrowData.timings
+            ? this.timeToMinutes(tomorrowData.timings["Fajr"])
+            : this.timeToMinutes(todayData.timings["Fajr"]);
+
+        return {
+            label: "Fajr",
+            remainingMinutes: 24 * 60 - nowMinutes + tomorrowFajr,
+        };
+    },
+
+    formatRemaining(totalMinutes) {
+        if (totalMinutes < 60) return `${totalMinutes}m`;
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
     },
 
     formatTime(timeStr) {
