@@ -18,7 +18,7 @@ export const COLORS = {
     cellBgPressed: 0x2a5a2a, // Active cell bg
     cellName: 0xa89880,    // Sandstone — cell prayer name
     cellTime: 0xe8dcc8,    // Warm ivory — cell time
-    noData: 0xc75050,      // Error red
+    noData: 0xd4a843,      // Gold — call-to-action prompt
 };
 
 // ── City Header (pill) ──
