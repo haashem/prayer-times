@@ -47,6 +47,26 @@ Page(
             });
             y += PARA_HEIGHT + PARA_GAP;
 
+            // Calculation method section
+            createWidget(widget.TEXT, {
+                ...getParaStyle(y),
+                text: "Calculation Method",
+                text_size: TITLE_FONT_SIZE,
+                color: 0xffffff,
+                h: TITLE_HEIGHT,
+                align_h: align.CENTER_H,
+            });
+            y += TITLE_HEIGHT + PARA_GAP;
+
+            createWidget(widget.TEXT, {
+                ...getParaStyle(y),
+                h: PARA_HEIGHT,
+                text:
+                    "Prayer times are calculated using the Muslim World League (MWL) method.\n\n" +
+                    "Asr time follows the Shafi'i school, where Asr begins when an object's shadow equals its height.",
+            });
+            y += PARA_HEIGHT + PARA_GAP;
+
             // Bottom spacer
             createWidget(widget.FILL_RECT, {
                 x: 0,
