@@ -1,4 +1,5 @@
 import { createWidget, deleteWidget, widget, prop, event, setStatusBarVisible } from "@zos/ui";
+import { setPageBrightTime } from "@zos/display";
 import { push } from "@zos/router";
 import { setScrollMode, SCROLL_MODE_SWIPER } from "@zos/page";
 import { Time } from "@zos/sensor";
@@ -51,6 +52,10 @@ Page(
 
     build() {
       logger.debug("prayer-times page build");
+      // Keep the screen bright while the user views prayer times.
+      // Without this, AOD will dismiss the app back to the watch face.
+      setPageBrightTime({ brightTime: 15000 });
+
       const { screenShape } = getDeviceInfo();
 
       // Hide system title bar on square watches to avoid overlay on app content.
@@ -225,14 +230,21 @@ Page(
       const loc = this.state.location;
       if (!loc) return;
 
-      this.request({
-        method: "FETCH_PRAYER_TIMES",
-        params: {
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-          method: loc.method || 3,
-        },
-      })
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Request timed out")), 15000)
+      );
+
+      Promise.race([
+        this.request({
+          method: "FETCH_PRAYER_TIMES",
+          params: {
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            method: loc.method || 3,
+          },
+        }),
+        timeout,
+      ])
         .then((data) => {
           if (data && data.result && data.result.code === 200 && data.result.data) {
             const time = new Time();
@@ -258,7 +270,9 @@ Page(
           }
         })
         .catch((err) => {
-          logger.error("Fetch error: " + JSON.stringify(err));
+          logger.error("Fetch error: " + (err && err.message ? err.message : JSON.stringify(err)));
+          this.clearLoading();
+          this.showLoading("Network error. Check connection.");
         });
     },
 
