@@ -1,13 +1,17 @@
 import { createWidget, widget, align, setStatusBarVisible } from "@zos/ui";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
+import { localStorage } from "@zos/storage";
+import { Time } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
 import {
     getParaStyle,
+    getHijriDateStyle,
     PARA_HEIGHT,
     PARA_GAP,
     PARA_START_Y,
     TITLE_FONT_SIZE,
     TITLE_HEIGHT,
+    HIJRI_DATE_HEIGHT,
     BOTTOM_PADDING,
 } from "zosLoader:./index.page.[pf].layout.js";
 
@@ -33,7 +37,17 @@ Page(
                 align_h: align.CENTER_H,
             });
 
-            let y = PARA_START_Y + TITLE_HEIGHT + PARA_GAP;
+            // Hijri date below title
+            const hijriText = this.getTodayHijriText();
+
+            if (hijriText) {
+                createWidget(widget.TEXT, {
+                    ...getHijriDateStyle(PARA_START_Y + TITLE_HEIGHT),
+                    text: hijriText,
+                });
+            }
+
+            let y = PARA_START_Y + TITLE_HEIGHT + (hijriText ? HIJRI_DATE_HEIGHT + PARA_GAP : 0) + PARA_GAP;
             createWidget(widget.TEXT, {
                 ...getParaStyle(y),
                 h: PARA_HEIGHT,
@@ -76,6 +90,26 @@ Page(
                 color: 0x000000,
                 alpha: 0,
             });
+        },
+
+        getTodayHijriText() {
+            try {
+                const stored = localStorage.getItem("prayerData");
+                if (!stored) return "";
+                const cached = JSON.parse(stored);
+                const time = new Time();
+                const day = String(time.getDate()).padStart(2, "0");
+                const month = String(time.getMonth()).padStart(2, "0");
+                const year = String(time.getFullYear());
+                const todayStr = `${day}-${month}-${year}`;
+                const entry = cached.data && cached.data.find(
+                    (d) => d.date && d.date.gregorian && d.date.gregorian.date === todayStr
+                );
+                const hijri = entry && entry.date && entry.date.hijri;
+                return hijri ? `${hijri.day} ${hijri.month.en} ${hijri.year}` : "";
+            } catch (e) {
+                return "";
+            }
         },
     })
 );
