@@ -50,6 +50,18 @@
               }
             }
           ]
+        },
+        "app-widget": {
+          "widgets": [
+            {
+              "path": "app-widget/gt/index",
+              "icon": "icon.png",
+              "name": "Prayer Times",
+              "runtime": {
+                "type": "js"
+              }
+            }
+          ]
         }
       },
       "platforms": [
