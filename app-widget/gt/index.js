@@ -10,7 +10,6 @@ import {
     ICON_Y,
     TEXT_OFFSET,
     REMAINING_STYLE,
-    REMAINING_URGENT_COLOR,
     PRAYER_STYLE,
     HIJRI_STYLE,
     NO_DATA_STYLE,
@@ -174,9 +173,6 @@ AppWidget({
             ...REMAINING_STYLE,
             x: textX,
             w: textW,
-            color: nextInfo.remainingMinutes <= 30
-                ? REMAINING_URGENT_COLOR
-                : REMAINING_STYLE.color,
             text: `in ${this.formatRemaining(nextInfo.remainingMinutes)}`,
         }));
 

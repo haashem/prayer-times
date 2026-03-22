@@ -33,7 +33,6 @@ const ROW3_Y = ROW2_Y + PRAYER_H + GAP;
 
 const COLORS = {
     remaining: 0xd4a843,
-    remainingUrgent: 0xff5252,
     prayer: 0xffffff,
     hijri: 0xa89880,
     noData: 0xd4a843,
@@ -49,8 +48,6 @@ export const REMAINING_STYLE = {
     align_v: align.CENTER_V,
     text_style: text_style.NONE,
 };
-
-export const REMAINING_URGENT_COLOR = COLORS.remainingUrgent;
 
 // ── "Asr 15:30" — 36px ──
 export const PRAYER_STYLE = {
