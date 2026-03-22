@@ -1,7 +1,8 @@
 import { align, text_style } from "@zos/ui";
 import { px } from "@zos/utils";
 
-// ── Plain text card — square 390px ──
+// ── Icon + text card — square 390px ──
+// Layout: Row[ icon, Column[ remaining, prayer, hijri ] ]
 // Row heights = font_size × 1.25
 //   28px → 35px   "in 2h 15m"
 //   36px → 45px   "Asr 15:30"
@@ -13,8 +14,18 @@ const REMAINING_H = px(35); // 28px text
 const PRAYER_H = px(45); // 36px text
 const HIJRI_H = px(30); // 24px text
 
+// Icon dimensions
+export const ICON_SIZE = px(80);
+const ICON_GAP = px(10); // gap between icon and text column
+export const TEXT_OFFSET = ICON_SIZE + ICON_GAP; // left inset for text
+
+const TEXT_COL_H = REMAINING_H + GAP + PRAYER_H + GAP + HIJRI_H; // 126px
+
 // Dynamic height — derived from actual row sizes + margins
-export const CARD_HEIGHT = MARGIN * 2 + REMAINING_H + GAP + PRAYER_H + GAP + HIJRI_H;
+export const CARD_HEIGHT = MARGIN * 2 + Math.max(ICON_SIZE, TEXT_COL_H);
+
+// Icon vertically centered within content area
+export const ICON_Y = MARGIN + Math.round((TEXT_COL_H - ICON_SIZE) / 2);
 
 const ROW1_Y = MARGIN;
 const ROW2_Y = ROW1_Y + REMAINING_H + GAP;

@@ -6,6 +6,9 @@ import { log as Logger } from "@zos/utils";
 import {
     CARD_HEIGHT,
     MARGIN,
+    ICON_SIZE,
+    ICON_Y,
+    TEXT_OFFSET,
     REMAINING_STYLE,
     REMAINING_URGENT_COLOR,
     PRAYER_STYLE,
@@ -16,6 +19,15 @@ import {
 const logger = Logger.getLogger("prayer-card");
 
 const PRAYER_KEYS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+
+const PRAYER_ICONS = {
+    Fajr: "image/ic_fajr_80px.png",
+    Sunrise: "image/ic_sunrise_80px.png",
+    Dhuhr: "image/ic_dhuhr_80px.png",
+    Asr: "image/ic_asr_80px.png",
+    Maghrib: "image/ic_maghrib_80px.png",
+    Isha: "image/ic_isha_80px.png",
+};
 
 AppWidget({
     state: {
@@ -142,9 +154,21 @@ AppWidget({
 
     renderCard() {
         const data = this.state.prayerData;
-        const textX = this.state.cardX + MARGIN;
-        const textW = this.state.cardW - MARGIN;
         const nextInfo = this.getNextPrayerInfo(data, this.state.tomorrowData);
+
+        // Icon (left side)
+        const iconX = this.state.cardX + MARGIN;
+        this.trackWidget(createWidget(widget.IMG, {
+            x: iconX,
+            y: ICON_Y,
+            w: ICON_SIZE,
+            h: ICON_SIZE,
+            src: PRAYER_ICONS[nextInfo.key],
+        }));
+
+        // Text column (right of icon)
+        const textX = this.state.cardX + MARGIN + TEXT_OFFSET;
+        const textW = this.state.cardW - MARGIN - TEXT_OFFSET;
 
         this.trackWidget(createWidget(widget.TEXT, {
             ...REMAINING_STYLE,
