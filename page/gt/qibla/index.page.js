@@ -1,5 +1,6 @@
 import { createWidget, deleteWidget, widget, prop, event } from "@zos/ui";
 import { back } from "@zos/router";
+import { setPageBrightTime } from "@zos/display";
 import { Compass, Vibrator, VIBRATOR_SCENE_SHORT_MIDDLE } from "@zos/sensor";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
@@ -43,6 +44,9 @@ Page({
 
     build() {
         logger.debug("qibla page build");
+
+        // Keep the screen bright while the user uses the compass.
+        setPageBrightTime({ brightTime: 60000 });
 
         // Load location
         try {

@@ -54,7 +54,7 @@ Page(
       logger.debug("prayer-times page build");
       // Keep the screen bright while the user views prayer times.
       // Without this, AOD will dismiss the app back to the watch face.
-      setPageBrightTime({ brightTime: 15000 });
+      setPageBrightTime({ brightTime: 30000 });
 
       const { screenShape } = getDeviceInfo();
 

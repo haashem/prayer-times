@@ -1,4 +1,5 @@
 import { createWidget, widget, align, setStatusBarVisible } from "@zos/ui";
+import { setPageBrightTime } from "@zos/display";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { localStorage } from "@zos/storage";
 import { Time } from "@zos/sensor";
@@ -18,6 +19,9 @@ import {
 Page(
     BasePage({
         build() {
+            // Keep the screen bright while the user reads the help page.
+            setPageBrightTime({ brightTime: 30000 });
+
             const { screenShape } = getDeviceInfo();
 
             // Hide system title bar on square watches to avoid overlay on app content.
