@@ -1,4 +1,5 @@
-import { createWidget, widget, align, setStatusBarVisible } from "@zos/ui";
+import { createWidget, widget, prop, event, align, setStatusBarVisible } from "@zos/ui";
+import { push } from "@zos/router";
 import { setPageBrightTime } from "@zos/display";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { localStorage } from "@zos/storage";
@@ -13,7 +14,11 @@ import {
     TITLE_FONT_SIZE,
     TITLE_HEIGHT,
     HIJRI_DATE_HEIGHT,
+    LANGUAGE_TILE_GAP,
     BOTTOM_PADDING,
+    getLanguageTileBgStyle,
+    getLanguageTileTitleStyle,
+    getLanguageTileChevronStyle,
 } from "zosLoader:./index.page.[pf].layout.js";
 
 Page(
@@ -52,6 +57,9 @@ Page(
             }
 
             let y = PARA_START_Y + TITLE_HEIGHT + (hijriText ? HIJRI_DATE_HEIGHT + PARA_GAP : 0) + PARA_GAP;
+            this.renderLanguageTile(y);
+            y += getLanguageTileBgStyle(y).h + LANGUAGE_TILE_GAP;
+
             createWidget(widget.TEXT, {
                 ...getParaStyle(y),
                 h: PARA_HEIGHT,
@@ -94,6 +102,35 @@ Page(
                 color: 0x000000,
                 alpha: 0,
             });
+        },
+
+        renderLanguageTile(y) {
+            const tileBg = createWidget(widget.FILL_RECT, getLanguageTileBgStyle(y));
+            const tileTitle = createWidget(widget.TEXT, {
+                ...getLanguageTileTitleStyle(y),
+                text: "Language",
+            });
+            const tileChevron = createWidget(widget.IMG, {
+                ...getLanguageTileChevronStyle(y),
+                src: "image/chevron_right.png",
+            });
+
+            const setPressed = (pressed) => {
+                tileBg.setProperty(prop.MORE, {
+                    ...getLanguageTileBgStyle(y),
+                    color: pressed ? 0x101010 : 0x000000,
+                });
+            };
+            const openLanguagePage = () => {
+                setPressed(false);
+                push({ url: "page/gt/language/index.page" });
+            };
+
+            for (const w of [tileBg, tileTitle, tileChevron]) {
+                w.addEventListener(event.CLICK_DOWN, () => setPressed(true));
+                w.addEventListener(event.MOVE, () => setPressed(false));
+                w.addEventListener(event.SELECT, openLanguagePage);
+            }
         },
 
         getTodayHijriText() {

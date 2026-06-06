@@ -32,7 +32,8 @@
           "pages": [
             "page/gt/home/index.page",
             "page/gt/help/index.page",
-            "page/gt/qibla/index.page"
+            "page/gt/qibla/index.page",
+            "page/gt/language/index.page"
           ]
         },
         "app-side": {
