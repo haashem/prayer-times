@@ -2,7 +2,7 @@ import { createWidget, deleteWidget, widget, prop, event, setStatusBarVisible } 
 import { setPageBrightTime } from "@zos/display";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { onKey, offKey, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK, KEY_EVENT_PRESS, KEY_EVENT_RELEASE } from "@zos/interaction";
-import { setScrollMode, swipeToIndex, SCROLL_ANIMATION_NONE, SCROLL_MODE_SWIPER } from "@zos/page";
+import { setScrollMode, SCROLL_MODE_SWIPER } from "@zos/page";
 import { BasePage } from "@zeppos/zml/base-page";
 import {
     TITLE_STYLE,
@@ -60,10 +60,6 @@ Page(
 
             this.renderOptions();
             this.registerSelectionKey();
-            swipeToIndex({
-                index: this.getSelectedIndex(),
-                animation: SCROLL_ANIMATION_NONE,
-            });
         },
 
         clearOptions() {
@@ -133,7 +129,7 @@ Page(
         },
 
         renderFocusIndicator() {
-            this.state.focusIndex = this.getSelectedIndex();
+            this.state.focusIndex = 0;
             this.state.focusTop = this.trackOptionWidget(createWidget(widget.IMG, {
                 ...getFocusLineTopStyle(this.state.focusIndex),
                 src: "image/focus_line_top.png",

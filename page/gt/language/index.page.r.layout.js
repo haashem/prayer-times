@@ -12,13 +12,14 @@ const COLORS = {
     text: 0xffffff,
 };
 
-const TITLE_Y = px(70);
+const TITLE_Y = px(44);
 const TITLE_HEIGHT = px(64);
-const ROW_START_Y = px(176);
+const ROW_START_Y = px(184);
 const ROW_HEIGHT = px(104);
 const ROW_PAD_X = px(76);
 const RADIO_SIZE = px(64);
 const RADIO_RIGHT_PAD = px(70);
+const FOCUS_LINE_HEIGHT = px(22);
 
 export const LANGUAGE_OPTIONS = [
     { value: "farsi", label: "فارسی" },
@@ -101,16 +102,16 @@ export function getFocusLineTopStyle(index) {
         x: px(24),
         y: getRowY(index),
         w: DEVICE_WIDTH - px(48),
-        h: px(22),
+        h: FOCUS_LINE_HEIGHT,
     };
 }
 
 export function getFocusLineBottomStyle(index) {
     return {
         x: px(24),
-        y: getRowY(index) + ROW_HEIGHT - px(22),
+        y: getRowY(index) + ROW_HEIGHT - FOCUS_LINE_HEIGHT,
         w: DEVICE_WIDTH - px(48),
-        h: px(22),
+        h: FOCUS_LINE_HEIGHT,
     };
 }
 
