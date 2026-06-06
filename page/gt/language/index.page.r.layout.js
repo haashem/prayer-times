@@ -27,6 +27,7 @@ export const LANGUAGE_OPTIONS = [
 ];
 
 const BOTTOM_PADDING_Y = ROW_START_Y + LANGUAGE_OPTIONS.length * ROW_HEIGHT;
+export const SCROLL_ITEM_HEIGHT = ROW_HEIGHT;
 
 export const TITLE_STYLE = {
     x: SIDE_PADDING,
@@ -75,12 +76,41 @@ export function getLanguageRowTextStyle(index) {
     };
 }
 
+export function getLanguageRowHitStyle(index) {
+    return {
+        x: 0,
+        y: getRowY(index),
+        w: DEVICE_WIDTH - RADIO_RIGHT_PAD - RADIO_SIZE,
+        h: ROW_HEIGHT,
+        color: COLORS.rowBg,
+        alpha: 0,
+    };
+}
+
 export function getStateButtonStyle(index) {
     return {
         x: 0,
         y: index * ROW_HEIGHT + (ROW_HEIGHT - RADIO_SIZE) / 2,
         w: RADIO_SIZE,
         h: RADIO_SIZE,
+    };
+}
+
+export function getFocusLineTopStyle(index) {
+    return {
+        x: px(24),
+        y: getRowY(index),
+        w: DEVICE_WIDTH - px(48),
+        h: px(22),
+    };
+}
+
+export function getFocusLineBottomStyle(index) {
+    return {
+        x: px(24),
+        y: getRowY(index) + ROW_HEIGHT - px(22),
+        w: DEVICE_WIDTH - px(48),
+        h: px(22),
     };
 }
 
