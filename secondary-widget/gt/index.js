@@ -3,6 +3,7 @@ import { Time } from "@zos/sensor";
 import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
+import { formatNextPrayer, getPrayerLabel, localizeDigits, t } from "../../utils/i18n";
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
@@ -23,7 +24,6 @@ import {
 const logger = Logger.getLogger("prayer-widget");
 
 const PRAYER_KEYS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
-const PRAYER_LABELS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 const NEXT_EVENT_KEYS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 SecondaryWidget({
@@ -164,7 +164,7 @@ SecondaryWidget({
 
         this.trackWidget(createWidget(widget.TEXT, {
             ...NO_DATA_STYLE,
-            text: "Tap to set up\nPrayer Times",
+            text: t("tapSetupPrayerTimesTwoLine"),
         }));
     },
 
@@ -188,7 +188,7 @@ SecondaryWidget({
                 color: nextInfo.remainingMinutes <= 60
                     ? NEXT_SUMMARY_URGENT_COLOR
                     : NEXT_SUMMARY_STYLE.color,
-                text: `${nextInfo.label} in ${this.formatRemaining(nextInfo.remainingMinutes)}`,
+                text: formatNextPrayer(getPrayerLabel(nextInfo.key), nextInfo.remainingMinutes),
             }));
         }
 
@@ -203,11 +203,11 @@ SecondaryWidget({
             this.trackWidget(createWidget(widget.FILL_RECT, getPrayerCellBgStyle(x, y, isActive)));
             this.trackWidget(createWidget(widget.TEXT, {
                 ...getPrayerLabelStyle(x, y, isActive),
-                text: PRAYER_LABELS[i],
+                text: getPrayerLabel(PRAYER_KEYS[i]),
             }));
             this.trackWidget(createWidget(widget.TEXT, {
                 ...getPrayerTimeStyle(x, y, isActive),
-                text: this.formatTime(data.timings[PRAYER_KEYS[i]]),
+                text: localizeDigits(this.formatTime(data.timings[PRAYER_KEYS[i]])),
             }));
         }
     },
@@ -220,7 +220,7 @@ SecondaryWidget({
             const prayerMinutes = this.timeToMinutes(todayData.timings[key]);
             if (nowMinutes < prayerMinutes) {
                 return {
-                    label: key,
+                    key,
                     remainingMinutes: prayerMinutes - nowMinutes,
                 };
             }
@@ -231,16 +231,9 @@ SecondaryWidget({
             : this.timeToMinutes(todayData.timings["Fajr"]);
 
         return {
-            label: "Fajr",
+            key: "Fajr",
             remainingMinutes: 24 * 60 - nowMinutes + tomorrowFajr,
         };
-    },
-
-    formatRemaining(totalMinutes) {
-        if (totalMinutes < 60) return `${totalMinutes}m`;
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-        return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
     },
 
     formatTime(timeStr) {

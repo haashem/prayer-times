@@ -1,6 +1,7 @@
 import { createWidget, deleteWidget, widget, prop } from "@zos/ui";
 import { Compass, Vibrator, VIBRATOR_SCENE_SHORT_MIDDLE } from "@zos/sensor";
 import { log as Logger } from "@zos/utils";
+import { t } from "../../../utils/i18n";
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
@@ -191,7 +192,7 @@ export function createQiblaCompass(container) {
         state.calibrateWidget = trackWidget(
             container.createWidget(widget.TEXT, {
                 ...CALIBRATE_STYLE,
-                text: "Rotate your wrist in a figure-8 to calibrate the compass",
+                text: t("qiblaCalibrate"),
             })
         );
     }
@@ -246,7 +247,7 @@ export function createQiblaCompass(container) {
         trackWidget(
             container.createWidget(widget.TEXT, {
                 ...QIBLA_NO_DATA_STYLE,
-                text: "No location data.\nOpen the app first to detect your city.",
+                text: t("qiblaNoData"),
             })
         );
     }

@@ -4,6 +4,7 @@ import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { onKey, offKey, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK, KEY_EVENT_PRESS, KEY_EVENT_RELEASE } from "@zos/interaction";
 import { setScrollMode, SCROLL_MODE_SWIPER } from "@zos/page";
 import { BasePage } from "@zeppos/zml/base-page";
+import { getAppLanguage, setAppLanguage, t } from "../../../utils/i18n";
 import {
     TITLE_STYLE,
     LANGUAGE_OPTIONS,
@@ -22,12 +23,14 @@ Page(
     BasePage({
         state: {
             optionWidgets: [],
+            titleWidget: null,
             radioGroup: null,
             stateButtons: [],
             focusTop: null,
             focusBottom: null,
             focusIndex: 0,
-            selectedIndex: 2,
+            selectedIndex: null,
+            updatingRadio: false,
         },
 
         build() {
@@ -53,9 +56,9 @@ Page(
             });
 
             createWidget(widget.PAGE_SCROLLBAR);
-            createWidget(widget.TEXT, {
+            this.state.titleWidget = createWidget(widget.TEXT, {
                 ...TITLE_STYLE,
-                text: "Language",
+                text: t("language"),
             });
 
             this.renderOptions();
@@ -92,6 +95,11 @@ Page(
                 ...RADIO_GROUP_STYLE,
                 select_src: "image/dot_select.png",
                 unselect_src: "image/dot_unselect.png",
+                check_func: (group, index, checked) => {
+                    if (checked && !this.state.updatingRadio) {
+                        this.selectIndex(index, false);
+                    }
+                },
             }));
 
             for (let i = 0; i < LANGUAGE_OPTIONS.length; i++) {
@@ -141,12 +149,13 @@ Page(
         },
 
         getSelectedIndex() {
-            if (this.state.selectedIndex >= 0 && this.state.selectedIndex < LANGUAGE_OPTIONS.length) {
+            if (this.state.selectedIndex !== null && this.state.selectedIndex >= 0 && this.state.selectedIndex < LANGUAGE_OPTIONS.length) {
                 return this.state.selectedIndex;
             }
 
+            const language = getAppLanguage();
             for (let i = 0; i < LANGUAGE_OPTIONS.length; i++) {
-                if (LANGUAGE_OPTIONS[i].value === "english") {
+                if (LANGUAGE_OPTIONS[i].value === language) {
                     return i;
                 }
             }
@@ -183,11 +192,23 @@ Page(
             });
         },
 
-        selectIndex(index) {
+        selectIndex(index, updateRadio = true) {
             const nextIndex = Math.max(0, Math.min(LANGUAGE_OPTIONS.length - 1, index));
             this.state.selectedIndex = nextIndex;
-            if (this.state.radioGroup && this.state.stateButtons[nextIndex]) {
-                this.state.radioGroup.setProperty(prop.CHECKED, this.state.stateButtons[nextIndex]);
+            setAppLanguage(LANGUAGE_OPTIONS[nextIndex].value);
+            if (updateRadio && this.state.radioGroup && this.state.stateButtons[nextIndex]) {
+                this.state.updatingRadio = true;
+                try {
+                    this.state.radioGroup.setProperty(prop.CHECKED, this.state.stateButtons[nextIndex]);
+                } finally {
+                    this.state.updatingRadio = false;
+                }
+            }
+            if (this.state.titleWidget) {
+                this.state.titleWidget.setProperty(prop.MORE, {
+                    ...TITLE_STYLE,
+                    text: t("language"),
+                });
             }
         },
 

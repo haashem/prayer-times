@@ -4,6 +4,7 @@ import { setPageBrightTime } from "@zos/display";
 import { Compass, Vibrator, VIBRATOR_SCENE_SHORT_MIDDLE } from "@zos/sensor";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
+import { t } from "../../../utils/i18n";
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
@@ -231,7 +232,7 @@ Page({
         this.state.calibrateWidget = this.trackWidget(
             createWidget(widget.TEXT, {
                 ...CALIBRATE_STYLE,
-                text: "Rotate your wrist in a figure-8 to calibrate the compass",
+                text: t("qiblaCalibrate"),
             })
         );
     },
@@ -286,7 +287,7 @@ Page({
         this.trackWidget(
             createWidget(widget.TEXT, {
                 ...NO_DATA_STYLE,
-                text: "No location data.\nOpen the app first to detect your city.",
+                text: t("qiblaNoData"),
             })
         );
     },

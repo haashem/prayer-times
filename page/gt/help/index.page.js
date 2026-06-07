@@ -5,7 +5,10 @@ import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { localStorage } from "@zos/storage";
 import { Time } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
+import { formatHijriDate, isRtl, t } from "../../../utils/i18n";
 import {
+    DEVICE_WIDTH,
+    DEVICE_HEIGHT,
     getParaStyle,
     getHijriDateStyle,
     PARA_HEIGHT,
@@ -34,12 +37,20 @@ Page(
                 setStatusBarVisible(false);
             }
 
+            const pageBg = createWidget(widget.FILL_RECT, {
+                x: 0,
+                y: 0,
+                w: DEVICE_WIDTH,
+                h: DEVICE_HEIGHT,
+                color: 0x000000,
+            });
             createWidget(widget.PAGE_SCROLLBAR);
+            const bodyAlign = isRtl() ? align.RIGHT : align.LEFT;
 
             // Title
             createWidget(widget.TEXT, {
                 ...getParaStyle(PARA_START_Y),
-                text: "Prayer Times",
+                text: t("appName"),
                 text_size: TITLE_FONT_SIZE,
                 color: 0xffffff,
                 h: TITLE_HEIGHT,
@@ -63,20 +74,15 @@ Page(
             createWidget(widget.TEXT, {
                 ...getParaStyle(y),
                 h: PARA_HEIGHT,
-                text:
-                    "This app detects your location and fetches accurate local prayer times.\n\n" +
-                    "For the best results:\n" +
-                    "• Connect to Wi-Fi\n" +
-                    "• Disconnect from VPN\n" +
-                    "• Turn off iCloud Private\n" +
-                    "  Relay on iPhone",
+                text: t("helpIntro"),
+                align_h: bodyAlign,
             });
             y += PARA_HEIGHT + PARA_GAP;
 
             // Calculation method section
             createWidget(widget.TEXT, {
                 ...getParaStyle(y),
-                text: "Calculation Method",
+                text: t("calculationMethod"),
                 text_size: TITLE_FONT_SIZE,
                 color: 0xffffff,
                 h: TITLE_HEIGHT,
@@ -87,9 +93,8 @@ Page(
             createWidget(widget.TEXT, {
                 ...getParaStyle(y),
                 h: PARA_HEIGHT,
-                text:
-                    "Prayer times are calculated using the Muslim World League (MWL) method.\n\n" +
-                    "Asr time follows the Shafi'i school, where Asr begins when an object's shadow equals its height.",
+                text: t("helpCalculation"),
+                align_h: bodyAlign,
             });
             y += PARA_HEIGHT + PARA_GAP;
 
@@ -102,13 +107,21 @@ Page(
                 color: 0x000000,
                 alpha: 0,
             });
+            pageBg.setProperty(prop.MORE, {
+                x: 0,
+                y: 0,
+                w: DEVICE_WIDTH,
+                h: y + BOTTOM_PADDING,
+                color: 0x000000,
+            });
         },
 
         renderLanguageTile(y) {
             const tileBg = createWidget(widget.FILL_RECT, getLanguageTileBgStyle(y));
             const tileTitle = createWidget(widget.TEXT, {
                 ...getLanguageTileTitleStyle(y),
-                text: "Language",
+                text: t("language"),
+                align_h: isRtl() ? align.RIGHT : align.LEFT,
             });
             const tileChevron = createWidget(widget.IMG, {
                 ...getLanguageTileChevronStyle(y),
@@ -146,8 +159,7 @@ Page(
                 const entry = cached.data && cached.data.find(
                     (d) => d.date && d.date.gregorian && d.date.gregorian.date === todayStr
                 );
-                const hijri = entry && entry.date && entry.date.hijri;
-                return hijri ? `${hijri.day} ${hijri.month.en} ${hijri.year}` : "";
+                return formatHijriDate(entry && entry.date && entry.date.hijri);
             } catch (e) {
                 return "";
             }

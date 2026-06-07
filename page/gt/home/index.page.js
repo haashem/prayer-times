@@ -8,6 +8,7 @@ import { log as Logger } from "@zos/utils";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { BasePage } from "@zeppos/zml/base-page";
 import { createQiblaCompass } from "./qibla";
+import { getPrayerLabel, localizeDigits, t } from "../../../utils/i18n";
 import {
   DEVICE_WIDTH,
   DEVICE_HEIGHT,
@@ -30,7 +31,6 @@ import {
 const logger = Logger.getLogger("prayer-times");
 
 const PRAYER_KEYS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
-const PRAYER_LABELS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 Page(
   BasePage({
@@ -105,7 +105,7 @@ Page(
       this.loadLocation();
 
       if (!this.state.location) {
-        this.showLoading("Detecting location...");
+        this.showLoading(t("detectingLocation"));
         this.state.qibla.build(null);
         this.detectLocation();
         return;
@@ -115,7 +115,7 @@ Page(
       if (todayData) {
         this.renderUI(todayData);
       } else {
-        this.showLoading("Loading prayer times...");
+        this.showLoading(t("loadingPrayerTimes"));
         this.fetchFromApi();
       }
 
@@ -208,7 +208,7 @@ Page(
             localStorage.setItem("location", JSON.stringify(loc));
             localStorage.removeItem("prayerData");
 
-            this.showLoading("Loading prayer times...");
+            this.showLoading(t("loadingPrayerTimes"));
             this.fetchFromApi();
 
             // Build Qibla now that we have location
@@ -216,13 +216,13 @@ Page(
           } else {
             logger.error("Location detection failed");
             this.clearLoading();
-            this.showLoading("Location detection failed");
+            this.showLoading(t("locationDetectionFailed"));
           }
         })
         .catch((err) => {
           logger.error("Location error: " + JSON.stringify(err));
           this.clearLoading();
-          this.showLoading("Check watch is connected to phone");
+          this.showLoading(t("checkPhoneConnection"));
         });
     },
 
@@ -261,18 +261,18 @@ Page(
             if (todayData) {
               this.renderUI(todayData);
             } else {
-              this.showLoading("No data for today");
+              this.showLoading(t("noDataToday"));
             }
           } else {
             logger.error("API response invalid");
             this.clearLoading();
-            this.showLoading("Failed to load data");
+            this.showLoading(t("failedLoadData"));
           }
         })
         .catch((err) => {
           logger.error("Fetch error: " + (err && err.message ? err.message : JSON.stringify(err)));
           this.clearLoading();
-          this.showLoading("Network error. Check connection.");
+          this.showLoading(t("networkError"));
         });
     },
 
@@ -386,11 +386,11 @@ Page(
         this.trackWidget(container.createWidget(widget.FILL_RECT, getPrayerCellBgStyle(x, y, isActive)));
         this.trackWidget(container.createWidget(widget.TEXT, {
           ...getPrayerLabelStyle(x, y, isActive),
-          text: PRAYER_LABELS[i],
+          text: getPrayerLabel(PRAYER_KEYS[i]),
         }));
         this.trackWidget(container.createWidget(widget.TEXT, {
           ...getPrayerTimeStyle(x, y, isActive),
-          text: this.formatTime(todayData.timings[PRAYER_KEYS[i]]),
+          text: localizeDigits(this.formatTime(todayData.timings[PRAYER_KEYS[i]])),
         }));
       }
 
@@ -412,7 +412,7 @@ Page(
     },
 
     onLocationTap() {
-      this.showLoading("Detecting location...");
+      this.showLoading(t("detectingLocation"));
       this.detectLocation();
     },
 

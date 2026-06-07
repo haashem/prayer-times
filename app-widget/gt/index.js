@@ -3,6 +3,7 @@ import { Time } from "@zos/sensor";
 import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
+import { formatHijriDate, formatRemaining, getPrayerLabel, localizeDigits, t } from "../../utils/i18n";
 import {
     CARD_HEIGHT,
     MARGIN,
@@ -147,7 +148,7 @@ AppWidget({
             ...NO_DATA_STYLE,
             x: this.state.cardX + MARGIN,
             w: this.state.cardW - MARGIN,
-            text: "Tap to set up Prayer Times",
+            text: t("tapSetupPrayerTimes"),
         }));
     },
 
@@ -173,7 +174,7 @@ AppWidget({
             ...REMAINING_STYLE,
             x: textX,
             w: textW,
-            text: `in ${this.formatRemaining(nextInfo.remainingMinutes)}`,
+            text: `${t("inPrefix")} ${formatRemaining(nextInfo.remainingMinutes)}`,
         }));
 
         const prayerTime = this.formatTime(data.timings[nextInfo.key]);
@@ -181,7 +182,7 @@ AppWidget({
             ...PRAYER_STYLE,
             x: textX,
             w: textW,
-            text: `${nextInfo.label} ${prayerTime}`,
+            text: `${getPrayerLabel(nextInfo.key)} ${localizeDigits(prayerTime)}`,
         }));
 
         const hijriText = this.getHijriText(data);
@@ -202,7 +203,7 @@ AppWidget({
         for (const key of PRAYER_KEYS) {
             const prayerMinutes = this.timeToMinutes(todayData.timings[key]);
             if (nowMinutes < prayerMinutes) {
-                return { key, label: key, remainingMinutes: prayerMinutes - nowMinutes };
+                return { key, remainingMinutes: prayerMinutes - nowMinutes };
             }
         }
 
@@ -213,7 +214,6 @@ AppWidget({
 
         return {
             key: "Fajr",
-            label: "Fajr",
             remainingMinutes: 24 * 60 - nowMinutes + tomorrowFajr,
         };
     },
@@ -221,17 +221,10 @@ AppWidget({
     getHijriText(data) {
         try {
             const hijri = data && data.date && data.date.hijri;
-            return hijri ? `${hijri.day} ${hijri.month.en} ${hijri.year}` : "";
+            return formatHijriDate(hijri);
         } catch (e) {
             return "";
         }
-    },
-
-    formatRemaining(totalMinutes) {
-        if (totalMinutes < 60) return `${totalMinutes}m`;
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-        return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
     },
 
     formatTime(timeStr) {
