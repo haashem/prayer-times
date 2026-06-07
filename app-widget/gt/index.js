@@ -3,7 +3,7 @@ import { Time } from "@zos/sensor";
 import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
-import { formatHijriDate, formatRelativeRemaining, getPrayerLabel, localizeDigits, t } from "../../utils/i18n";
+import { formatHijriDate, formatRelativeRemaining, getPrayerLabel, localizeDigits, refreshAppLanguage, t } from "../../utils/i18n";
 import {
     CARD_HEIGHT,
     MARGIN,
@@ -62,6 +62,7 @@ AppWidget({
     onResume() {
         try {
             this.clearUI();
+            refreshAppLanguage();
             setAppWidgetSize({ h: CARD_HEIGHT });
             const cardSize = getAppWidgetSize();
             this.state.cardW = cardSize.w;

@@ -239,6 +239,11 @@ export function getAppLanguage() {
     return cachedAppLanguage;
 }
 
+export function refreshAppLanguage() {
+    cachedAppLanguage = null;
+    return getAppLanguage();
+}
+
 export function setAppLanguage(language) {
     const normalized = normalizeLanguage(language);
     if (cachedAppLanguage !== normalized) {

@@ -3,7 +3,7 @@ import { Time } from "@zos/sensor";
 import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
-import { formatNextPrayer, getPrayerLabel, localizeDigits, t } from "../../utils/i18n";
+import { formatNextPrayer, getPrayerLabel, localizeDigits, refreshAppLanguage, t } from "../../utils/i18n";
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
@@ -59,6 +59,7 @@ SecondaryWidget({
         logger.debug("prayer widget onResume");
         try {
             this.clearUI();
+            refreshAppLanguage();
             this.loadData();
 
             if (!this.state.prayerData) {
