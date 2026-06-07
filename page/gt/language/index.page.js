@@ -58,7 +58,7 @@ Page(
             createWidget(widget.PAGE_SCROLLBAR);
             this.state.titleWidget = createWidget(widget.TEXT, {
                 ...TITLE_STYLE,
-                text: t("language"),
+                text: t("selectLanguage"),
             });
 
             this.renderOptions();
@@ -212,7 +212,7 @@ Page(
             if (this.state.titleWidget) {
                 this.state.titleWidget.setProperty(prop.MORE, {
                     ...TITLE_STYLE,
-                    text: t("language"),
+                    text: t("selectLanguage"),
                 });
             }
         },

@@ -120,8 +120,8 @@ Page(
             const tileBg = createWidget(widget.FILL_RECT, getLanguageTileBgStyle(y));
             const tileTitle = createWidget(widget.TEXT, {
                 ...getLanguageTileTitleStyle(y),
-                text: t("language"),
-                align_h: isRtl() ? align.RIGHT : align.LEFT,
+                text: t("selectLanguage"),
+                align_h: align.LEFT,
             });
             const tileChevron = createWidget(widget.IMG, {
                 ...getLanguageTileChevronStyle(y),

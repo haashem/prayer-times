@@ -14,7 +14,7 @@ let cachedAppLanguage = null;
 const TRANSLATIONS = {
     english: {
         appName: "Prayer Times",
-        language: "Language",
+        selectLanguage: "Language",
         calculationMethod: "Calculation Method",
         helpIntro:
             "This app detects your location and fetches accurate local prayer times.\n\n" +
@@ -43,7 +43,7 @@ const TRANSLATIONS = {
     },
     farsi: {
         appName: "اوقات شرعی",
-        language: "زبان",
+        selectLanguage: "انتخاب زبان",
         calculationMethod: "روش محاسبه",
         helpIntro:
             "این برنامه موقعیت شما را تشخیص می‌دهد و اوقات شرعی دقیق محلی را دریافت می‌کند.\n\n" +
@@ -71,7 +71,7 @@ const TRANSLATIONS = {
     },
     arabic: {
         appName: "مواقيت الصلاة",
-        language: "اللغة",
+        selectLanguage: "اختيار اللغة",
         calculationMethod: "طريقة الحساب",
         helpIntro:
             "يكتشف هذا التطبيق موقعك ويجلب مواقيت الصلاة المحلية بدقة.\n\n" +
