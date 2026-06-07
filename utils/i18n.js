@@ -15,6 +15,7 @@ const TRANSLATIONS = {
     english: {
         appName: "Prayer Times",
         selectLanguage: "Language",
+        contactUs: "Contact Us",
         calculationMethod: "Calculation Method",
         helpIntro:
             "This app detects your location and fetches accurate local prayer times.\n\n" +
@@ -44,6 +45,7 @@ const TRANSLATIONS = {
     farsi: {
         appName: "اوقات شرعی",
         selectLanguage: "انتخاب زبان",
+        contactUs: "تماس با ما",
         calculationMethod: "روش محاسبه",
         helpIntro:
             "این برنامه موقعیت شما را تشخیص می‌دهد و اوقات شرعی دقیق محلی را دریافت می‌کند.\n\n" +
@@ -72,6 +74,7 @@ const TRANSLATIONS = {
     arabic: {
         appName: "مواقيت الصلاة",
         selectLanguage: "اختيار اللغة",
+        contactUs: "اتصل بنا",
         calculationMethod: "طريقة الحساب",
         helpIntro:
             "يكتشف هذا التطبيق موقعك ويجلب مواقيت الصلاة المحلية بدقة.\n\n" +

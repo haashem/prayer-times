@@ -16,11 +16,15 @@ import {
     TITLE_HEIGHT,
     HIJRI_DATE_HEIGHT,
     LANGUAGE_TILE_GAP,
+    CONTACT_QR_SECTION_HEIGHT,
     BOTTOM_PADDING,
     getLanguageTileBgStyle,
     getLanguageTileTitleStyle,
     getLanguageTileChevronStyle,
+    getContactQrStyle,
 } from "zosLoader:./index.page.[pf].layout.js";
+
+const CONTACT_EMAIL_QR_CONTENT = "mailto:hashemp206@yahoo.com?subject=Prayer%20Times%20App";
 
 Page(
     BasePage({
@@ -107,6 +111,22 @@ Page(
                 align_h: bodyAlign,
             });
             y += PARA_HEIGHT + PARA_GAP;
+
+            createWidget(widget.TEXT, {
+                ...getParaStyle(y),
+                text: t("contactUs"),
+                text_size: TITLE_FONT_SIZE,
+                color: 0xffffff,
+                h: TITLE_HEIGHT,
+                align_h: align.CENTER_H,
+            });
+            y += TITLE_HEIGHT + PARA_GAP;
+
+            createWidget(widget.QRCODE, {
+                ...getContactQrStyle(y),
+                content: CONTACT_EMAIL_QR_CONTENT,
+            });
+            y += CONTACT_QR_SECTION_HEIGHT + PARA_GAP;
 
             // Bottom spacer
             createWidget(widget.FILL_RECT, {

@@ -23,6 +23,10 @@ export const LANGUAGE_TILE_GAP = px(12);
 const LANGUAGE_TILE_HEIGHT = px(104);
 const LANGUAGE_TILE_PAD_X = px(76);
 const LANGUAGE_TILE_CHEVRON_W = px(64);
+export const CONTACT_QR_SECTION_HEIGHT = px(294);
+const CONTACT_QR_GAP = px(14);
+const CONTACT_QR_SIZE = px(230);
+const CONTACT_QR_BG_PADDING = px(14);
 
 export function getHijriDateStyle(y) {
     return {
@@ -82,6 +86,22 @@ export function getLanguageTileChevronStyle(y) {
         y: y + (LANGUAGE_TILE_HEIGHT - LANGUAGE_TILE_CHEVRON_W) / 2,
         w: LANGUAGE_TILE_CHEVRON_W,
         h: LANGUAGE_TILE_CHEVRON_W,
+    };
+}
+
+export function getContactQrStyle(y) {
+    const x = (DEVICE_WIDTH - CONTACT_QR_SIZE) / 2;
+
+    return {
+        x: x,
+        y: y + CONTACT_QR_GAP,
+        w: CONTACT_QR_SIZE,
+        h: CONTACT_QR_SIZE,
+        bg_x: x - CONTACT_QR_BG_PADDING,
+        bg_y: y + CONTACT_QR_GAP - CONTACT_QR_BG_PADDING,
+        bg_w: CONTACT_QR_SIZE + CONTACT_QR_BG_PADDING * 2,
+        bg_h: CONTACT_QR_SIZE + CONTACT_QR_BG_PADDING * 2,
+        bg_radius: px(8),
     };
 }
 
