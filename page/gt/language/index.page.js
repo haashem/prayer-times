@@ -108,7 +108,12 @@ Page(
 
             const selectedIndex = this.getSelectedIndex();
             if (this.state.stateButtons[selectedIndex]) {
-                this.state.radioGroup.setProperty(prop.INIT, this.state.stateButtons[selectedIndex]);
+                this.state.updatingRadio = true;
+                try {
+                    this.state.radioGroup.setProperty(prop.INIT, this.state.stateButtons[selectedIndex]);
+                } finally {
+                    this.state.updatingRadio = false;
+                }
             }
 
             this.trackOptionWidget(createWidget(widget.FILL_RECT, {

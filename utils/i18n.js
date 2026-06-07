@@ -9,6 +9,8 @@ export const LANGUAGE_OPTIONS = [
     { value: "english", label: "English" },
 ];
 
+let cachedAppLanguage = null;
+
 const TRANSLATIONS = {
     english: {
         appName: "Prayer Times",
@@ -225,16 +227,24 @@ export function normalizeLanguage(language) {
 }
 
 export function getAppLanguage() {
-    try {
-        return normalizeLanguage(localStorage.getItem(APP_LANGUAGE_KEY));
-    } catch (e) {
-        return DEFAULT_LANGUAGE;
+    if (cachedAppLanguage !== null) {
+        return cachedAppLanguage;
     }
+
+    try {
+        cachedAppLanguage = normalizeLanguage(localStorage.getItem(APP_LANGUAGE_KEY));
+    } catch (e) {
+        cachedAppLanguage = DEFAULT_LANGUAGE;
+    }
+    return cachedAppLanguage;
 }
 
 export function setAppLanguage(language) {
     const normalized = normalizeLanguage(language);
-    localStorage.setItem(APP_LANGUAGE_KEY, normalized);
+    if (cachedAppLanguage !== normalized) {
+        cachedAppLanguage = normalized;
+        localStorage.setItem(APP_LANGUAGE_KEY, normalized);
+    }
     return normalized;
 }
 
