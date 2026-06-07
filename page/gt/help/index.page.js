@@ -2,8 +2,6 @@ import { createWidget, widget, prop, event, align, setStatusBarVisible } from "@
 import { push } from "@zos/router";
 import { setPageBrightTime } from "@zos/display";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
-import { localStorage } from "@zos/storage";
-import { Time } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
 import { formatHijriDate, isRtl, t } from "../../../utils/i18n";
 import {
@@ -26,7 +24,19 @@ import {
 
 Page(
     BasePage({
-        build() {
+        state: {
+            hijriDate: null,
+        },
+
+        onInit(params) {
+            this.state.hijriDate = this.getHijriDateParam(params);
+        },
+
+        build(params) {
+            if (!this.state.hijriDate) {
+                this.state.hijriDate = this.getHijriDateParam(params);
+            }
+
             // Keep the screen bright while the user reads the help page.
             setPageBrightTime({ brightTime: 30000 });
 
@@ -58,7 +68,7 @@ Page(
             });
 
             // Hijri date below title
-            const hijriText = this.getTodayHijriText();
+            const hijriText = formatHijriDate(this.state.hijriDate);
 
             if (hijriText) {
                 createWidget(widget.TEXT, {
@@ -146,22 +156,13 @@ Page(
             }
         },
 
-        getTodayHijriText() {
+        getHijriDateParam(params) {
             try {
-                const stored = localStorage.getItem("prayerData");
-                if (!stored) return "";
-                const cached = JSON.parse(stored);
-                const time = new Time();
-                const day = String(time.getDate()).padStart(2, "0");
-                const month = String(time.getMonth()).padStart(2, "0");
-                const year = String(time.getFullYear());
-                const todayStr = `${day}-${month}-${year}`;
-                const entry = cached.data && cached.data.find(
-                    (d) => d.date && d.date.gregorian && d.date.gregorian.date === todayStr
-                );
-                return formatHijriDate(entry && entry.date && entry.date.hijri);
+                if (!params) return null;
+                const data = typeof params === "string" ? JSON.parse(params) : params;
+                return data && data.hijriDate ? data.hijriDate : null;
             } catch (e) {
-                return "";
+                return null;
             }
         },
     })

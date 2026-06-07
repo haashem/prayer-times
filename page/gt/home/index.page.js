@@ -407,7 +407,12 @@ Page(
       });
       helpIcon.addEventListener(event.SELECT, () => {
         helpIcon.setProperty(prop.MORE, { alpha: 255 });
-        push({ url: "page/gt/help/index.page" });
+        push({
+          url: "page/gt/help/index.page",
+          params: JSON.stringify({
+            hijriDate: todayData && todayData.date && todayData.date.hijri,
+          }),
+        });
       });
     },
 
