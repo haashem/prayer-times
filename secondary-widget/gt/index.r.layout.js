@@ -159,9 +159,9 @@ export function getPrayerTimeStyle(x, y, isActive) {
 // ── No Data ──
 export const NO_DATA_STYLE = {
     x: SIDE_PADDING,
-    y: DEVICE_HEIGHT / 2 - px(30),
+    y: DEVICE_HEIGHT / 2 - px(58),
     w: CONTENT_WIDTH,
-    h: px(80),
+    h: px(116),
     color: COLORS.noData,
     text_size: px(36),
     align_h: align.CENTER_H,
