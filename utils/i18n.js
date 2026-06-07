@@ -36,9 +36,8 @@ const TRANSLATIONS = {
         tapSetupPrayerTimesTwoLine: "Tap to set up\nPrayer Times",
         qiblaCalibrate: "Rotate your wrist in a figure-8 to calibrate the compass",
         qiblaNoData: "No location data.\nOpen the app first to detect your city.",
-        inPrefix: "in",
-        hourShort: "h",
-        minuteShort: "m",
+        hourUnit: "h",
+        minuteUnit: "m",
     },
     farsi: {
         appName: "اوقات شرعی",
@@ -65,9 +64,8 @@ const TRANSLATIONS = {
         tapSetupPrayerTimesTwoLine: "برای تنظیم\nاوقات شرعی لمس کنید",
         qiblaCalibrate: "برای کالیبره کردن قطب‌نما، مچ خود را به شکل ۸ حرکت دهید",
         qiblaNoData: "داده موقعیت وجود ندارد.\nابتدا برنامه را باز کنید تا شهر شما تشخیص داده شود.",
-        inPrefix: "تا",
-        hourShort: "س",
-        minuteShort: "د",
+        hourUnit: "ساعت",
+        minuteUnit: "دقیقه",
     },
     arabic: {
         appName: "مواقيت الصلاة",
@@ -94,9 +92,8 @@ const TRANSLATIONS = {
         tapSetupPrayerTimesTwoLine: "اضغط لإعداد\nمواقيت الصلاة",
         qiblaCalibrate: "حرّك معصمك على شكل 8 لمعايرة البوصلة",
         qiblaNoData: "لا توجد بيانات موقع.\nافتح التطبيق أولاً لتحديد مدينتك.",
-        inPrefix: "بعد",
-        hourShort: "س",
-        minuteShort: "د",
+        hourUnit: "ساعة",
+        minuteUnit: "دقيقة",
     },
 };
 
@@ -274,23 +271,45 @@ export function localizeDigits(value, language = getAppLanguage()) {
 }
 
 export function formatRemaining(totalMinutes, language = getAppLanguage()) {
+    const normalized = normalizeLanguage(language);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    const minute = t("minuteShort", language);
-    const hour = t("hourShort", language);
+    const minute = t("minuteUnit", normalized);
+    const hour = t("hourUnit", normalized);
 
-    if (totalMinutes < 60) return `${localizeDigits(totalMinutes, language)}${minute}`;
-    return minutes === 0
-        ? `${localizeDigits(hours, language)}${hour}`
-        : `${localizeDigits(hours, language)}${hour} ${localizeDigits(minutes, language)}${minute}`;
+    if (totalMinutes < 60) {
+        return normalized === "english"
+            ? `${localizeDigits(totalMinutes, normalized)}${minute}`
+            : `${localizeDigits(totalMinutes, normalized)} ${minute}`;
+    }
+
+    const hourText = normalized === "english"
+        ? `${localizeDigits(hours, normalized)}${hour}`
+        : `${localizeDigits(hours, normalized)} ${hour}`;
+    const minuteText = normalized === "english"
+        ? `${localizeDigits(minutes, normalized)}${minute}`
+        : `${localizeDigits(minutes, normalized)} ${minute}`;
+
+    if (minutes === 0) return hourText;
+    return normalized === "english" ? `${hourText} ${minuteText}` : `${hourText} و ${minuteText}`;
+}
+
+export function formatRelativeRemaining(remainingMinutes, language = getAppLanguage()) {
+    const normalized = normalizeLanguage(language);
+    const remaining = formatRemaining(remainingMinutes, normalized);
+
+    if (normalized === "farsi") return `${remaining} مانده`;
+    if (normalized === "arabic") return `باقي ${remaining}`;
+    return `in ${remaining}`;
 }
 
 export function formatNextPrayer(label, remainingMinutes, language = getAppLanguage()) {
-    const remaining = formatRemaining(remainingMinutes, language);
-    const prefix = t("inPrefix", language);
-    return language === "english"
-        ? `${label} ${prefix} ${remaining}`
-        : `${label} ${prefix} ${remaining}`;
+    const normalized = normalizeLanguage(language);
+    const remaining = formatRemaining(remainingMinutes, normalized);
+
+    if (normalized === "farsi") return `${remaining} تا ${label}`;
+    if (normalized === "arabic") return `${remaining} حتى ${label}`;
+    return `${label} in ${remaining}`;
 }
 
 export function formatHijriDate(hijri, language = getAppLanguage()) {

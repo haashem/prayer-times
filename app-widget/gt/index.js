@@ -3,7 +3,7 @@ import { Time } from "@zos/sensor";
 import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
-import { formatHijriDate, formatRemaining, getPrayerLabel, localizeDigits, t } from "../../utils/i18n";
+import { formatHijriDate, formatRelativeRemaining, getPrayerLabel, localizeDigits, t } from "../../utils/i18n";
 import {
     CARD_HEIGHT,
     MARGIN,
@@ -174,7 +174,7 @@ AppWidget({
             ...REMAINING_STYLE,
             x: textX,
             w: textW,
-            text: `${t("inPrefix")} ${formatRemaining(nextInfo.remainingMinutes)}`,
+            text: formatRelativeRemaining(nextInfo.remainingMinutes),
         }));
 
         const prayerTime = this.formatTime(data.timings[nextInfo.key]);
