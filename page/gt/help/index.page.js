@@ -17,6 +17,7 @@ import {
     HIJRI_DATE_HEIGHT,
     LANGUAGE_TILE_GAP,
     CONTACT_QR_SECTION_HEIGHT,
+    getContactEmailTextStyle,
     BOTTOM_PADDING,
     getLanguageTileBgStyle,
     getLanguageTileTitleStyle,
@@ -25,6 +26,7 @@ import {
 } from "zosLoader:./index.page.[pf].layout.js";
 
 const CONTACT_EMAIL_QR_CONTENT = "mailto:hashemp206@yahoo.com?subject=Prayer%20Times%20App";
+const CONTACT_EMAIL = "hashemp206@yahoo.com";
 
 Page(
     BasePage({
@@ -125,6 +127,10 @@ Page(
             createWidget(widget.QRCODE, {
                 ...getContactQrStyle(y),
                 content: CONTACT_EMAIL_QR_CONTENT,
+            });
+            createWidget(widget.TEXT, {
+                ...getContactEmailTextStyle(y),
+                text: CONTACT_EMAIL,
             });
             y += CONTACT_QR_SECTION_HEIGHT + PARA_GAP;
 

@@ -23,10 +23,12 @@ export const LANGUAGE_TILE_GAP = px(12);
 const LANGUAGE_TILE_HEIGHT = px(104);
 const LANGUAGE_TILE_PAD_X = px(76);
 const LANGUAGE_TILE_CHEVRON_W = px(64);
-export const CONTACT_QR_SECTION_HEIGHT = px(294);
+export const CONTACT_QR_SECTION_HEIGHT = px(346);
 const CONTACT_QR_GAP = px(14);
 const CONTACT_QR_SIZE = px(230);
 const CONTACT_QR_BG_PADDING = px(14);
+const CONTACT_EMAIL_GAP = px(20);
+const CONTACT_EMAIL_HEIGHT = px(38);
 
 export function getHijriDateStyle(y) {
     return {
@@ -102,6 +104,20 @@ export function getContactQrStyle(y) {
         bg_w: CONTACT_QR_SIZE + CONTACT_QR_BG_PADDING * 2,
         bg_h: CONTACT_QR_SIZE + CONTACT_QR_BG_PADDING * 2,
         bg_radius: px(8),
+    };
+}
+
+export function getContactEmailTextStyle(y) {
+    return {
+        x: SIDE_PADDING,
+        y: y + CONTACT_QR_GAP + CONTACT_QR_SIZE + CONTACT_EMAIL_GAP,
+        w: CONTENT_WIDTH,
+        h: CONTACT_EMAIL_HEIGHT,
+        text_size: px(26),
+        color: COLORS.value,
+        align_h: align.CENTER_H,
+        align_v: align.CENTER_V,
+        text_style: text_style.NONE,
     };
 }
 
