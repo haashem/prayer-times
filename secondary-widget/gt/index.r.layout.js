@@ -58,9 +58,9 @@ export function getCityTextStyle(textLen) {
 
 // ── Next Prayer Summary ──
 export const NEXT_SUMMARY_STYLE = {
-    x: 0,
+    x: SIDE_PADDING,
     y: px(54),
-    w: DEVICE_WIDTH,
+    w: CONTENT_WIDTH,
     h: px(44),
     color: COLORS.nextName,
     text_size: px(38),
