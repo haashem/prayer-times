@@ -320,11 +320,19 @@ export function formatRelativeRemaining(remainingMinutes, language = getAppLangu
 
 export function formatNextPrayer(label, remainingMinutes, language = getAppLanguage()) {
     const normalized = normalizeLanguage(language);
-    const remaining = formatRemaining(remainingMinutes, normalized);
+    if (normalized !== "farsi" && normalized !== "arabic") {
+        return `${formatRemaining(remainingMinutes, normalized)} to ${label}`;
+    }
+
+    const hours = Math.floor(remainingMinutes / 60);
+    const minutes = remainingMinutes % 60;
+    const remaining = hours > 0
+        ? `${localizeDigits(hours, normalized)}" ${localizeDigits(minutes, normalized)}'`
+        : `${localizeDigits(minutes, normalized)} ${t("minuteUnit", normalized)}`;
 
     if (normalized === "farsi") return `${remaining} تا ${label}`;
     if (normalized === "arabic") return `${remaining} حتى ${label}`;
-    return `${label} in ${remaining}`;
+    return "";
 }
 
 export function formatHijriDate(hijri, language = getAppLanguage()) {
