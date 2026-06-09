@@ -4,6 +4,7 @@ import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
 import { formatHijriDate, formatRelativeRemaining, getPrayerLabel, localizeDigits, refreshAppLanguage, t } from "../../utils/i18n";
+import { PRAYER_CACHE_KEY, getPrayerWindow } from "../../utils/prayer-cache";
 import {
     CARD_HEIGHT,
     MARGIN,
@@ -104,41 +105,15 @@ AppWidget({
             this.state.prayerData = null;
             this.state.tomorrowData = null;
 
-            const storedData = localStorage.getItem("prayerData");
+            const storedData = localStorage.getItem(PRAYER_CACHE_KEY);
             if (!storedData) return;
 
             const cached = JSON.parse(storedData);
-            if (!cached || !Array.isArray(cached.data)) return;
+            const prayerWindow = getPrayerWindow(cached, new Time());
+            if (!prayerWindow) return;
 
-            const time = new Time();
-            const day = String(time.getDate()).padStart(2, "0");
-            const month = String(time.getMonth()).padStart(2, "0");
-            const year = String(time.getFullYear());
-            const todayStr = day + "-" + month + "-" + year;
-
-            if (cached.month !== month || cached.year !== year) return;
-
-            const todayEntry = cached.data.find(
-                (d) => d.date && d.date.gregorian && d.date.gregorian.date === todayStr
-            );
-            if (todayEntry) this.state.prayerData = todayEntry;
-
-            const tomorrow = new Date(
-                time.getFullYear(),
-                time.getMonth() - 1,
-                time.getDate() + 1
-            );
-            const tDay = String(tomorrow.getDate()).padStart(2, "0");
-            const tMonth = String(tomorrow.getMonth() + 1).padStart(2, "0");
-            const tYear = String(tomorrow.getFullYear());
-            const tomorrowStr = tDay + "-" + tMonth + "-" + tYear;
-
-            if (cached.month === tMonth && cached.year === tYear) {
-                const tomorrowEntry = cached.data.find(
-                    (d) => d.date && d.date.gregorian && d.date.gregorian.date === tomorrowStr
-                );
-                if (tomorrowEntry) this.state.tomorrowData = tomorrowEntry;
-            }
+            this.state.prayerData = prayerWindow.today;
+            this.state.tomorrowData = prayerWindow.tomorrow;
         } catch (e) {
             logger.error("loadData error: " + e.message);
         }

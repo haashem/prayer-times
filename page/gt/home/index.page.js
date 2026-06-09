@@ -9,6 +9,7 @@ import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { BasePage } from "@zeppos/zml/base-page";
 import { createQiblaCompass } from "./qibla";
 import { getPrayerLabel, localizeDigits, t } from "../../../utils/i18n";
+import { PRAYER_CACHE_KEY, getPrayerWindow } from "../../../utils/prayer-cache";
 import {
   DEVICE_WIDTH,
   DEVICE_HEIGHT,
@@ -137,27 +138,12 @@ Page(
 
     loadTodayData() {
       try {
-        const stored = localStorage.getItem("prayerData");
+        const stored = localStorage.getItem(PRAYER_CACHE_KEY);
         if (!stored) return null;
 
         const cached = JSON.parse(stored);
-        if (!cached || !Array.isArray(cached.data)) return null;
-
-        const time = new Time();
-        const day = String(time.getDate()).padStart(2, "0");
-        const month = String(time.getMonth()).padStart(2, "0");
-        const year = String(time.getFullYear());
-        const todayStr = `${day}-${month}-${year}`;
-
-        if (cached.month !== month || cached.year !== year) {
-          return null;
-        }
-
-        const todayEntry = cached.data.find(
-          (d) => d.date && d.date.gregorian && d.date.gregorian.date === todayStr
-        );
-
-        return todayEntry || null;
+        const prayerWindow = getPrayerWindow(cached, new Time());
+        return prayerWindow ? prayerWindow.today : null;
       } catch (e) {
         logger.error("Error loading prayer data: " + e.message);
       }
@@ -206,6 +192,7 @@ Page(
             };
             this.state.location = loc;
             localStorage.setItem("location", JSON.stringify(loc));
+            localStorage.removeItem(PRAYER_CACHE_KEY);
             localStorage.removeItem("prayerData");
 
             this.showLoading(t("loadingPrayerTimes"));
@@ -246,15 +233,9 @@ Page(
         timeout,
       ])
         .then((data) => {
-          if (data && data.result && data.result.code === 200 && data.result.data) {
-            const time = new Time();
-            const month = String(time.getMonth()).padStart(2, "0");
-            const year = String(time.getFullYear());
-
-            localStorage.setItem(
-              "prayerData",
-              JSON.stringify({ month, year, data: data.result.data })
-            );
+          if (data && data.result && data.result.code === 200 && data.result.cache) {
+            localStorage.setItem(PRAYER_CACHE_KEY, JSON.stringify(data.result.cache));
+            localStorage.removeItem("prayerData");
 
             this.clearLoading();
             const todayData = this.loadTodayData();

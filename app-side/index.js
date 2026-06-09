@@ -1,4 +1,5 @@
 import { BaseSideService } from "@zeppos/zml/base-side";
+import { createPrayerMonthCache } from "../utils/prayer-cache";
 
 async function getPhoneLocation(res) {
     try {
@@ -50,7 +51,10 @@ function stripDay(day) {
             gregorian: { date: day.date.gregorian.date },
             hijri: {
                 day: day.date.hijri.day,
-                month: { en: day.date.hijri.month.en },
+                month: {
+                    en: day.date.hijri.month.en,
+                    number: day.date.hijri.month.number,
+                },
                 year: day.date.hijri.year,
             },
         },
@@ -60,24 +64,29 @@ function stripDay(day) {
 async function fetchPrayerTimes(params, res) {
     try {
         const today = new Date();
-        const mm = String(today.getMonth() + 1);
+        const mm = today.getMonth() + 1;
         const yyyy = today.getFullYear();
+        const nextMonth = mm === 12 ? 1 : mm + 1;
+        const nextMonthYear = mm === 12 ? yyyy + 1 : yyyy;
 
-        const url = `https://api.aladhan.com/v1/calendar/${yyyy}/${mm}?latitude=${params.latitude}&longitude=${params.longitude}&method=${params.method}`;
-        console.log("Fetching prayer times: " + url);
-
-        const response = await fetch({ url, method: "GET" });
-        const resBody =
-            typeof response.body === "string"
-                ? JSON.parse(response.body)
-                : response.body;
+        const resBody = await fetchCalendar(yyyy, mm, params);
 
         console.log("Fetch response code: " + (resBody && resBody.code));
 
-        if (resBody && resBody.code === 200) {
-            // Strip each day down to only the fields we need
+        if (resBody && resBody.code === 200 && Array.isArray(resBody.data)) {
+            let nextMonthFirst = null;
+            try {
+                const nextMonthBody = await fetchCalendar(nextMonthYear, nextMonth, params);
+                if (nextMonthBody && nextMonthBody.code === 200 && Array.isArray(nextMonthBody.data)) {
+                    nextMonthFirst = stripDay(nextMonthBody.data[0]);
+                }
+            } catch (e) {
+                console.log("Failed to fetch next month first day: " + e.message);
+            }
+
             const slim = resBody.data.map(stripDay);
-            res(null, { result: { code: 200, data: slim } });
+            const cache = createPrayerMonthCache(slim, yyyy, mm, nextMonthFirst);
+            res(null, { result: { code: 200, cache } });
         } else {
             console.log("Fetch error body: " + JSON.stringify(resBody).substring(0, 500));
             res(null, { error: "API returned non-200 status" });
@@ -86,6 +95,16 @@ async function fetchPrayerTimes(params, res) {
         console.log("Error fetching prayer times: " + e.message);
         res(null, { error: e.message });
     }
+}
+
+async function fetchCalendar(year, month, params) {
+    const url = `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${params.latitude}&longitude=${params.longitude}&method=${params.method}`;
+    console.log("Fetching prayer times: " + url);
+
+    const response = await fetch({ url, method: "GET" });
+    return typeof response.body === "string"
+        ? JSON.parse(response.body)
+        : response.body;
 }
 
 AppSideService(
