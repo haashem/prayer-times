@@ -59,9 +59,9 @@ export function getCityTextStyle(textLen) {
 // ── Next Prayer Summary ──
 export const NEXT_SUMMARY_STYLE = {
     x: SIDE_PADDING,
-    y: px(54),
+    y: px(50),
     w: CONTENT_WIDTH,
-    h: px(44),
+    h: px(54),
     color: COLORS.nextName,
     text_size: px(38),
     align_h: align.CENTER_H,
@@ -110,7 +110,7 @@ export const NEXT_TIME_STYLE = {
 
 // ── Prayer Grid ──
 export const GRID_START_X = SIDE_PADDING;
-export const GRID_START_Y = px(132);
+export const GRID_START_Y = px(120);
 export const GRID_COL_GAP = px(10);
 export const GRID_ROW_GAP = px(12);
 export const GRID_CELL_W = (CONTENT_WIDTH - GRID_COL_GAP) / 2;
