@@ -171,6 +171,10 @@ export function refreshPrayerNotificationSchedule() {
     }
 }
 
+export function deferPrayerNotificationScheduleRefresh() {
+    setTimeout(() => refreshPrayerNotificationSchedule(), 0);
+}
+
 export function refreshPrayerNotificationScheduleIfNeeded() {
     const location = getStoredLocation();
     const cache = getStoredCache();
@@ -179,7 +183,7 @@ export function refreshPrayerNotificationScheduleIfNeeded() {
     const context = localStorage.getItem(SCHEDULE_CONTEXT_KEY);
 
     if (!expectedSignature || expectedSignature !== storedSignature || !context) {
-        refreshPrayerNotificationSchedule();
+        deferPrayerNotificationScheduleRefresh();
         return;
     }
 
@@ -187,7 +191,7 @@ export function refreshPrayerNotificationScheduleIfNeeded() {
     const ids = getAlarmIds();
     for (const prayerKey of PRAYER_NOTIFICATION_KEYS) {
         if (preferences[prayerKey] && !(ids[prayerKey] > 0)) {
-            refreshPrayerNotificationSchedule();
+            deferPrayerNotificationScheduleRefresh();
             return;
         }
     }
@@ -199,28 +203,35 @@ export function invalidatePrayerNotificationSchedule() {
     localStorage.setItem(SCHEDULE_SIGNATURE_KEY, "");
 }
 
+export function deferPrayerNotificationScheduleInvalidation() {
+    setTimeout(() => invalidatePrayerNotificationSchedule(), 0);
+}
+
 export function setPrayerNotificationEnabled(prayerKey, enabled) {
     if (PRAYER_NOTIFICATION_KEYS.indexOf(prayerKey) === -1) return;
     const preferences = getPrayerNotificationPreferences();
     preferences[prayerKey] = enabled === true;
     writeJson(PRAYER_NOTIFICATION_PREFS_KEY, preferences);
 
-    if (!enabled) {
-        cancelPrayerNotificationAlarm(prayerKey);
-        return;
-    }
+    setTimeout(() => {
+        const currentPreferences = getPrayerNotificationPreferences();
+        if (!currentPreferences[prayerKey]) {
+            cancelPrayerNotificationAlarm(prayerKey);
+            return;
+        }
 
-    const location = getStoredLocation();
-    const cache = getStoredCache();
-    const expectedSignature = createScheduleSignature(location, cache);
-    const storedSignature = localStorage.getItem(SCHEDULE_SIGNATURE_KEY) || "";
-    const context = localStorage.getItem(SCHEDULE_CONTEXT_KEY);
-    if (!expectedSignature || expectedSignature !== storedSignature || !context) {
-        refreshPrayerNotificationSchedule();
-        return;
-    }
+        const location = getStoredLocation();
+        const cache = getStoredCache();
+        const expectedSignature = createScheduleSignature(location, cache);
+        const storedSignature = localStorage.getItem(SCHEDULE_SIGNATURE_KEY) || "";
+        const context = localStorage.getItem(SCHEDULE_CONTEXT_KEY);
+        if (!expectedSignature || expectedSignature !== storedSignature || !context) {
+            refreshPrayerNotificationSchedule();
+            return;
+        }
 
-    scheduleNextPrayerNotification(prayerKey, context);
+        scheduleNextPrayerNotification(prayerKey, context);
+    }, 0);
 }
 
 export function isPrayerNotificationCurrent(prayerKey, context) {
