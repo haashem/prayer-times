@@ -1,6 +1,7 @@
 import { set as setAlarm, cancel as cancelAlarm, REPEAT_ONCE } from "@zos/alarm";
 import { localStorage } from "@zos/storage";
-import { getPrayerLabel, t } from "./i18n";
+import { getTimeFormat, TIME_FORMAT_12 } from "@zos/settings";
+import { getPrayerLabel, localizeDigits, t } from "./i18n";
 import { PRAYER_CACHE_KEY, getNextPrayerOccurrence } from "./prayer-cache";
 
 export const PRAYER_NOTIFICATION_KEYS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
@@ -90,16 +91,32 @@ function createScheduleSignature(location, cache) {
     ].join("|");
 }
 
-function buildAlarmPayload(prayerKey, context, location) {
+function padTimePart(value) {
+    const text = String(value);
+    return text.length < 2 ? "0" + text : text;
+}
+
+function formatNotificationTime(occurrence) {
+    const hours = occurrence.getHours();
+    const minutes = padTimePart(occurrence.getMinutes());
+    if (getTimeFormat() === TIME_FORMAT_12) {
+        const displayHour = hours % 12 || 12;
+        const period = hours >= 12 ? t("pm") : t("am");
+        return localizeDigits(displayHour + ":" + minutes + " " + period);
+    }
+    return localizeDigits(padTimePart(hours) + ":" + minutes);
+}
+
+function buildAlarmPayload(prayerKey, context, occurrence) {
     const prayer = getPrayerLabel(prayerKey);
-    const city = location && location.city ? String(location.city) : t("yourLocation");
+    const time = formatNotificationTime(occurrence);
     return {
         prayerKey,
         context,
-        title: t("prayerNotificationTitle"),
+        title: t("prayerNotificationTitle").replace("{prayer}", prayer),
         content: t("prayerNotificationContent")
             .replace("{prayer}", prayer)
-            .replace("{city}", city),
+            .replace("{time}", time),
         openLabel: t("openApp"),
     };
 }
@@ -124,7 +141,7 @@ export function scheduleNextPrayerNotification(prayerKey, context, now = new Dat
     const alarmId = setAlarm({
         url: NOTIFICATION_SERVICE_URL,
         time: Math.floor(occurrence.getTime() / 1000),
-        param: JSON.stringify(buildAlarmPayload(prayerKey, context, location)),
+        param: JSON.stringify(buildAlarmPayload(prayerKey, context, occurrence)),
         repeat_type: REPEAT_ONCE,
         store: true,
     });
@@ -154,10 +171,6 @@ export function refreshPrayerNotificationSchedule() {
     }
 }
 
-export function deferPrayerNotificationScheduleRefresh() {
-    setTimeout(() => refreshPrayerNotificationSchedule(), 0);
-}
-
 export function refreshPrayerNotificationScheduleIfNeeded() {
     const location = getStoredLocation();
     const cache = getStoredCache();
@@ -166,7 +179,7 @@ export function refreshPrayerNotificationScheduleIfNeeded() {
     const context = localStorage.getItem(SCHEDULE_CONTEXT_KEY);
 
     if (!expectedSignature || expectedSignature !== storedSignature || !context) {
-        deferPrayerNotificationScheduleRefresh();
+        refreshPrayerNotificationSchedule();
         return;
     }
 
@@ -174,7 +187,7 @@ export function refreshPrayerNotificationScheduleIfNeeded() {
     const ids = getAlarmIds();
     for (const prayerKey of PRAYER_NOTIFICATION_KEYS) {
         if (preferences[prayerKey] && !(ids[prayerKey] > 0)) {
-            deferPrayerNotificationScheduleRefresh();
+            refreshPrayerNotificationSchedule();
             return;
         }
     }
@@ -186,35 +199,28 @@ export function invalidatePrayerNotificationSchedule() {
     localStorage.setItem(SCHEDULE_SIGNATURE_KEY, "");
 }
 
-export function deferPrayerNotificationScheduleInvalidation() {
-    setTimeout(() => invalidatePrayerNotificationSchedule(), 0);
-}
-
 export function setPrayerNotificationEnabled(prayerKey, enabled) {
     if (PRAYER_NOTIFICATION_KEYS.indexOf(prayerKey) === -1) return;
     const preferences = getPrayerNotificationPreferences();
     preferences[prayerKey] = enabled === true;
     writeJson(PRAYER_NOTIFICATION_PREFS_KEY, preferences);
 
-    setTimeout(() => {
-        const currentPreferences = getPrayerNotificationPreferences();
-        if (!currentPreferences[prayerKey]) {
-            cancelPrayerNotificationAlarm(prayerKey);
-            return;
-        }
+    if (!enabled) {
+        cancelPrayerNotificationAlarm(prayerKey);
+        return;
+    }
 
-        const location = getStoredLocation();
-        const cache = getStoredCache();
-        const expectedSignature = createScheduleSignature(location, cache);
-        const storedSignature = localStorage.getItem(SCHEDULE_SIGNATURE_KEY) || "";
-        const context = localStorage.getItem(SCHEDULE_CONTEXT_KEY);
-        if (!expectedSignature || expectedSignature !== storedSignature || !context) {
-            refreshPrayerNotificationSchedule();
-            return;
-        }
+    const location = getStoredLocation();
+    const cache = getStoredCache();
+    const expectedSignature = createScheduleSignature(location, cache);
+    const storedSignature = localStorage.getItem(SCHEDULE_SIGNATURE_KEY) || "";
+    const context = localStorage.getItem(SCHEDULE_CONTEXT_KEY);
+    if (!expectedSignature || expectedSignature !== storedSignature || !context) {
+        refreshPrayerNotificationSchedule();
+        return;
+    }
 
-        scheduleNextPrayerNotification(prayerKey, context);
-    }, 0);
+    scheduleNextPrayerNotification(prayerKey, context);
 }
 
 export function isPrayerNotificationCurrent(prayerKey, context) {
