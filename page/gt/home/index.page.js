@@ -13,7 +13,6 @@ import { PRAYER_CACHE_KEY, getPrayerWindow } from "../../../utils/prayer-cache";
 import {
   deferPrayerNotificationScheduleInvalidation,
   deferPrayerNotificationScheduleRefresh,
-  refreshPrayerNotificationScheduleIfNeeded,
 } from "../../../utils/prayer-notifications";
 import {
   DEVICE_WIDTH,
@@ -121,7 +120,6 @@ Page(
       const todayData = this.loadTodayData();
       if (todayData) {
         this.renderUI(todayData);
-        refreshPrayerNotificationScheduleIfNeeded();
       } else {
         deferPrayerNotificationScheduleInvalidation();
         this.showLoading(t("loadingPrayerTimes"));
@@ -135,9 +133,16 @@ Page(
 
     loadLocation() {
       try {
+        const appCache = this.getAppCache();
+        if (appCache && appCache.location) {
+          this.state.location = appCache.location;
+          return;
+        }
+
         const stored = localStorage.getItem("location");
         if (stored) {
           this.state.location = JSON.parse(stored);
+          if (appCache) appCache.location = this.state.location;
         }
       } catch (e) {
         logger.error("Error loading location: " + e.message);
@@ -146,16 +151,49 @@ Page(
 
     loadTodayData() {
       try {
-        const stored = localStorage.getItem(PRAYER_CACHE_KEY);
-        if (!stored) return null;
+        const time = new Time();
+        const dayKey = [time.getFullYear(), time.getMonth(), time.getDate()].join("-");
+        const appCache = this.getAppCache();
+        if (appCache && appCache.prayerDayKey === dayKey && appCache.prayerData) {
+          return appCache.prayerData;
+        }
 
-        const cached = JSON.parse(stored);
-        const prayerWindow = getPrayerWindow(cached, new Time());
-        return prayerWindow ? prayerWindow.today : null;
+        let cached = appCache && appCache.prayerCache;
+        if (!cached) {
+          const stored = localStorage.getItem(PRAYER_CACHE_KEY);
+          if (!stored) return null;
+          cached = JSON.parse(stored);
+          if (appCache) appCache.prayerCache = cached;
+        }
+
+        const prayerWindow = getPrayerWindow(cached, time);
+        const todayData = prayerWindow ? prayerWindow.today : null;
+        if (appCache) {
+          appCache.prayerDayKey = dayKey;
+          appCache.prayerData = todayData;
+        }
+        return todayData;
       } catch (e) {
         logger.error("Error loading prayer data: " + e.message);
       }
       return null;
+    },
+
+    getAppCache() {
+      try {
+        const app = getApp();
+        return app && app._options ? app._options.globalData : null;
+      } catch (e) {
+        return null;
+      }
+    },
+
+    clearCachedPrayerData() {
+      const appCache = this.getAppCache();
+      if (!appCache) return;
+      appCache.prayerCache = null;
+      appCache.prayerData = null;
+      appCache.prayerDayKey = null;
     },
 
     showLoading(message) {
@@ -199,9 +237,12 @@ Page(
               method: 3,
             };
             this.state.location = loc;
+            const appCache = this.getAppCache();
+            if (appCache) appCache.location = loc;
             localStorage.setItem("location", JSON.stringify(loc));
             localStorage.removeItem(PRAYER_CACHE_KEY);
             localStorage.removeItem("prayerData");
+            this.clearCachedPrayerData();
             deferPrayerNotificationScheduleInvalidation();
 
             this.showLoading(t("loadingPrayerTimes"));
@@ -245,6 +286,12 @@ Page(
           if (data && data.result && data.result.code === 200 && data.result.cache) {
             localStorage.setItem(PRAYER_CACHE_KEY, JSON.stringify(data.result.cache));
             localStorage.removeItem("prayerData");
+            const appCache = this.getAppCache();
+            if (appCache) appCache.prayerCache = data.result.cache;
+            if (appCache) {
+              appCache.prayerData = null;
+              appCache.prayerDayKey = null;
+            }
             deferPrayerNotificationScheduleRefresh();
 
             this.clearLoading();
