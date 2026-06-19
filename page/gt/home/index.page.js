@@ -375,7 +375,7 @@ Page(
         }));
       }
 
-      // Help icon
+      // Settings/help entry icon
       const helpIcon = this.trackWidget(container.createWidget(widget.IMG, {
         ...HELP_ICON_STYLE,
         src: "image/ic_QA_40px.png",
@@ -389,7 +389,7 @@ Page(
       helpIcon.addEventListener(event.SELECT, () => {
         helpIcon.setProperty(prop.MORE, { alpha: 255 });
         push({
-          url: "page/gt/help/index.page",
+          url: "page/gt/settings/index.page",
           params: JSON.stringify({
             hijriDate: todayData && todayData.date && todayData.date.hijri,
           }),

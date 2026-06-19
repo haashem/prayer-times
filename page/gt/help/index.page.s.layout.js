@@ -6,119 +6,62 @@ export const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = getDeviceInfo();
 
 const SIDE_PADDING = px(20);
 const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
+const TITLE_Y = px(24);
+const TITLE_HEIGHT = px(58);
+const INTRO_Y = TITLE_Y + TITLE_HEIGHT + px(18);
+const INTRO_HEIGHT = px(500);
+const SECTION_TITLE_Y = INTRO_Y + INTRO_HEIGHT + px(12);
+const SECTION_TITLE_HEIGHT = px(56);
+const CALCULATION_Y = SECTION_TITLE_Y + SECTION_TITLE_HEIGHT + px(6);
+const CALCULATION_HEIGHT = px(540);
 
-const COLORS = {
-    rowBg: 0x000000,
-    text: 0xa89880,
-    value: 0xffffff,
+export const TITLE_STYLE = {
+    x: SIDE_PADDING,
+    y: TITLE_Y,
+    w: CONTENT_WIDTH,
+    h: TITLE_HEIGHT,
+    text_size: px(34),
+    color: 0xffffff,
+    align_h: align.CENTER_H,
+    align_v: align.CENTER_V,
+    text_style: text_style.NONE,
 };
 
-export const PARA_START_Y = px(20);
-export const PARA_HEIGHT = px(500);
-export const PARA_GAP = px(6);
-export const TITLE_FONT_SIZE = px(34);
-export const TITLE_HEIGHT = px(56);
-export const HIJRI_DATE_HEIGHT = px(34);
-export const LANGUAGE_TILE_GAP = px(10);
-const LANGUAGE_TILE_HEIGHT = px(88);
-const LANGUAGE_TILE_PAD_X = px(36);
-const LANGUAGE_TILE_CHEVRON_W = px(54);
-export const CONTACT_QR_SECTION_HEIGHT = px(306);
-const CONTACT_QR_GAP = px(12);
-const CONTACT_QR_SIZE = px(210);
-const CONTACT_QR_BG_PADDING = px(12);
-const CONTACT_EMAIL_GAP = px(18);
-const CONTACT_EMAIL_HEIGHT = px(34);
+export const INTRO_STYLE = {
+    x: SIDE_PADDING,
+    y: INTRO_Y,
+    w: CONTENT_WIDTH,
+    h: INTRO_HEIGHT,
+    text_size: px(36),
+    color: 0xa89880,
+    align_h: align.LEFT,
+    align_v: align.TOP,
+    text_style: text_style.WRAP,
+};
 
-export function getHijriDateStyle(y) {
-    return {
-        x: SIDE_PADDING,
-        y: y,
-        w: CONTENT_WIDTH,
-        h: HIJRI_DATE_HEIGHT,
-        text_size: px(24),
-        color: 0xd4a843,
-        align_h: align.CENTER_H,
-        align_v: align.CENTER_V,
-        text_style: text_style.NONE,
-    };
-}
+export const SECTION_TITLE_STYLE = {
+    x: SIDE_PADDING,
+    y: SECTION_TITLE_Y,
+    w: CONTENT_WIDTH,
+    h: SECTION_TITLE_HEIGHT,
+    text_size: px(34),
+    color: 0xffffff,
+    align_h: align.CENTER_H,
+    align_v: align.CENTER_V,
+    text_style: text_style.WRAP,
+};
 
-export function getParaStyle(y) {
-    return {
-        x: SIDE_PADDING,
-        y: y,
-        w: CONTENT_WIDTH,
-        h: PARA_HEIGHT,
-        text_size: px(36),
-        color: COLORS.text,
-        align_h: align.LEFT,
-        align_v: align.TOP,
-        text_style: text_style.WRAP,
-    };
-}
+export const CALCULATION_STYLE = {
+    x: SIDE_PADDING,
+    y: CALCULATION_Y,
+    w: CONTENT_WIDTH,
+    h: CALCULATION_HEIGHT,
+    text_size: px(36),
+    color: 0xa89880,
+    align_h: align.LEFT,
+    align_v: align.TOP,
+    text_style: text_style.WRAP,
+};
 
-export function getLanguageTileBgStyle(y) {
-    return {
-        x: 0,
-        y: y,
-        w: DEVICE_WIDTH,
-        h: LANGUAGE_TILE_HEIGHT,
-        color: COLORS.rowBg,
-    };
-}
-
-export function getLanguageTileTitleStyle(y) {
-    return {
-        x: LANGUAGE_TILE_PAD_X,
-        y: y,
-        w: DEVICE_WIDTH - LANGUAGE_TILE_PAD_X * 2 - LANGUAGE_TILE_CHEVRON_W,
-        h: LANGUAGE_TILE_HEIGHT,
-        text_size: px(36),
-        color: COLORS.value,
-        align_h: align.LEFT,
-        align_v: align.CENTER_V,
-        text_style: text_style.ELLIPSIS,
-    };
-}
-
-export function getLanguageTileChevronStyle(y) {
-    return {
-        x: DEVICE_WIDTH - LANGUAGE_TILE_PAD_X - LANGUAGE_TILE_CHEVRON_W,
-        y: y + (LANGUAGE_TILE_HEIGHT - LANGUAGE_TILE_CHEVRON_W) / 2,
-        w: LANGUAGE_TILE_CHEVRON_W,
-        h: LANGUAGE_TILE_CHEVRON_W,
-    };
-}
-
-export function getContactQrStyle(y) {
-    const x = (DEVICE_WIDTH - CONTACT_QR_SIZE) / 2;
-
-    return {
-        x: x,
-        y: y + CONTACT_QR_GAP,
-        w: CONTACT_QR_SIZE,
-        h: CONTACT_QR_SIZE,
-        bg_x: x - CONTACT_QR_BG_PADDING,
-        bg_y: y + CONTACT_QR_GAP - CONTACT_QR_BG_PADDING,
-        bg_w: CONTACT_QR_SIZE + CONTACT_QR_BG_PADDING * 2,
-        bg_h: CONTACT_QR_SIZE + CONTACT_QR_BG_PADDING * 2,
-        bg_radius: px(8),
-    };
-}
-
-export function getContactEmailTextStyle(y) {
-    return {
-        x: SIDE_PADDING,
-        y: y + CONTACT_QR_GAP + CONTACT_QR_SIZE + CONTACT_EMAIL_GAP,
-        w: CONTENT_WIDTH,
-        h: CONTACT_EMAIL_HEIGHT,
-        text_size: px(24),
-        color: COLORS.value,
-        align_h: align.CENTER_H,
-        align_v: align.CENTER_V,
-        text_style: text_style.NONE,
-    };
-}
-
+export const CONTENT_HEIGHT = CALCULATION_Y + CALCULATION_HEIGHT;
 export const BOTTOM_PADDING = px(40);

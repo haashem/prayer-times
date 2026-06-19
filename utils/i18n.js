@@ -14,6 +14,8 @@ let cachedAppLanguage = null;
 const TRANSLATIONS = {
     english: {
         appName: "Prayer Times",
+        settings: "Settings",
+        help: "Help",
         selectLanguage: "Language",
         contactUs: "Contact Us",
         calculationMethod: "Calculation Method",
@@ -44,6 +46,8 @@ const TRANSLATIONS = {
     },
     farsi: {
         appName: "اوقات شرعی",
+        settings: "تنظیمات",
+        help: "راهنما",
         selectLanguage: "انتخاب زبان",
         contactUs: "تماس با ما",
         calculationMethod: "روش محاسبه",
@@ -73,6 +77,8 @@ const TRANSLATIONS = {
     },
     arabic: {
         appName: "مواقيت الصلاة",
+        settings: "الإعدادات",
+        help: "المساعدة",
         selectLanguage: "اختيار اللغة",
         contactUs: "اتصل بنا",
         calculationMethod: "طريقة الحساب",

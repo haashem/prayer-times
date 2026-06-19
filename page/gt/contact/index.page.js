@@ -1,18 +1,20 @@
-import { createWidget, widget, prop, align, setStatusBarVisible } from "@zos/ui";
+import { createWidget, widget, prop, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { BasePage } from "@zeppos/zml/base-page";
-import { isRtl, t } from "../../../utils/i18n";
+import { t } from "../../../utils/i18n";
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
     TITLE_STYLE,
-    INTRO_STYLE,
-    SECTION_TITLE_STYLE,
-    CALCULATION_STYLE,
+    QR_STYLE,
+    EMAIL_STYLE,
     CONTENT_HEIGHT,
     BOTTOM_PADDING,
 } from "zosLoader:./index.page.[pf].layout.js";
+
+const CONTACT_EMAIL_QR_CONTENT = "mailto:hashemp206@yahoo.com?subject=Prayer%20Times%20App";
+const CONTACT_EMAIL = "hashemp206@yahoo.com";
 
 Page(
     BasePage({
@@ -32,25 +34,17 @@ Page(
                 color: 0x000000,
             });
             createWidget(widget.PAGE_SCROLLBAR);
-
-            const bodyAlign = isRtl() ? align.RIGHT : align.LEFT;
             createWidget(widget.TEXT, {
                 ...TITLE_STYLE,
-                text: t("help"),
+                text: t("contactUs"),
+            });
+            createWidget(widget.QRCODE, {
+                ...QR_STYLE,
+                content: CONTACT_EMAIL_QR_CONTENT,
             });
             createWidget(widget.TEXT, {
-                ...INTRO_STYLE,
-                text: t("helpIntro"),
-                align_h: bodyAlign,
-            });
-            createWidget(widget.TEXT, {
-                ...SECTION_TITLE_STYLE,
-                text: t("calculationMethod"),
-            });
-            createWidget(widget.TEXT, {
-                ...CALCULATION_STYLE,
-                text: t("helpCalculation"),
-                align_h: bodyAlign,
+                ...EMAIL_STYLE,
+                text: CONTACT_EMAIL,
             });
             createWidget(widget.FILL_RECT, {
                 x: 0,
