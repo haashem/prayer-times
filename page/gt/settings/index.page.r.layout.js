@@ -17,6 +17,7 @@ const CHEVRON_RIGHT_PAD = px(70);
 const FOCUS_LINE_HEIGHT = px(22);
 
 export const SETTINGS_ITEMS = [
+    { labelKey: "prayerAlerts", url: "page/gt/notifications/index.page" },
     { labelKey: "selectLanguage", url: "page/gt/language/index.page" },
     { labelKey: "contactUs", url: "page/gt/contact/index.page" },
     { labelKey: "help", url: "page/gt/help/index.page" },

@@ -206,3 +206,43 @@ export function getPrayerWindow(cache, time) {
 
     return { today, tomorrow };
 }
+
+function getPrayerDateTime(day, prayerKey) {
+    if (!day || !day.timings || !day.timings[prayerKey]) return null;
+
+    const dateText = day.date && day.date.gregorian && day.date.gregorian.date;
+    const dateMatch = String(dateText || "").match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+    const timeMatch = String(day.timings[prayerKey] || "").match(/(\d{1,2}):(\d{2})/);
+    if (!dateMatch || !timeMatch) return null;
+
+    return new Date(
+        Number(dateMatch[3]),
+        Number(dateMatch[2]) - 1,
+        Number(dateMatch[1]),
+        Number(timeMatch[1]),
+        Number(timeMatch[2]),
+        0,
+        0
+    );
+}
+
+export function getNextPrayerOccurrence(cache, prayerKey, now = new Date()) {
+    const cacheTime = {
+        getFullYear: () => now.getFullYear(),
+        getMonth: () => now.getMonth() + 1,
+        getDate: () => now.getDate(),
+    };
+    const prayerWindow = getPrayerWindow(cache, cacheTime);
+    if (!prayerWindow) return null;
+
+    const minimumTime = now.getTime() + 30000;
+    const candidates = [prayerWindow.today, prayerWindow.tomorrow];
+    for (const day of candidates) {
+        const occurrence = getPrayerDateTime(day, prayerKey);
+        if (occurrence && occurrence.getTime() > minimumTime) {
+            return occurrence;
+        }
+    }
+
+    return null;
+}

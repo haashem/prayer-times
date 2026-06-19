@@ -15,7 +15,9 @@
   "permissions": [
     "data:os.device.info",
     "device:os.local_storage",
-    "device:os.compass"
+    "device:os.compass",
+    "device:os.alarm",
+    "device:os.notification"
   ],
   "runtime": {
     "apiVersion": {
@@ -32,10 +34,16 @@
           "pages": [
             "page/gt/home/index.page",
             "page/gt/settings/index.page",
+            "page/gt/notifications/index.page",
             "page/gt/help/index.page",
             "page/gt/contact/index.page",
             "page/gt/qibla/index.page",
             "page/gt/language/index.page"
+          ]
+        },
+        "app-service": {
+          "services": [
+            "app-service/prayer-notification"
           ]
         },
         "app-side": {

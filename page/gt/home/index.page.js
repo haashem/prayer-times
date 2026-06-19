@@ -11,6 +11,11 @@ import { createQiblaCompass } from "./qibla";
 import { getPrayerLabel, localizeDigits, t } from "../../../utils/i18n";
 import { PRAYER_CACHE_KEY, getPrayerWindow } from "../../../utils/prayer-cache";
 import {
+  deferPrayerNotificationScheduleInvalidation,
+  deferPrayerNotificationScheduleRefresh,
+  refreshPrayerNotificationScheduleIfNeeded,
+} from "../../../utils/prayer-notifications";
+import {
   DEVICE_WIDTH,
   DEVICE_HEIGHT,
   COLORS,
@@ -106,6 +111,7 @@ Page(
       this.loadLocation();
 
       if (!this.state.location) {
+        deferPrayerNotificationScheduleInvalidation();
         this.showLoading(t("detectingLocation"));
         this.state.qibla.build(null);
         this.detectLocation();
@@ -115,7 +121,9 @@ Page(
       const todayData = this.loadTodayData();
       if (todayData) {
         this.renderUI(todayData);
+        refreshPrayerNotificationScheduleIfNeeded();
       } else {
+        deferPrayerNotificationScheduleInvalidation();
         this.showLoading(t("loadingPrayerTimes"));
         this.fetchFromApi();
       }
@@ -194,6 +202,7 @@ Page(
             localStorage.setItem("location", JSON.stringify(loc));
             localStorage.removeItem(PRAYER_CACHE_KEY);
             localStorage.removeItem("prayerData");
+            deferPrayerNotificationScheduleInvalidation();
 
             this.showLoading(t("loadingPrayerTimes"));
             this.fetchFromApi();
@@ -236,6 +245,7 @@ Page(
           if (data && data.result && data.result.code === 200 && data.result.cache) {
             localStorage.setItem(PRAYER_CACHE_KEY, JSON.stringify(data.result.cache));
             localStorage.removeItem("prayerData");
+            deferPrayerNotificationScheduleRefresh();
 
             this.clearLoading();
             const todayData = this.loadTodayData();
