@@ -19,7 +19,6 @@ import {
 } from "zosLoader:./index.page.[pf].layout.js";
 
 const VIBRATION_DURATION_MS = 30000;
-const VIBRATION_RESTART_MS = 1500;
 
 function parsePayload(value) {
     try {
@@ -39,7 +38,6 @@ Page(
         state: {
             payload: null,
             vibrator: null,
-            vibrationTimer: null,
             stopTimer: null,
             dismissButton: null,
             stopped: false,
@@ -101,10 +99,6 @@ Page(
 
             this.state.vibrator = new Vibrator();
             this.startVibrationPattern();
-            this.state.vibrationTimer = setInterval(
-                () => this.startVibrationPattern(),
-                VIBRATION_RESTART_MS
-            );
             this.state.stopTimer = setTimeout(() => this.stopAlert(), VIBRATION_DURATION_MS);
         },
 
@@ -135,10 +129,6 @@ Page(
         stopAlert() {
             if (this.state.stopped) return;
             this.state.stopped = true;
-            if (this.state.vibrationTimer !== null) {
-                clearInterval(this.state.vibrationTimer);
-                this.state.vibrationTimer = null;
-            }
             if (this.state.stopTimer !== null) {
                 clearTimeout(this.state.stopTimer);
                 this.state.stopTimer = null;
