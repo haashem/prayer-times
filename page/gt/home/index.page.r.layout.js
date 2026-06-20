@@ -130,6 +130,14 @@ export const HELP_ICON_STYLE = {
   h: px(40),
 };
 
+export const HELP_HIT_STYLE = {
+  x: DEVICE_WIDTH / 2 - px(52),
+  y: DEVICE_HEIGHT - px(78),
+  w: px(104),
+  h: px(56),
+  color: COLORS.background,
+};
+
 // ── Qibla Compass (page 1) ──
 const RING_SIZE = px(460);
 export const COMPASS_RING_STYLE = {

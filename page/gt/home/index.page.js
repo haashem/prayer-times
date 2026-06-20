@@ -31,6 +31,7 @@ import {
   getPrayerTimeStyle,
   NO_DATA_STYLE,
   HELP_ICON_STYLE,
+  HELP_HIT_STYLE,
 } from "zosLoader:./index.page.[pf].layout.js";
 
 const logger = Logger.getLogger("prayer-times");
@@ -433,25 +434,31 @@ Page(
       }
 
       // Settings/help entry icon
+      const helpHit = this.trackWidget(container.createWidget(widget.FILL_RECT, HELP_HIT_STYLE));
       const helpIcon = this.trackWidget(container.createWidget(widget.IMG, {
         ...HELP_ICON_STYLE,
         src: "image/ic_QA_40px.png",
       }));
-      helpIcon.addEventListener(event.CLICK_DOWN, () => {
+      const onHelpDown = () => {
         helpIcon.setProperty(prop.MORE, { alpha: 120 });
-      });
-      helpIcon.addEventListener(event.MOVE, () => {
+      };
+      const onHelpReset = () => {
         helpIcon.setProperty(prop.MORE, { alpha: 255 });
-      });
-      helpIcon.addEventListener(event.SELECT, () => {
-        helpIcon.setProperty(prop.MORE, { alpha: 255 });
+      };
+      const onHelpSelect = () => {
+        onHelpReset();
         push({
           url: "page/gt/settings/index.page",
           params: JSON.stringify({
             hijriDate: todayData && todayData.date && todayData.date.hijri,
           }),
         });
-      });
+      };
+      for (const target of [helpHit, helpIcon]) {
+        target.addEventListener(event.CLICK_DOWN, onHelpDown);
+        target.addEventListener(event.MOVE, onHelpReset);
+        target.addEventListener(event.SELECT, onHelpSelect);
+      }
     },
 
     onLocationTap() {
