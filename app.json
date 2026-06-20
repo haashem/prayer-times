@@ -33,6 +33,7 @@
         "page": {
           "pages": [
             "page/gt/home/index.page",
+            "page/gt/prayer-alert/index.page",
             "page/gt/settings/index.page",
             "page/gt/notifications/index.page",
             "page/gt/help/index.page",

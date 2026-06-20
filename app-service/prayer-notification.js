@@ -15,7 +15,8 @@ function parsePayload(params) {
 AppService({
     onInit(params) {
         const payload = parsePayload(params);
-        if (!payload || !isPrayerNotificationCurrent(payload.prayerKey, payload.context)) {
+        if (!payload || payload.prayerKey === "Fajr" ||
+            !isPrayerNotificationCurrent(payload.prayerKey, payload.context)) {
             return;
         }
 
