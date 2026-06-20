@@ -116,9 +116,7 @@ function buildAlarmPayload(prayerKey, context, occurrence) {
         context,
         time,
         title: t("prayerNotificationTitle").replace("{prayer}", prayer),
-        content: t("prayerNotificationContent")
-            .replace("{prayer}", prayer)
-            .replace("{time}", time),
+        content: time,
         openLabel: t("openApp"),
     };
 }
