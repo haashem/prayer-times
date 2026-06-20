@@ -30,7 +30,6 @@ AppService({
                     param: "",
                 },
             ],
-            vibrate: 5,
         });
 
         scheduleNextPrayerNotification(payload.prayerKey, payload.context, new Date());
