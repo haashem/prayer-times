@@ -1,4 +1,4 @@
-import { createWidget, widget, prop, event, setStatusBarVisible } from "@zos/ui";
+import { createWidget, widget, prop, event, setStatusBarVisible, text_style } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { onKey, offKey, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK } from "@zos/interaction";
@@ -115,6 +115,7 @@ Page(
             const bg = this.trackWidget(createWidget(widget.FILL_RECT, getRowBgStyle(index)));
             const label = this.trackWidget(createWidget(widget.TEXT, {
                 ...getRowTextStyle(index, rtl),
+                text_style: text_style.NONE,
                 text: t("fajrAlarmSound"),
             }));
             const track = this.trackWidget(createWidget(
