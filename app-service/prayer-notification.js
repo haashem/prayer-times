@@ -23,13 +23,7 @@ AppService({
         notify({
             title: payload.title,
             content: payload.content,
-            actions: [
-                {
-                    text: payload.openLabel,
-                    file: "page/gt/home/index.page",
-                    param: "",
-                },
-            ],
+            actions: [],
         });
 
         scheduleNextPrayerNotification(payload.prayerKey, payload.context, new Date());
