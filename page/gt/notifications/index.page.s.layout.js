@@ -19,10 +19,6 @@ const KNOB_INSET = px(6);
 const FOCUS_LINE_HEIGHT = px(18);
 
 export const SCROLL_ITEM_HEIGHT = ROW_HEIGHT;
-export const BOTTOM_PADDING = {
-    y: ROW_START_Y + ROW_HEIGHT * 6,
-    h: px(40),
-};
 
 export const TITLE_STYLE = {
     x: SIDE_PADDING,
@@ -101,5 +97,26 @@ export function getFocusLineBottomStyle(index) {
         y: getRowY(index) + ROW_HEIGHT - FOCUS_LINE_HEIGHT,
         w: DEVICE_WIDTH - px(40),
         h: FOCUS_LINE_HEIGHT,
+    };
+}
+
+export function getInfoTextStyle(rowCount, rtl = false) {
+    return {
+        x: ROW_PAD_X,
+        y: getRowY(rowCount) + px(10),
+        w: DEVICE_WIDTH - ROW_PAD_X * 2,
+        h: px(130),
+        text_size: px(24),
+        color: 0xa6a6a6,
+        align_h: rtl ? align.RIGHT : align.LEFT,
+        align_v: align.TOP,
+        text_style: text_style.WRAP,
+    };
+}
+
+export function getBottomPaddingStyle(rowCount) {
+    return {
+        y: getRowY(rowCount) + px(140),
+        h: px(40),
     };
 }

@@ -14,7 +14,6 @@ import {
 } from "../../../utils/prayer-notifications";
 import {
     TITLE_STYLE,
-    BOTTOM_PADDING,
     SCROLL_ITEM_HEIGHT,
     getRowBgStyle,
     getRowTextStyle,
@@ -22,6 +21,8 @@ import {
     getToggleKnobStyle,
     getFocusLineTopStyle,
     getFocusLineBottomStyle,
+    getInfoTextStyle,
+    getBottomPaddingStyle,
 } from "zosLoader:./index.page.[pf].layout.js";
 
 const SOUND_ROW_INDEX = PRAYER_NOTIFICATION_KEYS.length;
@@ -70,12 +71,14 @@ Page(
                 this.renderRow(PRAYER_NOTIFICATION_KEYS[i], i);
             }
             this.renderSoundRow();
+            this.renderInfoText();
             this.renderFocusIndicator();
+            const bottomPadding = getBottomPaddingStyle(ROW_COUNT);
             this.trackWidget(createWidget(widget.FILL_RECT, {
                 x: 0,
-                y: BOTTOM_PADDING.y,
+                y: bottomPadding.y,
                 w: 1,
-                h: BOTTOM_PADDING.h,
+                h: bottomPadding.h,
                 color: 0x000000,
                 alpha: 0,
             }));
@@ -127,6 +130,13 @@ Page(
             for (const w of [bg, label, track, knob]) {
                 w.addEventListener(event.SELECT, toggle);
             }
+        },
+
+        renderInfoText() {
+            this.trackWidget(createWidget(widget.TEXT, {
+                ...getInfoTextStyle(ROW_COUNT, isRtl()),
+                text: t("prayerAlertInfo"),
+            }));
         },
 
         toggleIndex(index) {
