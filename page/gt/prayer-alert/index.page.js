@@ -6,6 +6,7 @@ import { Vibrator, VIBRATOR_SCENE_TIMER, SystemSounds } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
 import { t } from "../../../utils/i18n";
 import {
+    getFajrAlarmSoundEnabled,
     isPrayerNotificationCurrent,
     scheduleNextPrayerNotification,
 } from "../../../utils/prayer-notifications";
@@ -100,7 +101,9 @@ Page(
 
             this.state.vibrator = new Vibrator();
             this.startVibrationPattern();
-            this.startAlarmSound();
+            if (getFajrAlarmSoundEnabled()) {
+                this.startAlarmSound();
+            }
             this.state.stopTimer = setTimeout(() => this.stopAlert(), ALERT_DURATION_MS);
         },
 

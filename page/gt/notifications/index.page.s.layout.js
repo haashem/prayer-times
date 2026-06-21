@@ -19,6 +19,10 @@ const KNOB_INSET = px(6);
 const FOCUS_LINE_HEIGHT = px(18);
 
 export const SCROLL_ITEM_HEIGHT = ROW_HEIGHT;
+export const BOTTOM_PADDING = {
+    y: ROW_START_Y + ROW_HEIGHT * 6,
+    h: px(40),
+};
 
 export const TITLE_STYLE = {
     x: SIDE_PADDING,
@@ -99,8 +103,3 @@ export function getFocusLineBottomStyle(index) {
         h: FOCUS_LINE_HEIGHT,
     };
 }
-
-export const BOTTOM_PADDING = {
-    y: ROW_START_Y + ROW_HEIGHT * 5,
-    h: px(40),
-};
