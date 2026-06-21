@@ -2,7 +2,7 @@ import { createWidget, widget, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { back } from "@zos/router";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
-import { Vibrator, VIBRATOR_SCENE_CALL } from "@zos/sensor";
+import { Vibrator, VIBRATOR_SCENE_TIMER, SystemSounds } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
 import { t } from "../../../utils/i18n";
 import {
@@ -18,7 +18,7 @@ import {
     DISMISS_ICON_STYLE,
 } from "zosLoader:./index.page.[pf].layout.js";
 
-const VIBRATION_DURATION_MS = 30000;
+const ALERT_DURATION_MS = 30000;
 
 function parsePayload(value) {
     try {
@@ -38,6 +38,7 @@ Page(
         state: {
             payload: null,
             vibrator: null,
+            systemSounds: null,
             stopTimer: null,
             dismissButton: null,
             stopped: false,
@@ -52,7 +53,7 @@ Page(
                 this.state.payload = parsePayload(params) || this.takePendingPayload();
             }
 
-            setPageBrightTime({ brightTime: 30000 });
+            setPageBrightTime({ brightTime: ALERT_DURATION_MS });
             const { screenShape } = getDeviceInfo();
             if (screenShape === SCREEN_SHAPE_SQUARE) {
                 setStatusBarVisible(false);
@@ -99,13 +100,28 @@ Page(
 
             this.state.vibrator = new Vibrator();
             this.startVibrationPattern();
-            this.state.stopTimer = setTimeout(() => this.stopAlert(), VIBRATION_DURATION_MS);
+            this.startAlarmSound();
+            this.state.stopTimer = setTimeout(() => this.stopAlert(), ALERT_DURATION_MS);
         },
 
         startVibrationPattern() {
             if (!this.state.vibrator || this.state.stopped) return;
             this.state.vibrator.stop();
-            this.state.vibrator.start({ mode: VIBRATOR_SCENE_CALL });
+            this.state.vibrator.start({ mode: VIBRATOR_SCENE_TIMER });
+        },
+
+        startAlarmSound() {
+            try {
+                if (typeof SystemSounds !== "function") return;
+                const sounds = new SystemSounds();
+                if (!sounds.getEnabled()) return;
+                const sourceTypes = sounds.getSourceType();
+                if (!sourceTypes || typeof sourceTypes.REGULAR !== "number") return;
+                this.state.systemSounds = sounds;
+                sounds.start(sourceTypes.REGULAR, Math.ceil(ALERT_DURATION_MS / 1000));
+            } catch (e) {
+                this.state.systemSounds = null;
+            }
         },
 
         dismissAlert() {
@@ -136,11 +152,19 @@ Page(
             if (this.state.vibrator) {
                 this.state.vibrator.stop();
             }
+            if (this.state.systemSounds) {
+                try {
+                    this.state.systemSounds.stop();
+                } catch (e) {
+                    // Sound may already have stopped or be unsupported.
+                }
+            }
         },
 
         onDestroy() {
             this.stopAlert();
             this.state.vibrator = null;
+            this.state.systemSounds = null;
             this.state.dismissButton = null;
             this.state.dismissIcon = null;
         },
