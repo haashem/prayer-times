@@ -174,11 +174,11 @@ export const DOT_ORBIT_RADIUS = px(155);
 
 export const CALIBRATE_STYLE = {
   x: px(24),
-  y: DEVICE_HEIGHT / 2 - px(34),
+  y: DEVICE_HEIGHT / 2 - px(48),
   w: DEVICE_WIDTH - px(48),
-  h: px(68),
+  h: px(96),
   color: COLORS.title,
-  text_size: px(24),
+  text_size: px(28),
   align_h: align.CENTER_H,
   align_v: align.CENTER_V,
   text_style: text_style.WRAP,
