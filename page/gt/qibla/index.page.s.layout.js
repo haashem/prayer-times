@@ -55,9 +55,9 @@ export const DOT_ORBIT_RADIUS = px(155);
 // ── Calibration Message ──
 export const CALIBRATE_STYLE = {
     x: px(24),
-    y: DEVICE_HEIGHT / 2 - px(48),
+    y: DEVICE_HEIGHT / 2 - px(75),
     w: DEVICE_WIDTH - px(48),
-    h: px(96),
+    h: px(150),
     color: COLORS.calibrate,
     text_size: px(28),
     align_h: align.CENTER_H,
