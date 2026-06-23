@@ -98,7 +98,9 @@ async function fetchPrayerTimes(params, res) {
 }
 
 async function fetchCalendar(year, month, params) {
-    const url = `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${params.latitude}&longitude=${params.longitude}&method=${params.method}`;
+    const method = params.method || 3;
+    const school = params.school === 1 ? 1 : 0;
+    const url = `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${params.latitude}&longitude=${params.longitude}&method=${method}&school=${school}`;
     console.log("Fetching prayer times: " + url);
 
     const response = await fetch({ url, method: "GET" });

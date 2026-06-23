@@ -14,6 +14,7 @@ import {
   deferPrayerNotificationScheduleInvalidation,
   deferPrayerNotificationScheduleRefresh,
 } from "../../../utils/prayer-notifications";
+import { getPrayerCalculationSettings } from "../../../utils/prayer-settings";
 import {
   DEVICE_WIDTH,
   DEVICE_HEIGHT,
@@ -235,7 +236,6 @@ Page(
               country: data.result.country,
               latitude: data.result.latitude,
               longitude: data.result.longitude,
-              method: 3,
             };
             this.state.location = loc;
             const appCache = this.getAppCache();
@@ -278,7 +278,7 @@ Page(
           params: {
             latitude: loc.latitude,
             longitude: loc.longitude,
-            method: loc.method || 3,
+            ...getPrayerCalculationSettings(),
           },
         }),
         timeout,

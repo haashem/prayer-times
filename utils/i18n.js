@@ -25,6 +25,10 @@ const TRANSLATIONS = {
         selectLanguage: "Language",
         contactUs: "Contact Us",
         calculationMethod: "Calculation Method",
+        school: "School",
+        schoolShafaei: "Shafaei",
+        schoolHanafi: "Hanafi",
+        schoolInfo: "Sets the juristic school used for Asr only. Shafaei: shadow equals object height. Hanafi: shadow is twice object height.",
         helpIntro:
             "This app detects your location and fetches accurate local prayer times.\n\n" +
             "For the best results:\n" +
@@ -34,7 +38,7 @@ const TRANSLATIONS = {
             "  Relay on iPhone",
         helpCalculation:
             "Prayer times are calculated using the Muslim World League (MWL) method.\n\n" +
-            "Asr time follows the Shafi'i school, where Asr begins when an object's shadow equals its height.",
+            "Asr time follows the selected school. Shafaei begins when an object's shadow equals its height; Hanafi begins at twice its height.",
         detectingLocation: "Detecting location...",
         loadingPrayerTimes: "Loading prayer times...",
         locationDetectionFailed: "Location detection failed",
@@ -63,6 +67,10 @@ const TRANSLATIONS = {
         selectLanguage: "انتخاب زبان",
         contactUs: "تماس با ما",
         calculationMethod: "روش محاسبه",
+        school: "مبنای عصر",
+        schoolShafaei: "شافعی",
+        schoolHanafi: "حنفی",
+        schoolInfo: "این گزینه فقط مبنای محاسبه وقت عصر را مشخص می‌کند. شافعی: وقتی سایه به اندازه ارتفاع جسم است. حنفی: وقتی سایه دو برابر ارتفاع جسم است.",
         helpIntro:
             "این برنامه موقعیت شما را تشخیص می‌دهد و اوقات شرعی دقیق محلی را دریافت می‌کند.\n\n" +
             "برای بهترین نتیجه:\n" +
@@ -71,7 +79,7 @@ const TRANSLATIONS = {
             "• iCloud Private Relay را در iPhone خاموش کنید",
         helpCalculation:
             "اوقات شرعی با روش اتحادیه جهانی مسلمانان (MWL) محاسبه می‌شود.\n\n" +
-            "وقت عصر بر اساس مذهب شافعی است؛ یعنی وقتی سایه هر جسم به اندازه ارتفاع خودش برسد.",
+            "وقت عصر بر اساس مذهب انتخاب‌شده است؛ شافعی وقتی سایه جسم برابر ارتفاع آن شود و حنفی وقتی دو برابر شود.",
         detectingLocation: "در حال تشخیص موقعیت...",
         loadingPrayerTimes: "در حال دریافت اوقات شرعی...",
         locationDetectionFailed: "تشخیص موقعیت ناموفق بود",
@@ -100,6 +108,10 @@ const TRANSLATIONS = {
         selectLanguage: "اختيار اللغة",
         contactUs: "اتصل بنا",
         calculationMethod: "طريقة الحساب",
+        school: "المذهب",
+        schoolShafaei: "شافعي",
+        schoolHanafi: "حنفي",
+        schoolInfo: "هذا الخيار يخص حساب وقت العصر فقط. الشافعي: عندما يساوي الظل طول الجسم. الحنفي: عندما يبلغ الظل ضعف طول الجسم.",
         helpIntro:
             "يكتشف هذا التطبيق موقعك ويجلب مواقيت الصلاة المحلية بدقة.\n\n" +
             "لأفضل النتائج:\n" +
@@ -108,7 +120,7 @@ const TRANSLATIONS = {
             "• أوقف iCloud Private Relay على iPhone",
         helpCalculation:
             "تُحسب مواقيت الصلاة باستخدام طريقة رابطة العالم الإسلامي (MWL).\n\n" +
-            "يتبع وقت العصر المذهب الشافعي، حيث يبدأ العصر عندما يصبح ظل الجسم مساوياً لطوله.",
+            "يتبع وقت العصر المذهب المختار؛ الشافعي عندما يصبح ظل الجسم مساوياً لطوله، والحنفي عندما يصبح ضعف طوله.",
         detectingLocation: "جارٍ تحديد الموقع...",
         loadingPrayerTimes: "جارٍ تحميل مواقيت الصلاة...",
         locationDetectionFailed: "فشل تحديد الموقع",
