@@ -11,6 +11,7 @@ const TITLE_HEIGHT = px(58);
 const ROW_HEIGHT = px(88);
 const ROW_START_Y = (DEVICE_HEIGHT - ROW_HEIGHT) / 2;
 const ROW_PAD_X = px(34);
+const INFO_OUTER_PAD_X = px(22);
 const TOGGLE_W = px(80);
 const TOGGLE_H = px(48);
 const TOGGLE_SIDE_PAD = px(30);
@@ -101,10 +102,12 @@ export function getFocusLineBottomStyle(index) {
 }
 
 export function getInfoTextStyle(rowCount, rtl = false) {
+    const x = rtl ? INFO_OUTER_PAD_X : ROW_PAD_X;
+    const endPad = rtl ? ROW_PAD_X : INFO_OUTER_PAD_X;
     return {
-        x: ROW_PAD_X,
+        x,
         y: getRowY(rowCount) + px(10),
-        w: DEVICE_WIDTH - ROW_PAD_X * 2,
+        w: DEVICE_WIDTH - x - endPad,
         h: px(130),
         text_size: px(24),
         color: 0xa6a6a6,
