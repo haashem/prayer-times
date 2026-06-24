@@ -1,4 +1,4 @@
-import { createWidget, widget, prop, event, setStatusBarVisible, text_style } from "@zos/ui";
+import { createWidget, widget, prop, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { onKey, offKey, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK } from "@zos/interaction";
@@ -7,9 +7,7 @@ import { BasePage } from "@zeppos/zml/base-page";
 import { getPrayerLabel, isRtl, t } from "../../../utils/i18n";
 import {
     PRAYER_NOTIFICATION_KEYS,
-    getFajrAlarmSoundEnabled,
     getPrayerNotificationPreferences,
-    setFajrAlarmSoundEnabled,
     setPrayerNotificationEnabled,
 } from "../../../utils/prayer-notifications";
 import {
@@ -25,14 +23,13 @@ import {
     getBottomPaddingStyle,
 } from "zosLoader:./index.page.[pf].layout.js";
 
-const SOUND_ROW_INDEX = PRAYER_NOTIFICATION_KEYS.length;
-const ROW_COUNT = SOUND_ROW_INDEX + 1;
+const ROW_COUNT = PRAYER_NOTIFICATION_KEYS.length;
+const SCROLL_PAGE_COUNT = ROW_COUNT + 1;
 
 Page(
     BasePage({
         state: {
             preferences: {},
-            soundEnabled: false,
             rowWidgets: [],
             toggles: [],
             focusIndex: 0,
@@ -48,12 +45,11 @@ Page(
             }
 
             this.state.preferences = getPrayerNotificationPreferences();
-            this.state.soundEnabled = getFajrAlarmSoundEnabled();
             setScrollMode({
                 mode: SCROLL_MODE_SWIPER,
                 options: {
                     height: SCROLL_ITEM_HEIGHT,
-                    count: ROW_COUNT,
+                    count: SCROLL_PAGE_COUNT,
                     modeParams: {
                         crown_enable: true,
                         on_page: (pageIndex) => this.setFocusedIndex(pageIndex),
@@ -70,7 +66,6 @@ Page(
             for (let i = 0; i < PRAYER_NOTIFICATION_KEYS.length; i++) {
                 this.renderRow(PRAYER_NOTIFICATION_KEYS[i], i);
             }
-            this.renderSoundRow();
             this.renderInfoText();
             this.renderFocusIndicator();
             const bottomPadding = getBottomPaddingStyle(ROW_COUNT);
@@ -108,31 +103,6 @@ Page(
             }
         },
 
-        renderSoundRow() {
-            const index = SOUND_ROW_INDEX;
-            const rtl = isRtl();
-            const checked = this.state.soundEnabled;
-            const bg = this.trackWidget(createWidget(widget.FILL_RECT, getRowBgStyle(index)));
-            const label = this.trackWidget(createWidget(widget.TEXT, {
-                ...getRowTextStyle(index, rtl),
-                text_style: text_style.NONE,
-                text: t("fajrAlarmSound"),
-            }));
-            const track = this.trackWidget(createWidget(
-                widget.FILL_RECT,
-                getToggleTrackStyle(index, checked, rtl)
-            ));
-            const knob = this.trackWidget(createWidget(
-                widget.CIRCLE,
-                getToggleKnobStyle(index, checked, rtl)
-            ));
-            this.state.toggles[index] = { track, knob };
-            const toggle = () => this.toggleIndex(index);
-            for (const w of [bg, label, track, knob]) {
-                w.addEventListener(event.SELECT, toggle);
-            }
-        },
-
         renderInfoText() {
             this.trackWidget(createWidget(widget.TEXT, {
                 ...getInfoTextStyle(ROW_COUNT, isRtl()),
@@ -141,16 +111,6 @@ Page(
         },
 
         toggleIndex(index) {
-            if (index === SOUND_ROW_INDEX) {
-                const checked = !this.state.soundEnabled;
-                this.state.soundEnabled = checked;
-                const rtl = isRtl();
-                const toggle = this.state.toggles[index];
-                toggle.track.setProperty(prop.MORE, getToggleTrackStyle(index, checked, rtl));
-                toggle.knob.setProperty(prop.MORE, getToggleKnobStyle(index, checked, rtl));
-                setFajrAlarmSoundEnabled(checked);
-                return;
-            }
             const prayerKey = PRAYER_NOTIFICATION_KEYS[index];
             if (!prayerKey) return;
 
@@ -176,15 +136,30 @@ Page(
         },
 
         setFocusedIndex(index) {
-            const nextIndex = Math.max(
-                0,
-                Math.min(ROW_COUNT - 1, index)
-            );
+            const nextIndex = Math.max(0, Math.min(SCROLL_PAGE_COUNT - 1, index));
             if (nextIndex === this.state.focusIndex) return;
 
             this.state.focusIndex = nextIndex;
-            this.state.focusTop.setProperty(prop.MORE, getFocusLineTopStyle(nextIndex));
-            this.state.focusBottom.setProperty(prop.MORE, getFocusLineBottomStyle(nextIndex));
+            if (nextIndex >= ROW_COUNT) {
+                this.state.focusTop.setProperty(prop.MORE, {
+                    ...getFocusLineTopStyle(ROW_COUNT - 1),
+                    alpha: 0,
+                });
+                this.state.focusBottom.setProperty(prop.MORE, {
+                    ...getFocusLineBottomStyle(ROW_COUNT - 1),
+                    alpha: 0,
+                });
+                return;
+            }
+
+            this.state.focusTop.setProperty(prop.MORE, {
+                ...getFocusLineTopStyle(nextIndex),
+                alpha: 255,
+            });
+            this.state.focusBottom.setProperty(prop.MORE, {
+                ...getFocusLineBottomStyle(nextIndex),
+                alpha: 255,
+            });
         },
 
         registerSelectionKey() {

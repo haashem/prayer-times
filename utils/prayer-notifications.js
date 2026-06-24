@@ -6,7 +6,6 @@ import { PRAYER_CACHE_KEY, getNextPrayerOccurrence } from "./prayer-cache";
 
 export const PRAYER_NOTIFICATION_KEYS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 export const PRAYER_NOTIFICATION_PREFS_KEY = "prayerNotificationPrefsV1";
-export const FAJR_ALARM_SOUND_KEY = "fajrAlarmSoundEnabledV1";
 
 const ALARM_IDS_KEY = "prayerNotificationAlarmIdsV1";
 const SCHEDULE_CONTEXT_KEY = "prayerNotificationScheduleContextV1";
@@ -34,14 +33,6 @@ export function getPrayerNotificationPreferences() {
         preferences[key] = stored[key] === true;
     }
     return preferences;
-}
-
-export function getFajrAlarmSoundEnabled() {
-    return localStorage.getItem(FAJR_ALARM_SOUND_KEY) === "true";
-}
-
-export function setFajrAlarmSoundEnabled(enabled) {
-    localStorage.setItem(FAJR_ALARM_SOUND_KEY, enabled === true ? "true" : "false");
 }
 
 function getAlarmIds() {

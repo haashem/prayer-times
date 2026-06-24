@@ -108,7 +108,7 @@ export function getInfoTextStyle(rowCount, rtl = false) {
         x,
         y: getRowY(rowCount) + px(12),
         w: DEVICE_WIDTH - x - endPad,
-        h: px(170),
+        h: px(250),
         text_size: px(28),
         color: 0xa6a6a6,
         align_h: rtl ? align.RIGHT : align.LEFT,
@@ -119,7 +119,7 @@ export function getInfoTextStyle(rowCount, rtl = false) {
 
 export function getBottomPaddingStyle(rowCount) {
     return {
-        y: getRowY(rowCount) + px(182),
+        y: getRowY(rowCount) + px(262),
         h: px(80),
     };
 }
