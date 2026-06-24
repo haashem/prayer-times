@@ -186,13 +186,31 @@ Page(
 
             this.state.focusIndex = nextIndex;
             if (nextIndex >= SCHOOL_OPTIONS.length) {
+                if (this.state.focusTop) {
+                    this.state.focusTop.setProperty(prop.MORE, {
+                        ...getFocusLineTopStyle(SCHOOL_OPTIONS.length - 1),
+                        alpha: 0,
+                    });
+                }
+                if (this.state.focusBottom) {
+                    this.state.focusBottom.setProperty(prop.MORE, {
+                        ...getFocusLineBottomStyle(SCHOOL_OPTIONS.length - 1),
+                        alpha: 0,
+                    });
+                }
                 return;
             }
             if (this.state.focusTop) {
-                this.state.focusTop.setProperty(prop.MORE, getFocusLineTopStyle(nextIndex));
+                this.state.focusTop.setProperty(prop.MORE, {
+                    ...getFocusLineTopStyle(nextIndex),
+                    alpha: 255,
+                });
             }
             if (this.state.focusBottom) {
-                this.state.focusBottom.setProperty(prop.MORE, getFocusLineBottomStyle(nextIndex));
+                this.state.focusBottom.setProperty(prop.MORE, {
+                    ...getFocusLineBottomStyle(nextIndex),
+                    alpha: 255,
+                });
             }
         },
 
