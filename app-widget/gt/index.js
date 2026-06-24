@@ -4,7 +4,7 @@ import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
 import { formatHijriDate, formatRelativeRemaining, getPrayerLabel, localizeDigits, refreshAppLanguage, t } from "../../utils/i18n";
-import { PRAYER_CACHE_KEY, getPrayerWindow } from "../../utils/prayer-cache";
+import { getStoredPrayerWindow } from "../../utils/prayer-cache";
 import {
     CARD_HEIGHT,
     MARGIN,
@@ -105,11 +105,7 @@ AppWidget({
             this.state.prayerData = null;
             this.state.tomorrowData = null;
 
-            const storedData = localStorage.getItem(PRAYER_CACHE_KEY);
-            if (!storedData) return;
-
-            const cached = JSON.parse(storedData);
-            const prayerWindow = getPrayerWindow(cached, new Time());
+            const prayerWindow = getStoredPrayerWindow(localStorage, new Time());
             if (!prayerWindow) return;
 
             this.state.prayerData = prayerWindow.today;

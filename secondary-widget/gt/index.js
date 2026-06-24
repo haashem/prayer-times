@@ -4,7 +4,7 @@ import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
 import { formatNextPrayer, getPrayerLabel, localizeDigits, refreshAppLanguage, t } from "../../utils/i18n";
-import { PRAYER_CACHE_KEY, getPrayerWindow } from "../../utils/prayer-cache";
+import { getStoredPrayerWindow } from "../../utils/prayer-cache";
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
@@ -109,14 +109,10 @@ SecondaryWidget({
                 this.state.location = JSON.parse(storedLoc);
             }
 
-            const storedData = localStorage.getItem(PRAYER_CACHE_KEY);
-            if (storedData) {
-                const cached = JSON.parse(storedData);
-                const prayerWindow = getPrayerWindow(cached, new Time());
-                if (prayerWindow) {
-                    this.state.prayerData = prayerWindow.today;
-                    this.state.tomorrowData = prayerWindow.tomorrow;
-                }
+            const prayerWindow = getStoredPrayerWindow(localStorage, new Time());
+            if (prayerWindow) {
+                this.state.prayerData = prayerWindow.today;
+                this.state.tomorrowData = prayerWindow.tomorrow;
             }
         } catch (e) {
             logger.error("Widget loadData error: " + e.message);

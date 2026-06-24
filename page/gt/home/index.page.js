@@ -9,7 +9,7 @@ import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { BasePage } from "@zeppos/zml/base-page";
 import { createQiblaCompass } from "./qibla";
 import { getPrayerLabel, localizeDigits, t } from "../../../utils/i18n";
-import { PRAYER_CACHE_KEY, getPrayerWindow } from "../../../utils/prayer-cache";
+import { PRAYER_CACHE_KEY, getPrayerWindow, getStoredPrayerWindow } from "../../../utils/prayer-cache";
 import {
   deferPrayerNotificationScheduleInvalidation,
   deferPrayerNotificationScheduleRefresh,
@@ -160,15 +160,11 @@ Page(
           return appCache.prayerData;
         }
 
-        let cached = appCache && appCache.prayerCache;
-        if (!cached) {
-          const stored = localStorage.getItem(PRAYER_CACHE_KEY);
-          if (!stored) return null;
-          cached = JSON.parse(stored);
-          if (appCache) appCache.prayerCache = cached;
+        const cached = appCache && appCache.prayerCache;
+        let prayerWindow = cached ? getPrayerWindow(cached, time) : null;
+        if (!prayerWindow) {
+          prayerWindow = getStoredPrayerWindow(localStorage, time);
         }
-
-        const prayerWindow = getPrayerWindow(cached, time);
         const todayData = prayerWindow ? prayerWindow.today : null;
         if (appCache) {
           appCache.prayerDayKey = dayKey;

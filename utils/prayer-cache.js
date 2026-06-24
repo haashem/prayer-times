@@ -1,4 +1,5 @@
 export const PRAYER_CACHE_KEY = "prayerMonthV2";
+export const LEGACY_PRAYER_DATA_KEY = "prayerData";
 
 export const PRAYER_KEYS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
@@ -142,6 +143,18 @@ function getNextMonth(year, month) {
     return { year: String(numericYear), month: pad(numericMonth + 1, 2) };
 }
 
+function parseStoredJson(value) {
+    if (!value) return null;
+    if (typeof value === "string") {
+        try {
+            return JSON.parse(value);
+        } catch (e) {
+            return null;
+        }
+    }
+    return typeof value === "object" ? value : null;
+}
+
 export function createPrayerMonthCache(days, year, month, nextMonthFirstDay) {
     const paddedMonth = pad(month, 2);
     const records = [];
@@ -205,6 +218,52 @@ export function getPrayerWindow(cache, time) {
     }
 
     return { today, tomorrow };
+}
+
+export function getLegacyPrayerWindow(cache, time) {
+    if (!cache || !Array.isArray(cache.data)) return null;
+
+    const day = pad(time.getDate(), 2);
+    const month = pad(time.getMonth(), 2);
+    const year = String(time.getFullYear());
+    const todayText = day + "-" + month + "-" + year;
+
+    if (cache.month !== month || cache.year !== year) return null;
+
+    const today = cache.data.find(
+        (d) => d.date && d.date.gregorian && d.date.gregorian.date === todayText
+    );
+    if (!today) return null;
+
+    let tomorrow = null;
+    const tomorrowDate = new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day) + 1
+    );
+    const tomorrowText = pad(tomorrowDate.getDate(), 2) + "-" +
+        pad(tomorrowDate.getMonth() + 1, 2) + "-" +
+        String(tomorrowDate.getFullYear());
+
+    if (cache.month === pad(tomorrowDate.getMonth() + 1, 2) &&
+        cache.year === String(tomorrowDate.getFullYear())) {
+        tomorrow = cache.data.find(
+            (d) => d.date && d.date.gregorian && d.date.gregorian.date === tomorrowText
+        ) || null;
+    }
+
+    return { today, tomorrow };
+}
+
+export function getStoredPrayerWindow(storage, time) {
+    if (!storage || !storage.getItem) return null;
+
+    const cached = parseStoredJson(storage.getItem(PRAYER_CACHE_KEY));
+    const prayerWindow = getPrayerWindow(cached, time);
+    if (prayerWindow) return prayerWindow;
+
+    const legacy = parseStoredJson(storage.getItem(LEGACY_PRAYER_DATA_KEY));
+    return getLegacyPrayerWindow(legacy, time);
 }
 
 function getPrayerDateTime(day, prayerKey) {
