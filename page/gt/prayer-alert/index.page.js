@@ -18,7 +18,7 @@ import {
     DISMISS_ICON_STYLE,
 } from "zosLoader:./index.page.[pf].layout.js";
 
-const ALERT_DURATION_MS = 10 * 60 * 1000;
+const ALERT_DURATION_MS = 30 * 60 * 1000;
 
 function parsePayload(value) {
     try {
