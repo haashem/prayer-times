@@ -6,6 +6,7 @@ import { Vibrator, VIBRATOR_SCENE_TIMER, SystemSounds } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
 import { t } from "../../../utils/i18n";
 import {
+    getPrayerNotificationPayloadDisplay,
     isPrayerNotificationCurrent,
     scheduleNextPrayerNotification,
 } from "../../../utils/prayer-notifications";
@@ -77,13 +78,14 @@ Page(
                 return;
             }
 
+            const display = getPrayerNotificationPayloadDisplay(payload);
             createWidget(widget.TEXT, {
                 ...TITLE_STYLE,
-                text: payload.title,
+                text: display.title,
             });
             createWidget(widget.TEXT, {
                 ...MESSAGE_STYLE,
-                text: payload.time,
+                text: display.time,
             });
             this.state.dismissButton = createWidget(widget.BUTTON, {
                 ...DISMISS_BUTTON_STYLE,

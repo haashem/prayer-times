@@ -108,15 +108,37 @@ function formatNotificationTime(occurrence) {
     return localizeDigits(padTimePart(hours) + ":" + minutes);
 }
 
-function buildAlarmPayload(prayerKey, context, occurrence) {
+export function getPrayerNotificationDisplay(prayerKey, occurrence) {
     const prayer = getPrayerLabel(prayerKey);
     const time = formatNotificationTime(occurrence);
     return {
-        prayerKey,
-        context,
         time,
         title: t("prayerNotificationTitle").replace("{prayer}", prayer),
         content: time,
+    };
+}
+
+export function getPrayerNotificationPayloadDisplay(payload) {
+    const occurrenceTime = payload && Number(payload.occurrenceTime);
+    if (payload && payload.prayerKey && isFinite(occurrenceTime)) {
+        return getPrayerNotificationDisplay(payload.prayerKey, new Date(occurrenceTime));
+    }
+    return {
+        time: payload && payload.time ? payload.time : "",
+        title: payload && payload.title ? payload.title : "",
+        content: payload && payload.content ? payload.content : "",
+    };
+}
+
+function buildAlarmPayload(prayerKey, context, occurrence) {
+    const display = getPrayerNotificationDisplay(prayerKey, occurrence);
+    return {
+        prayerKey,
+        context,
+        occurrenceTime: occurrence.getTime(),
+        time: display.time,
+        title: display.title,
+        content: display.content,
     };
 }
 

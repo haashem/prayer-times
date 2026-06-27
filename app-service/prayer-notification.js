@@ -1,5 +1,6 @@
 import { notify } from "@zos/notification";
 import {
+    getPrayerNotificationPayloadDisplay,
     isPrayerNotificationCurrent,
     scheduleNextPrayerNotification,
 } from "../utils/prayer-notifications";
@@ -20,9 +21,10 @@ AppService({
             return;
         }
 
+        const display = getPrayerNotificationPayloadDisplay(payload);
         notify({
-            title: payload.title,
-            content: payload.content,
+            title: display.title,
+            content: display.content,
             actions: [],
         });
 
