@@ -1,8 +1,9 @@
 import { createWidget, widget, prop, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
-import { onKey, offKey, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK } from "@zos/interaction";
+import { createModal, onKey, offKey, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK } from "@zos/interaction";
 import { setScrollMode, SCROLL_MODE_SWIPER } from "@zos/page";
+import { getSystemMode } from "@zos/settings";
 import { BasePage } from "@zeppos/zml/base-page";
 import { getPrayerLabel, isRtl, t } from "../../../utils/i18n";
 import {
@@ -25,6 +26,7 @@ import {
 
 const ROW_COUNT = PRAYER_NOTIFICATION_KEYS.length;
 const SCROLL_PAGE_COUNT = ROW_COUNT + 1;
+const FAJR_PRAYER_KEY = "Fajr";
 
 Page(
     BasePage({
@@ -35,6 +37,7 @@ Page(
             focusIndex: 0,
             focusTop: null,
             focusBottom: null,
+            systemModeWarningShown: false,
         },
 
         build() {
@@ -78,6 +81,9 @@ Page(
                 alpha: 0,
             }));
             this.registerSelectionKey();
+            if (this.state.preferences[FAJR_PRAYER_KEY] === true) {
+                this.showFajrSystemModeWarningIfNeeded();
+            }
         },
 
         trackWidget(w) {
@@ -115,12 +121,44 @@ Page(
             if (!prayerKey) return;
 
             const checked = this.state.preferences[prayerKey] !== true;
+            if (checked && prayerKey === FAJR_PRAYER_KEY && this.isFajrSystemModeBlocked()) {
+                this.showFajrSystemModeWarning();
+                return;
+            }
+
             this.state.preferences[prayerKey] = checked;
             const rtl = isRtl();
             const toggle = this.state.toggles[index];
             toggle.track.setProperty(prop.MORE, getToggleTrackStyle(index, checked, rtl));
             toggle.knob.setProperty(prop.MORE, getToggleKnobStyle(index, checked, rtl));
             setPrayerNotificationEnabled(prayerKey, checked);
+            if (checked && prayerKey === FAJR_PRAYER_KEY) {
+                this.showFajrSystemModeWarningIfNeeded();
+            }
+        },
+
+        isFajrSystemModeBlocked() {
+            try {
+                const mode = getSystemMode();
+                return mode && (mode.sleep === true || mode.DND === true);
+            } catch (e) {
+                return false;
+            }
+        },
+
+        showFajrSystemModeWarningIfNeeded() {
+            if (this.state.systemModeWarningShown || !this.isFajrSystemModeBlocked()) return;
+            this.showFajrSystemModeWarning();
+        },
+
+        showFajrSystemModeWarning() {
+            this.state.systemModeWarningShown = true;
+            createModal({
+                content: t("fajrSystemModeWarning"),
+                show: true,
+                autoHide: true,
+                capsuleButton: ["✓"],
+            });
         },
 
         renderFocusIndicator() {
