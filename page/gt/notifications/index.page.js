@@ -37,7 +37,6 @@ Page(
             focusIndex: 0,
             focusTop: null,
             focusBottom: null,
-            systemModeWarningShown: false,
         },
 
         build() {
@@ -81,9 +80,6 @@ Page(
                 alpha: 0,
             }));
             this.registerSelectionKey();
-            if (this.state.preferences[FAJR_PRAYER_KEY] === true) {
-                this.showFajrSystemModeWarningIfNeeded();
-            }
         },
 
         trackWidget(w) {
@@ -132,9 +128,6 @@ Page(
             toggle.track.setProperty(prop.MORE, getToggleTrackStyle(index, checked, rtl));
             toggle.knob.setProperty(prop.MORE, getToggleKnobStyle(index, checked, rtl));
             setPrayerNotificationEnabled(prayerKey, checked);
-            if (checked && prayerKey === FAJR_PRAYER_KEY) {
-                this.showFajrSystemModeWarningIfNeeded();
-            }
         },
 
         isFajrSystemModeBlocked() {
@@ -146,18 +139,12 @@ Page(
             }
         },
 
-        showFajrSystemModeWarningIfNeeded() {
-            if (this.state.systemModeWarningShown || !this.isFajrSystemModeBlocked()) return;
-            this.showFajrSystemModeWarning();
-        },
-
         showFajrSystemModeWarning() {
-            this.state.systemModeWarningShown = true;
             createModal({
                 content: t("fajrSystemModeWarning"),
                 show: true,
                 autoHide: true,
-                capsuleButton: ["✓"],
+                okButton: "image/ic_confirm_64px.png",
             });
         },
 
