@@ -9,7 +9,8 @@ const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 const TITLE_Y = px(24);
 const TITLE_HEIGHT = px(58);
 const ROW_HEIGHT = px(88);
-const ROW_START_Y = (DEVICE_HEIGHT - ROW_HEIGHT) / 2;
+const ROW_START_Y = TITLE_Y + TITLE_HEIGHT + px(40);
+const FAJR_ROW_HEIGHT = DEVICE_HEIGHT - ROW_START_Y - px(18);
 const ROW_PAD_X = px(34);
 const INFO_OUTER_PAD_X = px(22);
 const TOGGLE_W = px(80);
@@ -33,8 +34,22 @@ export const TITLE_STYLE = {
     text_style: text_style.NONE,
 };
 
-function getRowY(index) {
-    return ROW_START_Y + index * ROW_HEIGHT;
+export function getRowHeight(index) {
+    return index === 0 ? FAJR_ROW_HEIGHT : ROW_HEIGHT;
+}
+
+export function getRowY(index) {
+    let y = ROW_START_Y;
+    for (let i = 0; i < index; i++) {
+        y += getRowHeight(i);
+    }
+    return y;
+}
+
+export function getScrollYForIndex(index) {
+    if (index === 0) return 0;
+    const rowCenterY = getRowY(index) + getRowHeight(index) / 2;
+    return Math.min(0, DEVICE_HEIGHT / 2 - rowCenterY);
 }
 
 function getToggleX(rtl) {
@@ -42,16 +57,17 @@ function getToggleX(rtl) {
 }
 
 export function getRowBgStyle(index) {
-    return { x: 0, y: getRowY(index), w: DEVICE_WIDTH, h: ROW_HEIGHT, color: 0x000000 };
+    return { x: 0, y: getRowY(index), w: DEVICE_WIDTH, h: getRowHeight(index), color: 0x000000 };
 }
 
 export function getRowTextStyle(index, rtl = false) {
     const toggleSpace = TOGGLE_SIDE_PAD + TOGGLE_W + px(18);
+    const isFajr = index === 0;
     return {
         x: rtl ? toggleSpace : ROW_PAD_X,
-        y: getRowY(index),
+        y: getRowY(index) + (isFajr ? px(6) : 0),
         w: DEVICE_WIDTH - toggleSpace - ROW_PAD_X,
-        h: ROW_HEIGHT,
+        h: isFajr ? px(70) : ROW_HEIGHT,
         text_size: px(36),
         color: 0xffffff,
         align_h: rtl ? align.RIGHT : align.LEFT,
@@ -95,21 +111,21 @@ export function getFocusLineTopStyle(index) {
 export function getFocusLineBottomStyle(index) {
     return {
         x: px(20),
-        y: getRowY(index) + ROW_HEIGHT - FOCUS_LINE_HEIGHT,
+        y: getRowY(index) + getRowHeight(index) - FOCUS_LINE_HEIGHT,
         w: DEVICE_WIDTH - px(40),
         h: FOCUS_LINE_HEIGHT,
     };
 }
 
-export function getInfoTextStyle(rowCount, rtl = false) {
+export function getInfoTextStyle(index, rtl = false) {
     const x = rtl ? INFO_OUTER_PAD_X : ROW_PAD_X;
     const endPad = rtl ? ROW_PAD_X : INFO_OUTER_PAD_X;
     return {
         x,
-        y: getRowY(rowCount) + px(10),
+        y: getRowY(index) + px(80),
         w: DEVICE_WIDTH - x - endPad,
-        h: px(220),
-        text_size: px(24),
+        h: getRowHeight(index) - px(102),
+        text_size: px(28),
         color: 0xa6a6a6,
         align_h: rtl ? align.RIGHT : align.LEFT,
         align_v: align.TOP,
@@ -119,7 +135,7 @@ export function getInfoTextStyle(rowCount, rtl = false) {
 
 export function getBottomPaddingStyle(rowCount) {
     return {
-        y: getRowY(rowCount) + px(230),
-        h: px(40),
+        y: getRowY(rowCount),
+        h: DEVICE_HEIGHT / 2,
     };
 }

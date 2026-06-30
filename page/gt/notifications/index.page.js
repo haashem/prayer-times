@@ -25,7 +25,6 @@ import {
 } from "zosLoader:./index.page.[pf].layout.js";
 
 const ROW_COUNT = PRAYER_NOTIFICATION_KEYS.length;
-const SCROLL_PAGE_COUNT = ROW_COUNT + 1;
 const FAJR_PRAYER_KEY = "Fajr";
 
 Page(
@@ -51,10 +50,10 @@ Page(
                 mode: SCROLL_MODE_SWIPER,
                 options: {
                     height: SCROLL_ITEM_HEIGHT,
-                    count: SCROLL_PAGE_COUNT,
+                    count: ROW_COUNT,
                     modeParams: {
                         crown_enable: true,
-                        on_page: (pageIndex) => this.setFocusedIndex(pageIndex),
+                        on_page: (pageIndex) => this.moveFocus(pageIndex - this.state.focusIndex),
                     },
                 },
             });
@@ -68,7 +67,6 @@ Page(
             for (let i = 0; i < PRAYER_NOTIFICATION_KEYS.length; i++) {
                 this.renderRow(PRAYER_NOTIFICATION_KEYS[i], i);
             }
-            this.renderInfoText();
             this.renderFocusIndicator();
             const bottomPadding = getBottomPaddingStyle(ROW_COUNT);
             this.trackWidget(createWidget(widget.FILL_RECT, {
@@ -95,21 +93,24 @@ Page(
                 ...getRowTextStyle(index, rtl),
                 text: getPrayerLabel(prayerKey),
             }));
+            const rowWidgets = [bg, label];
+            if (index === 0) {
+                rowWidgets.push(this.trackWidget(createWidget(widget.TEXT, {
+                    ...getInfoTextStyle(index, rtl),
+                    text: t("prayerAlertInfo"),
+                })));
+            }
             const track = this.trackWidget(createWidget(widget.FILL_RECT, getToggleTrackStyle(index, checked, rtl)));
             const knob = this.trackWidget(createWidget(widget.CIRCLE, getToggleKnobStyle(index, checked, rtl)));
             this.state.toggles[index] = { track, knob };
 
-            const toggle = () => this.toggleIndex(index);
-            for (const w of [bg, label, track, knob]) {
+            const toggle = () => {
+                this.setFocusedIndex(index);
+                this.toggleIndex(index);
+            };
+            for (const w of rowWidgets.concat([track, knob])) {
                 w.addEventListener(event.SELECT, toggle);
             }
-        },
-
-        renderInfoText() {
-            this.trackWidget(createWidget(widget.TEXT, {
-                ...getInfoTextStyle(ROW_COUNT, isRtl()),
-                text: t("prayerAlertInfo"),
-            }));
         },
 
         toggleIndex(index) {
@@ -160,23 +161,21 @@ Page(
             }));
         },
 
+        moveFocus(delta) {
+            if (delta === 0) return;
+            const nextIndex = Math.max(0, Math.min(ROW_COUNT - 1, this.state.focusIndex + (delta > 0 ? 1 : -1)));
+            this.applyFocusedIndex(nextIndex);
+        },
+
         setFocusedIndex(index) {
-            const nextIndex = Math.max(0, Math.min(SCROLL_PAGE_COUNT - 1, index));
+            const nextIndex = Math.max(0, Math.min(ROW_COUNT - 1, index));
+            this.applyFocusedIndex(nextIndex);
+        },
+
+        applyFocusedIndex(nextIndex) {
             if (nextIndex === this.state.focusIndex) return;
 
             this.state.focusIndex = nextIndex;
-            if (nextIndex >= ROW_COUNT) {
-                this.state.focusTop.setProperty(prop.MORE, {
-                    ...getFocusLineTopStyle(ROW_COUNT - 1),
-                    alpha: 0,
-                });
-                this.state.focusBottom.setProperty(prop.MORE, {
-                    ...getFocusLineBottomStyle(ROW_COUNT - 1),
-                    alpha: 0,
-                });
-                return;
-            }
-
             this.state.focusTop.setProperty(prop.MORE, {
                 ...getFocusLineTopStyle(nextIndex),
                 alpha: 255,
