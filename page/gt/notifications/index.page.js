@@ -50,7 +50,7 @@ Page(
                 mode: SCROLL_MODE_SWIPER,
                 options: {
                     height: SCROLL_ITEM_HEIGHT,
-                    count: ROW_COUNT,
+                    count: ROW_COUNT + 1,
                     modeParams: {
                         crown_enable: true,
                         on_page: (pageIndex) => this.moveFocus(pageIndex - this.state.focusIndex),
@@ -67,6 +67,10 @@ Page(
             for (let i = 0; i < PRAYER_NOTIFICATION_KEYS.length; i++) {
                 this.renderRow(PRAYER_NOTIFICATION_KEYS[i], i);
             }
+            this.trackWidget(createWidget(widget.TEXT, {
+                ...getInfoTextStyle(ROW_COUNT, isRtl()),
+                text: t("prayerAlertInfo"),
+            }));
             this.renderFocusIndicator();
             const bottomPadding = getBottomPaddingStyle(ROW_COUNT);
             this.trackWidget(createWidget(widget.FILL_RECT, {
@@ -94,12 +98,6 @@ Page(
                 text: getPrayerLabel(prayerKey),
             }));
             const rowWidgets = [bg, label];
-            if (index === 0) {
-                rowWidgets.push(this.trackWidget(createWidget(widget.TEXT, {
-                    ...getInfoTextStyle(index, rtl),
-                    text: t("prayerAlertInfo"),
-                })));
-            }
             const track = this.trackWidget(createWidget(widget.FILL_RECT, getToggleTrackStyle(index, checked, rtl)));
             const knob = this.trackWidget(createWidget(widget.CIRCLE, getToggleKnobStyle(index, checked, rtl)));
             this.state.toggles[index] = { track, knob };

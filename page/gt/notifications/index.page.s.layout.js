@@ -10,9 +10,10 @@ const TITLE_Y = px(24);
 const TITLE_HEIGHT = px(58);
 const ROW_HEIGHT = px(88);
 const ROW_START_Y = TITLE_Y + TITLE_HEIGHT + px(40);
-const FAJR_ROW_HEIGHT = DEVICE_HEIGHT - ROW_START_Y - px(18);
 const ROW_PAD_X = px(34);
 const INFO_OUTER_PAD_X = px(22);
+const INFO_TOP_GAP = px(18);
+const INFO_HEIGHT = px(260);
 const TOGGLE_W = px(80);
 const TOGGLE_H = px(48);
 const TOGGLE_SIDE_PAD = px(30);
@@ -35,7 +36,7 @@ export const TITLE_STYLE = {
 };
 
 export function getRowHeight(index) {
-    return index === 0 ? FAJR_ROW_HEIGHT : ROW_HEIGHT;
+    return ROW_HEIGHT;
 }
 
 export function getRowY(index) {
@@ -62,12 +63,11 @@ export function getRowBgStyle(index) {
 
 export function getRowTextStyle(index, rtl = false) {
     const toggleSpace = TOGGLE_SIDE_PAD + TOGGLE_W + px(18);
-    const isFajr = index === 0;
     return {
         x: rtl ? toggleSpace : ROW_PAD_X,
-        y: getRowY(index) + (isFajr ? px(6) : 0),
+        y: getRowY(index),
         w: DEVICE_WIDTH - toggleSpace - ROW_PAD_X,
-        h: isFajr ? px(70) : ROW_HEIGHT,
+        h: ROW_HEIGHT,
         text_size: px(36),
         color: 0xffffff,
         align_h: rtl ? align.RIGHT : align.LEFT,
@@ -122,9 +122,9 @@ export function getInfoTextStyle(index, rtl = false) {
     const endPad = rtl ? ROW_PAD_X : INFO_OUTER_PAD_X;
     return {
         x,
-        y: getRowY(index) + px(80),
+        y: getRowY(index) + INFO_TOP_GAP,
         w: DEVICE_WIDTH - x - endPad,
-        h: getRowHeight(index) - px(102),
+        h: INFO_HEIGHT,
         text_size: px(28),
         color: 0xa6a6a6,
         align_h: rtl ? align.RIGHT : align.LEFT,
@@ -135,7 +135,7 @@ export function getInfoTextStyle(index, rtl = false) {
 
 export function getBottomPaddingStyle(rowCount) {
     return {
-        y: getRowY(rowCount),
+        y: getRowY(rowCount) + INFO_TOP_GAP + INFO_HEIGHT,
         h: DEVICE_HEIGHT / 2,
     };
 }
