@@ -126,7 +126,7 @@ export function getInfoTextStyle(rtl = false) {
         y: INFO_Y,
         w: DEVICE_WIDTH - x - endPad,
         h: INFO_HEIGHT,
-        text_size: px(22),
+        text_size: px(28),
         color: 0xa6a6a6,
         align_h: rtl ? align.RIGHT : align.LEFT,
         align_v: align.TOP,
