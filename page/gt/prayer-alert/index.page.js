@@ -4,7 +4,7 @@ import { back } from "@zos/router";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { Vibrator, VIBRATOR_SCENE_NOTIFICATION, VIBRATOR_SCENE_TIMER, SystemSounds } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
-import { t } from "../../../utils/i18n";
+import { getPrayerLabel, t } from "../../../utils/i18n";
 import {
     getPrayerNotificationPayloadDisplay,
     isPrayerNotificationCurrent,
@@ -13,7 +13,9 @@ import {
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
-    TITLE_STYLE,
+    EYEBROW_STYLE,
+    PRAYER_NAME_STYLE,
+    TIME_STYLE,
     MESSAGE_STYLE,
     DISMISS_BUTTON_STYLE,
     DISMISS_ICON_STYLE,
@@ -92,11 +94,15 @@ Page(
 
             const display = getPrayerNotificationPayloadDisplay(payload);
             createWidget(widget.TEXT, {
-                ...TITLE_STYLE,
-                text: display.title,
+                ...EYEBROW_STYLE,
+                text: t("timeForPrayer"),
             });
             createWidget(widget.TEXT, {
-                ...MESSAGE_STYLE,
+                ...PRAYER_NAME_STYLE,
+                text: getPrayerLabel(payload.prayerKey),
+            });
+            createWidget(widget.TEXT, {
+                ...TIME_STYLE,
                 text: display.time,
             });
             this.state.dismissButton = createWidget(widget.BUTTON, {
