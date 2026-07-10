@@ -11,7 +11,6 @@ const ALARM_IDS_KEY = "prayerNotificationAlarmIdsV1";
 const SCHEDULE_CONTEXT_KEY = "prayerNotificationScheduleContextV1";
 const SCHEDULE_SIGNATURE_KEY = "prayerNotificationScheduleSignatureV1";
 const PRAYER_ALERT_PAGE_URL = "page/gt/prayer-alert/index.page";
-const PRAYER_NOTIFICATION_SERVICE_URL = "app-service/prayer-notification";
 
 function readJson(key, fallback) {
     try {
@@ -160,9 +159,7 @@ export function scheduleNextPrayerNotification(prayerKey, context, now = new Dat
     cancelAlarmId(ids[prayerKey]);
 
     const alarmId = setAlarm({
-        url: prayerKey === "Fajr"
-            ? PRAYER_ALERT_PAGE_URL
-            : PRAYER_NOTIFICATION_SERVICE_URL,
+        url: PRAYER_ALERT_PAGE_URL,
         time: Math.floor(occurrence.getTime() / 1000),
         param: JSON.stringify(buildAlarmPayload(prayerKey, context, occurrence)),
         repeat_type: REPEAT_ONCE,

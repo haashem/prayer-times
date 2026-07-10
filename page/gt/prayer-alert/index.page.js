@@ -2,7 +2,7 @@ import { createWidget, widget, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { back } from "@zos/router";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
-import { Vibrator, VIBRATOR_SCENE_TIMER, SystemSounds } from "@zos/sensor";
+import { Vibrator, VIBRATOR_SCENE_NOTIFICATION, VIBRATOR_SCENE_TIMER, SystemSounds } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
 import { t } from "../../../utils/i18n";
 import {
@@ -19,7 +19,9 @@ import {
     DISMISS_ICON_STYLE,
 } from "zosLoader:./index.page.[pf].layout.js";
 
-const ALERT_DURATION_MS = 30 * 60 * 1000;
+const FAJR_PRAYER_KEY = "Fajr";
+const FAJR_ALERT_DURATION_MS = 5 * 60 * 1000;
+const PRAYER_ALERT_DURATION_MS = 10 * 1000;
 
 function parsePayload(value) {
     try {
@@ -32,6 +34,14 @@ function parsePayload(value) {
         return null;
     }
     return null;
+}
+
+function isFajrAlert(payload) {
+    return payload && payload.prayerKey === FAJR_PRAYER_KEY;
+}
+
+function getAlertDurationMs(payload) {
+    return isFajrAlert(payload) ? FAJR_ALERT_DURATION_MS : PRAYER_ALERT_DURATION_MS;
 }
 
 Page(
@@ -54,7 +64,9 @@ Page(
                 this.state.payload = parsePayload(params) || this.takePendingPayload();
             }
 
-            setPageBrightTime({ brightTime: ALERT_DURATION_MS });
+            const payload = this.state.payload;
+            const alertDuration = getAlertDurationMs(payload);
+            setPageBrightTime({ brightTime: alertDuration });
             const { screenShape } = getDeviceInfo();
             if (screenShape === SCREEN_SHAPE_SQUARE) {
                 setStatusBarVisible(false);
@@ -68,9 +80,9 @@ Page(
                 color: 0x000000,
             });
 
-            const payload = this.state.payload;
+            const isTest = payload && payload.test === true;
             if (!payload ||
-                !isPrayerNotificationCurrent(payload.prayerKey, payload.context)) {
+                (!isTest && !isPrayerNotificationCurrent(payload.prayerKey, payload.context))) {
                 createWidget(widget.TEXT, {
                     ...MESSAGE_STYLE,
                     text: t("noPrayerData"),
@@ -98,12 +110,18 @@ Page(
             });
             this.state.dismissIcon.addEventListener(event.SELECT, () => this.dismissAlert());
 
-            scheduleNextPrayerNotification(payload.prayerKey, payload.context, new Date());
+            if (!isTest) {
+                scheduleNextPrayerNotification(payload.prayerKey, payload.context, new Date());
+            }
 
             this.state.vibrator = new Vibrator();
-            this.startVibrationPattern();
-            this.startAlarmSound();
-            this.state.stopTimer = setTimeout(() => this.stopAlert(), ALERT_DURATION_MS);
+            if (isFajrAlert(payload)) {
+                this.startVibrationPattern();
+                this.startAlarmSound(alertDuration);
+            } else {
+                this.startSubtleVibration();
+            }
+            this.state.stopTimer = setTimeout(() => this.stopAlert(), alertDuration);
         },
 
         startVibrationPattern() {
@@ -112,7 +130,13 @@ Page(
             this.state.vibrator.start({ mode: VIBRATOR_SCENE_TIMER });
         },
 
-        startAlarmSound() {
+        startSubtleVibration() {
+            if (!this.state.vibrator || this.state.stopped) return;
+            this.state.vibrator.stop();
+            this.state.vibrator.start({ mode: VIBRATOR_SCENE_NOTIFICATION });
+        },
+
+        startAlarmSound(durationMs) {
             try {
                 if (typeof SystemSounds !== "function") return;
                 const sounds = new SystemSounds();
@@ -120,7 +144,7 @@ Page(
                 const sourceTypes = sounds.getSourceType();
                 if (!sourceTypes || typeof sourceTypes.REGULAR !== "number") return;
                 this.state.systemSounds = sounds;
-                sounds.start(sourceTypes.REGULAR, Math.ceil(ALERT_DURATION_MS / 1000));
+                sounds.start(sourceTypes.REGULAR, Math.ceil(durationMs / 1000));
             } catch (e) {
                 this.state.systemSounds = null;
             }
