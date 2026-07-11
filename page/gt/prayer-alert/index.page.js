@@ -13,17 +13,17 @@ import {
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
-    EYEBROW_STYLE,
-    PRAYER_NAME_STYLE,
-    TIME_STYLE,
     MESSAGE_STYLE,
     DISMISS_BUTTON_STYLE,
     DISMISS_ICON_STYLE,
+    getEyebrowStyle,
+    getPrayerNameStyle,
+    getTimeStyle,
 } from "zosLoader:./index.page.[pf].layout.js";
 
 const FAJR_PRAYER_KEY = "Fajr";
 const FAJR_ALERT_DURATION_MS = 5 * 60 * 1000;
-const PRAYER_ALERT_DURATION_MS = 10 * 1000;
+const PRAYER_ALERT_DURATION_MS = 5 * 1000;
 
 function parsePayload(value) {
     try {
@@ -93,18 +93,44 @@ Page(
             }
 
             const display = getPrayerNotificationPayloadDisplay(payload);
+            const isAlarmAlert = isFajrAlert(payload);
             createWidget(widget.TEXT, {
-                ...EYEBROW_STYLE,
+                ...getEyebrowStyle(isAlarmAlert),
                 text: t("timeForPrayer"),
             });
             createWidget(widget.TEXT, {
-                ...PRAYER_NAME_STYLE,
+                ...getPrayerNameStyle(isAlarmAlert),
                 text: getPrayerLabel(payload.prayerKey),
             });
             createWidget(widget.TEXT, {
-                ...TIME_STYLE,
+                ...getTimeStyle(isAlarmAlert),
                 text: display.time,
             });
+            if (isAlarmAlert) {
+                this.renderDismissButton();
+            }
+
+            if (!isTest) {
+                scheduleNextPrayerNotification(payload.prayerKey, payload.context, new Date());
+            }
+
+            this.state.vibrator = new Vibrator();
+            if (isAlarmAlert) {
+                this.startVibrationPattern();
+                this.startAlarmSound(alertDuration);
+            } else {
+                this.startSubtleVibration();
+            }
+            this.state.stopTimer = setTimeout(() => {
+                if (isAlarmAlert) {
+                    this.stopAlert();
+                } else {
+                    this.dismissAlert();
+                }
+            }, alertDuration);
+        },
+
+        renderDismissButton() {
             this.state.dismissButton = createWidget(widget.BUTTON, {
                 ...DISMISS_BUTTON_STYLE,
                 text: "",
@@ -115,19 +141,6 @@ Page(
                 src: "image/ic_cancel_64px.png",
             });
             this.state.dismissIcon.addEventListener(event.SELECT, () => this.dismissAlert());
-
-            if (!isTest) {
-                scheduleNextPrayerNotification(payload.prayerKey, payload.context, new Date());
-            }
-
-            this.state.vibrator = new Vibrator();
-            if (isFajrAlert(payload)) {
-                this.startVibrationPattern();
-                this.startAlarmSound(alertDuration);
-            } else {
-                this.startSubtleVibration();
-            }
-            this.state.stopTimer = setTimeout(() => this.stopAlert(), alertDuration);
         },
 
         startVibrationPattern() {
