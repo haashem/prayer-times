@@ -23,7 +23,7 @@ import {
 
 const FAJR_PRAYER_KEY = "Fajr";
 const FAJR_ALERT_DURATION_MS = 5 * 60 * 1000;
-const PRAYER_ALERT_DURATION_MS = 5 * 1000;
+const PRAYER_ALERT_DURATION_MS = 10 * 1000;
 
 function parsePayload(value) {
     try {
