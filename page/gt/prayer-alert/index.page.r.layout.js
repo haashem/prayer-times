@@ -7,12 +7,13 @@ export const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = getDeviceInfo();
 const SIDE_PADDING = px(60);
 const CONTENT_WIDTH = DEVICE_WIDTH - SIDE_PADDING * 2;
 const DISMISS_HEIGHT = px(96);
-const EYEBROW_HEIGHT = px(40);
-const PRAYER_HEIGHT = px(96);
-const TIME_HEIGHT = px(80);
-const EYEBROW_GAP = px(4);
-const TIME_GAP = px(4);
+const EYEBROW_HEIGHT = px(52);
+const PRAYER_HEIGHT = px(114);
+const TIME_HEIGHT = px(96);
+const EYEBROW_GAP = px(6);
+const TIME_GAP = px(6);
 const CONTENT_HEIGHT = EYEBROW_HEIGHT + EYEBROW_GAP + PRAYER_HEIGHT + TIME_GAP + TIME_HEIGHT;
+const PRIMARY_COLOR = 0x66bb6a;
 
 function getContentY(hasDismissButton = false) {
     const availableHeight = hasDismissButton ? DEVICE_HEIGHT - DISMISS_HEIGHT : DEVICE_HEIGHT;
@@ -25,7 +26,7 @@ export function getEyebrowStyle(hasDismissButton = false) {
         y: getContentY(hasDismissButton),
         w: CONTENT_WIDTH,
         h: EYEBROW_HEIGHT,
-        text_size: px(32),
+        text_size: px(42),
         color: 0x999999,
         align_h: align.CENTER_H,
         align_v: align.CENTER_V,
@@ -39,7 +40,7 @@ export function getPrayerNameStyle(hasDismissButton = false) {
         y: getContentY(hasDismissButton) + EYEBROW_HEIGHT + EYEBROW_GAP,
         w: CONTENT_WIDTH,
         h: PRAYER_HEIGHT,
-        text_size: px(64),
+        text_size: px(76),
         color: 0xffffff,
         align_h: align.CENTER_H,
         align_v: align.CENTER_V,
@@ -53,8 +54,8 @@ export function getTimeStyle(hasDismissButton = false) {
         y: getContentY(hasDismissButton) + EYEBROW_HEIGHT + EYEBROW_GAP + PRAYER_HEIGHT + TIME_GAP,
         w: CONTENT_WIDTH,
         h: TIME_HEIGHT,
-        text_size: px(64),
-        color: 0xd4a843,
+        text_size: px(76),
+        color: PRIMARY_COLOR,
         align_h: align.CENTER_H,
         align_v: align.CENTER_V,
         text_style: text_style.NONE,
@@ -67,7 +68,7 @@ export const MESSAGE_STYLE = {
     w: CONTENT_WIDTH,
     h: TIME_HEIGHT,
     text_size: px(40),
-    color: 0xd4a843,
+    color: PRIMARY_COLOR,
     align_h: align.CENTER_H,
     align_v: align.CENTER_V,
     text_style: text_style.WRAP,
