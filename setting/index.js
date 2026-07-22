@@ -1,4 +1,5 @@
 const SAVED_CITIES_KEY = "savedCities";
+const DEFAULT_CITY_KEY = "defaultCityKey";
 const EDIT_MODE_KEY = "locationsEditMode";
 const SEARCH_QUERY_KEY = "citySearchQuery";
 const SEARCH_REQUEST_KEY = "citySearchRequest";
@@ -30,8 +31,13 @@ function parseArray(value) {
 }
 
 function cityKey(city) {
-    if (city && city.id !== undefined && city.id !== null) return String(city.id);
-    return [city.name, city.admin1, city.country].join("|").toLowerCase();
+    if (!city) return "";
+    const latitude = Number(city.latitude);
+    const longitude = Number(city.longitude);
+    if (isFinite(latitude) && isFinite(longitude)) {
+        return latitude.toFixed(5) + "," + longitude.toFixed(5);
+    }
+    return String((city && city.name) || "").toLowerCase();
 }
 
 function citySubtitle(city) {
@@ -41,8 +47,16 @@ function citySubtitle(city) {
     return parts.join(", ");
 }
 
+function normalizeCity(city) {
+    return {
+        name: String((city && city.name) || ""),
+        latitude: Number(city && city.latitude),
+        longitude: Number(city && city.longitude),
+    };
+}
+
 function saveCities(storage, cities) {
-    storage.setItem(SAVED_CITIES_KEY, JSON.stringify(cities));
+    storage.setItem(SAVED_CITIES_KEY, JSON.stringify(cities.map(normalizeCity)));
 }
 
 function text(content, style, extraProps) {
@@ -57,7 +71,7 @@ function text(content, style, extraProps) {
     );
 }
 
-function renderLocationRow(city, index, count, editMode, onDelete) {
+function renderLocationRow(city, index, count, editMode, selected, onSelect, onDelete) {
     const titleChildren = [
         text(city.name, {
             color: COLORS.text,
@@ -119,18 +133,36 @@ function renderLocationRow(city, index, count, editMode, onDelete) {
                     style: {
                         width: "24px",
                         height: "24px",
-                        border: "2px solid " + COLORS.secondaryText,
+                        border: "2px solid " + (selected ? COLORS.accent : COLORS.secondaryText),
                         borderRadius: "12px",
                         marginLeft: "14px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                     },
                 },
-                []
+                selected
+                    ? [
+                        View(
+                            {
+                                style: {
+                                    width: "12px",
+                                    height: "12px",
+                                    borderRadius: "6px",
+                                    background: COLORS.accent,
+                                },
+                            },
+                            []
+                        ),
+                    ]
+                    : []
             )
         );
     }
 
     return View(
         {
+            onClick: editMode ? undefined : onSelect,
             style: {
                 display: "flex",
                 flexDirection: "row",
@@ -147,14 +179,24 @@ function renderLocationRow(city, index, count, editMode, onDelete) {
 function renderListPage(props, cities, editMode, showSearchPage) {
     const storage = props.settingsStorage;
     const hasCities = cities.length > 0;
+    const selectedCityKey = storage.getItem(DEFAULT_CITY_KEY) || "auto";
 
     const rows = cities.map((city, index) =>
-        renderLocationRow(city, index, cities.length, editMode, () => {
-            const key = cityKey(city);
-            const nextCities = cities.filter((item) => cityKey(item) !== key);
-            saveCities(storage, nextCities);
-            if (nextCities.length === 0) storage.setItem(EDIT_MODE_KEY, "false");
-        })
+        renderLocationRow(
+            city,
+            index,
+            cities.length,
+            editMode,
+            cityKey(city) === selectedCityKey,
+            () => storage.setItem(DEFAULT_CITY_KEY, cityKey(city)),
+            () => {
+                const key = cityKey(city);
+                const nextCities = cities.filter((item) => cityKey(item) !== key);
+                saveCities(storage, nextCities);
+                if (selectedCityKey === key) storage.setItem(DEFAULT_CITY_KEY, "auto");
+                if (nextCities.length === 0) storage.setItem(EDIT_MODE_KEY, "false");
+            }
+        )
     );
 
     const content = [
@@ -328,7 +370,7 @@ function renderSearchResult(props, city, savedCities, isLast, showListPage) {
                 ? undefined
                 : () => {
                     showListPage();
-                    saveCities(storage, savedCities.concat([city]).slice(0, MAX_CITIES));
+                    saveCities(storage, savedCities.concat([normalizeCity(city)]).slice(0, MAX_CITIES));
                     storage.setItem(EDIT_MODE_KEY, "false");
                 },
             style: {
@@ -369,15 +411,16 @@ function renderSearchPage(props, savedCities, showListPage) {
     const query = storage.getItem(SEARCH_QUERY_KEY) || "";
     const status = storage.getItem(SEARCH_STATUS_KEY) || "idle";
     const results = parseArray(storage.getItem(SEARCH_RESULTS_KEY));
-    const trimmedQuery = query.trim();
 
     const goBack = () => {
         showListPage();
         storage.setItem(SEARCH_STATUS_KEY, "idle");
     };
 
-    const search = () => {
-        if (trimmedQuery.length < 2) {
+    const search = (value) => {
+        const submittedQuery = String(value || "").trim();
+        storage.setItem(SEARCH_QUERY_KEY, value || "");
+        if (submittedQuery.length < 2) {
             storage.setItem(SEARCH_STATUS_KEY, "short-query");
             return;
         }
@@ -386,7 +429,7 @@ function renderSearchPage(props, savedCities, showListPage) {
         storage.setItem(SEARCH_RESULTS_KEY, "[]");
         storage.setItem(
             SEARCH_REQUEST_KEY,
-            JSON.stringify({ query: trimmedQuery, requestedAt: Date.now() })
+            JSON.stringify({ query: submittedQuery, requestedAt: Date.now() })
         );
     };
 
@@ -443,8 +486,7 @@ function renderSearchPage(props, savedCities, showListPage) {
             }
             : { display: "none" },
         onChange: (value) => {
-            storage.setItem(SEARCH_QUERY_KEY, value || "");
-            if (status !== "idle") storage.setItem(SEARCH_STATUS_KEY, "idle");
+            search(value);
         },
     };
     if (status === "loading") {
@@ -525,13 +567,6 @@ function renderSearchPage(props, savedCities, showListPage) {
                                     TextInput(inputProps),
                                 ]
                             ),
-                            trimmedQuery.length > 0
-                                ? Button({
-                                    label: "Search",
-                                    color: "primary",
-                                    onClick: search,
-                                })
-                                : View({}, []),
                             View(
                                 {
                                     onClick: goBack,
@@ -562,10 +597,10 @@ AppSettingsPage({
     },
 
     build(props) {
-        const cities = parseArray(props.settingsStorage.getItem(SAVED_CITIES_KEY)).slice(
-            0,
-            MAX_CITIES
-        );
+        const cities = parseArray(props.settingsStorage.getItem(SAVED_CITIES_KEY))
+            .map(normalizeCity)
+            .filter((city) => city.name && isFinite(city.latitude) && isFinite(city.longitude))
+            .slice(0, MAX_CITIES);
         const editMode =
             cities.length > 0 && props.settingsStorage.getItem(EDIT_MODE_KEY) === "true";
         const showListPage = () => {

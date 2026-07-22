@@ -1,5 +1,5 @@
 import { localStorage } from "@zos/storage";
-import { PRAYER_CACHE_KEY } from "./prayer-cache";
+import { PRAYER_CACHE_KEY, PRAYER_TODAY_CACHE_KEY } from "./prayer-cache";
 import { invalidatePrayerNotificationSchedule } from "./prayer-notifications";
 
 export const DEFAULT_PRAYER_METHOD = 3;
@@ -34,6 +34,7 @@ function isValidSchool(value) {
 function clearCachedPrayerTimes() {
     try {
         localStorage.removeItem(PRAYER_CACHE_KEY);
+        localStorage.removeItem(PRAYER_TODAY_CACHE_KEY);
         localStorage.removeItem("prayerData");
     } catch (e) {
         // Ignore storage failures; the next API fetch will still use current settings.

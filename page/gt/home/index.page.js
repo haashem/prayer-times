@@ -1,19 +1,30 @@
 import { createWidget, deleteWidget, widget, prop, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { push } from "@zos/router";
-import { setScrollMode, SCROLL_MODE_SWIPER } from "@zos/page";
+import {
+  setScrollMode,
+  swipeToIndex,
+  SCROLL_MODE_SWIPER,
+  SCROLL_ANIMATION_NONE,
+} from "@zos/page";
 import { Time } from "@zos/sensor";
-import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { BasePage } from "@zeppos/zml/base-page";
 import { createQiblaCompass } from "./qibla";
 import { getPrayerLabel, localizeDigits, t } from "../../../utils/i18n";
-import { PRAYER_CACHE_KEY, getPrayerWindow, getStoredPrayerWindow } from "../../../utils/prayer-cache";
 import {
-  deferPrayerNotificationScheduleInvalidation,
-  deferPrayerNotificationScheduleRefresh,
-} from "../../../utils/prayer-notifications";
+  getConfiguredLocationSelection,
+  getLocationKey,
+  getPersistedLocationSelection,
+  persistLocation,
+  readStoredLocation,
+} from "../../../utils/location-storage";
+import {
+  loadTodayPrayerData,
+  storePrayerMonthCache,
+} from "../../../utils/prayer-data-cache";
+import { deferPrayerNotificationScheduleRefresh } from "../../../utils/prayer-notifications";
 import { getPrayerCalculationSettings } from "../../../utils/prayer-settings";
 import {
   DEVICE_WIDTH,
@@ -51,6 +62,8 @@ Page(
       qiblaContainer: null,
       // Qibla compass module
       qibla: null,
+      lastLocationSyncAt: 0,
+      locationSyncToken: 0,
     },
 
     onInit() {
@@ -70,25 +83,7 @@ Page(
         setStatusBarVisible(false);
       }
 
-      // Page-level swiper (snapping between two vertical pages)
-      setScrollMode({
-        mode: SCROLL_MODE_SWIPER,
-        options: {
-          height: DEVICE_HEIGHT,
-          count: 2,
-          modeParams: {
-            crown_enable: true,
-            on_page: (pageIndex) => {
-              if (!this.state.qibla) return;
-              if (pageIndex === 1) {
-                this.state.qibla.startCompass();
-              } else {
-                this.state.qibla.stopCompass();
-              }
-            },
-          },
-        },
-      });
+      this.configurePageScroll(false);
 
       // Page 0: Prayer Times
       this.state.prayerContainer = createWidget(widget.GROUP, {
@@ -109,89 +104,89 @@ Page(
 
       createWidget(widget.PAGE_SCROLLBAR);
 
-      this.loadLocation();
+      this.state.qibla.build(null);
+      this.state.qibla.stopCompass();
 
-      if (!this.state.location) {
-        deferPrayerNotificationScheduleInvalidation();
-        this.showLoading(t("detectingLocation"));
-        this.state.qibla.build(null);
-        this.detectLocation();
-        return;
+      // Restore the last location and today's compact cache immediately. The
+      // phone sync below only needs to update the UI if its selected city changed.
+      this.state.location = readStoredLocation();
+      const storedTodayData = loadTodayPrayerData(this.state.location);
+      if (storedTodayData) {
+        this.renderUI(storedTodayData);
+        this.state.qibla.build(this.state.location);
+        this.state.qibla.stopCompass();
       }
+      this.initializeLocationSelection();
+    },
 
-      const todayData = this.loadTodayData();
+    configurePageScroll(resetToPrayerPage) {
+      setScrollMode({
+        mode: SCROLL_MODE_SWIPER,
+        options: {
+          height: DEVICE_HEIGHT,
+          count: 2,
+          modeParams: {
+            crown_enable: true,
+            on_page: (pageIndex) => {
+              if (!this.state.qibla) return;
+              if (pageIndex === 1) {
+                this.state.qibla.startCompass();
+              } else {
+                this.state.qibla.stopCompass();
+              }
+            },
+          },
+        },
+      });
+      if (resetToPrayerPage) {
+        swipeToIndex({ index: 0, animation: SCROLL_ANIMATION_NONE });
+      }
+    },
+
+    initializeLocationSelection() {
+      this.state.lastLocationSyncAt = Date.now();
+      const syncToken = ++this.state.locationSyncToken;
+      this.request({ method: "GET_LOCATION_SETTINGS" })
+        .then((data) => {
+          if (syncToken !== this.state.locationSyncToken) return;
+          const selection = getConfiguredLocationSelection(data && data.result);
+          if (selection) {
+            this.activateLocation(selection);
+            return;
+          }
+          persistLocation(null, "auto", "auto");
+          this.state.location = null;
+          this.showLoading(t("detectingLocation"));
+          this.detectLocation(syncToken);
+        })
+        .catch(() => {
+          if (syncToken !== this.state.locationSyncToken) return;
+          const selection = getPersistedLocationSelection();
+          if (selection) {
+            this.activateLocation(selection);
+          } else {
+            this.showLoading(t("detectingLocation"));
+            this.detectLocation(syncToken);
+          }
+        });
+    },
+
+    activateLocation(selection) {
+      const { location, mode, defaultCityKey } = selection;
+      this.state.location = location;
+      persistLocation(location, mode, defaultCityKey);
+
+      const todayData = loadTodayPrayerData(location);
       if (todayData) {
+        this.clearLoading();
         this.renderUI(todayData);
       } else {
-        deferPrayerNotificationScheduleInvalidation();
         this.showLoading(t("loadingPrayerTimes"));
         this.fetchFromApi();
       }
 
-      // Build Qibla compass UI
-      this.state.qibla.build(this.state.location);
+      this.state.qibla.build(location);
       this.state.qibla.stopCompass();
-    },
-
-    loadLocation() {
-      try {
-        const appCache = this.getAppCache();
-        if (appCache && appCache.location) {
-          this.state.location = appCache.location;
-          return;
-        }
-
-        const stored = localStorage.getItem("location");
-        if (stored) {
-          this.state.location = JSON.parse(stored);
-          if (appCache) appCache.location = this.state.location;
-        }
-      } catch (e) {
-        logger.error("Error loading location: " + e.message);
-      }
-    },
-
-    loadTodayData() {
-      try {
-        const time = new Time();
-        const dayKey = [time.getFullYear(), time.getMonth(), time.getDate()].join("-");
-        const appCache = this.getAppCache();
-        if (appCache && appCache.prayerDayKey === dayKey && appCache.prayerData) {
-          return appCache.prayerData;
-        }
-
-        const cached = appCache && appCache.prayerCache;
-        let prayerWindow = cached ? getPrayerWindow(cached, time) : null;
-        if (!prayerWindow) {
-          prayerWindow = getStoredPrayerWindow(localStorage, time);
-        }
-        const todayData = prayerWindow ? prayerWindow.today : null;
-        if (appCache) {
-          appCache.prayerDayKey = dayKey;
-          appCache.prayerData = todayData;
-        }
-        return todayData;
-      } catch (e) {
-        logger.error("Error loading prayer data: " + e.message);
-      }
-      return null;
-    },
-
-    getAppCache() {
-      try {
-        const app = getApp();
-        return app && app._options ? app._options.globalData : null;
-      } catch (e) {
-        return null;
-      }
-    },
-
-    clearCachedPrayerData() {
-      const appCache = this.getAppCache();
-      if (!appCache) return;
-      appCache.prayerCache = null;
-      appCache.prayerData = null;
-      appCache.prayerDayKey = null;
     },
 
     showLoading(message) {
@@ -223,9 +218,10 @@ Page(
       }
     },
 
-    detectLocation() {
+    detectLocation(syncToken) {
       this.request({ method: "GET_PHONE_LOCATION" })
         .then((data) => {
+          if (syncToken && syncToken !== this.state.locationSyncToken) return;
           if (data && data.result && data.result.valid) {
             const loc = {
               city: data.result.city,
@@ -233,20 +229,7 @@ Page(
               latitude: data.result.latitude,
               longitude: data.result.longitude,
             };
-            this.state.location = loc;
-            const appCache = this.getAppCache();
-            if (appCache) appCache.location = loc;
-            localStorage.setItem("location", JSON.stringify(loc));
-            localStorage.removeItem(PRAYER_CACHE_KEY);
-            localStorage.removeItem("prayerData");
-            this.clearCachedPrayerData();
-            deferPrayerNotificationScheduleInvalidation();
-
-            this.showLoading(t("loadingPrayerTimes"));
-            this.fetchFromApi();
-
-            // Build Qibla now that we have location
-            this.state.qibla.build(this.state.location);
+            this.activateLocation({ location: loc, mode: "auto", defaultCityKey: "auto" });
           } else {
             logger.error("Location detection failed");
             this.clearLoading();
@@ -254,6 +237,7 @@ Page(
           }
         })
         .catch((err) => {
+          if (syncToken && syncToken !== this.state.locationSyncToken) return;
           logger.error("Location error: " + JSON.stringify(err));
           this.clearLoading();
           this.showLoading(t("checkPhoneConnection"));
@@ -263,6 +247,7 @@ Page(
     fetchFromApi() {
       const loc = this.state.location;
       if (!loc) return;
+      const requestedLocationKey = getLocationKey(loc);
 
       const timeout = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Request timed out")), 15000)
@@ -280,19 +265,13 @@ Page(
         timeout,
       ])
         .then((data) => {
+          if (requestedLocationKey !== getLocationKey(this.state.location)) return;
           if (data && data.result && data.result.code === 200 && data.result.cache) {
-            localStorage.setItem(PRAYER_CACHE_KEY, JSON.stringify(data.result.cache));
-            localStorage.removeItem("prayerData");
-            const appCache = this.getAppCache();
-            if (appCache) appCache.prayerCache = data.result.cache;
-            if (appCache) {
-              appCache.prayerData = null;
-              appCache.prayerDayKey = null;
-            }
+            storePrayerMonthCache(data.result.cache);
             deferPrayerNotificationScheduleRefresh();
 
             this.clearLoading();
-            const todayData = this.loadTodayData();
+            const todayData = loadTodayPrayerData(this.state.location);
             if (todayData) {
               this.renderUI(todayData);
             } else {
@@ -305,6 +284,7 @@ Page(
           }
         })
         .catch((err) => {
+          if (requestedLocationKey !== getLocationKey(this.state.location)) return;
           logger.error("Fetch error: " + (err && err.message ? err.message : JSON.stringify(err)));
           this.clearLoading();
           this.showLoading(t("networkError"));
@@ -458,8 +438,21 @@ Page(
     },
 
     onLocationTap() {
-      this.showLoading(t("detectingLocation"));
-      this.detectLocation();
+      push({ url: "page/gt/location/index.page" });
+    },
+
+    onCall(data) {
+      if (data && data.type === "LOCATION_SETTINGS_CHANGED") {
+        this.configurePageScroll(true);
+        this.initializeLocationSelection();
+      }
+    },
+
+    onResume() {
+      if (!this.state.prayerContainer) return;
+      if (Date.now() - this.state.lastLocationSyncAt < 200) return;
+      this.configurePageScroll(true);
+      this.initializeLocationSelection();
     },
 
     onDestroy() {

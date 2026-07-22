@@ -1,4 +1,5 @@
 export const PRAYER_CACHE_KEY = "prayerMonthV2";
+export const PRAYER_TODAY_CACHE_KEY = "prayerTodayV1";
 export const LEGACY_PRAYER_DATA_KEY = "prayerData";
 
 export const PRAYER_KEYS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];

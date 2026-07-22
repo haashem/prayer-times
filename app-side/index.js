@@ -4,6 +4,58 @@ import { createPrayerMonthCache } from "../utils/prayer-cache";
 const CITY_SEARCH_REQUEST_KEY = "citySearchRequest";
 const CITY_SEARCH_RESULTS_KEY = "citySearchResults";
 const CITY_SEARCH_STATUS_KEY = "citySearchStatus";
+const SAVED_CITIES_KEY = "savedCities";
+const DEFAULT_CITY_KEY = "defaultCityKey";
+
+function cityKey(city) {
+    if (!city) return "";
+    const latitude = Number(city.latitude);
+    const longitude = Number(city.longitude);
+    if (isFinite(latitude) && isFinite(longitude)) {
+        return latitude.toFixed(5) + "," + longitude.toFixed(5);
+    }
+    return String((city && city.name) || "").toLowerCase();
+}
+
+function normalizeSavedCity(city) {
+    return {
+        name: String((city && city.name) || ""),
+        latitude: Number(city && city.latitude),
+        longitude: Number(city && city.longitude),
+    };
+}
+
+function getLocationSettings() {
+    const storedCities = parseJson(settings.settingsStorage.getItem(SAVED_CITIES_KEY), []);
+    const cities = Array.isArray(storedCities)
+        ? storedCities
+            .map(normalizeSavedCity)
+            .filter((city) => city.name && isFinite(city.latitude) && isFinite(city.longitude))
+            .slice(0, 5)
+        : [];
+    const requestedDefault = settings.settingsStorage.getItem(DEFAULT_CITY_KEY) || "auto";
+    const defaultCityKey =
+        requestedDefault === "auto" || cities.some((city) => cityKey(city) === requestedDefault)
+            ? requestedDefault
+            : "auto";
+
+    if (defaultCityKey !== requestedDefault) {
+        settings.settingsStorage.setItem(DEFAULT_CITY_KEY, "auto");
+    }
+
+    return { cities, defaultCityKey };
+}
+
+function setDefaultLocation(params, res) {
+    const locationSettings = getLocationSettings();
+    const requestedKey = params && params.key ? String(params.key) : "auto";
+    const valid =
+        requestedKey === "auto" ||
+        locationSettings.cities.some((city) => cityKey(city) === requestedKey);
+    const defaultCityKey = valid ? requestedKey : "auto";
+    settings.settingsStorage.setItem(DEFAULT_CITY_KEY, defaultCityKey);
+    res(null, { result: { valid, defaultCityKey } });
+}
 
 function parseJson(value, fallback) {
     try {
@@ -175,6 +227,15 @@ AppSideService(
             console.log("prayer-times app-side onInit");
             settings.settingsStorage.addListener("change", ({ key, newValue }) => {
                 if (key === CITY_SEARCH_REQUEST_KEY) searchCities(newValue);
+                if (key === SAVED_CITIES_KEY) getLocationSettings();
+                if (key === SAVED_CITIES_KEY || key === DEFAULT_CITY_KEY) {
+                    try {
+                        const pendingCall = this.call({ type: "LOCATION_SETTINGS_CHANGED" });
+                        if (pendingCall && pendingCall.catch) pendingCall.catch(() => { });
+                    } catch (e) {
+                        // The watch app may not currently be open.
+                    }
+                }
             });
         },
 
@@ -183,6 +244,10 @@ AppSideService(
                 getPhoneLocation(res);
             } else if (req.method === "FETCH_PRAYER_TIMES") {
                 fetchPrayerTimes(req.params, res);
+            } else if (req.method === "GET_LOCATION_SETTINGS") {
+                res(null, { result: getLocationSettings() });
+            } else if (req.method === "SET_DEFAULT_LOCATION") {
+                setDefaultLocation(req.params, res);
             }
         },
 
