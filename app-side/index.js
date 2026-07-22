@@ -1,6 +1,66 @@
 import { BaseSideService } from "@zeppos/zml/base-side";
 import { createPrayerMonthCache } from "../utils/prayer-cache";
 
+const CITY_SEARCH_REQUEST_KEY = "citySearchRequest";
+const CITY_SEARCH_RESULTS_KEY = "citySearchResults";
+const CITY_SEARCH_STATUS_KEY = "citySearchStatus";
+
+function parseJson(value, fallback) {
+    try {
+        return value ? JSON.parse(value) : fallback;
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function normalizeCityResult(result) {
+    return {
+        id: result.id,
+        name: result.name,
+        admin1: result.admin1 || "",
+        country: result.country || result.country_code || "",
+        latitude: result.latitude,
+        longitude: result.longitude,
+        timezone: result.timezone || "",
+    };
+}
+
+async function searchCities(requestValue) {
+    const request = parseJson(requestValue, null);
+    const query = request && typeof request.query === "string" ? request.query.trim() : "";
+    if (query.length < 2) return;
+
+    try {
+        const response = await fetch({
+            url:
+                "https://geocoding-api.open-meteo.com/v1/search?name=" +
+                encodeURIComponent(query) +
+                "&count=8&language=en&format=json",
+            method: "GET",
+        });
+        const body =
+            typeof response.body === "string" ? JSON.parse(response.body) : response.body;
+        const results = body && Array.isArray(body.results)
+            ? body.results.map(normalizeCityResult)
+            : [];
+
+        // Ignore an old response if another search was submitted while it was loading.
+        if (settings.settingsStorage.getItem(CITY_SEARCH_REQUEST_KEY) !== requestValue) return;
+
+        settings.settingsStorage.setItem(CITY_SEARCH_RESULTS_KEY, JSON.stringify(results));
+        settings.settingsStorage.setItem(
+            CITY_SEARCH_STATUS_KEY,
+            results.length > 0 ? "success" : "empty"
+        );
+    } catch (e) {
+        console.log("City search failed: " + e.message);
+        if (settings.settingsStorage.getItem(CITY_SEARCH_REQUEST_KEY) === requestValue) {
+            settings.settingsStorage.setItem(CITY_SEARCH_RESULTS_KEY, "[]");
+            settings.settingsStorage.setItem(CITY_SEARCH_STATUS_KEY, "error");
+        }
+    }
+}
+
 async function getPhoneLocation(res) {
     try {
         console.log("Getting location via IP geolocation...");
@@ -113,6 +173,9 @@ AppSideService(
     BaseSideService({
         onInit() {
             console.log("prayer-times app-side onInit");
+            settings.settingsStorage.addListener("change", ({ key, newValue }) => {
+                if (key === CITY_SEARCH_REQUEST_KEY) searchCities(newValue);
+            });
         },
 
         onRequest(req, res) {
