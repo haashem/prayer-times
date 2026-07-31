@@ -83,7 +83,7 @@ Page(
         setStatusBarVisible(false);
       }
 
-      this.configurePageScroll(false);
+      this.configurePageScroll();
 
       // Page 0: Prayer Times
       this.state.prayerContainer = createWidget(widget.GROUP, {
@@ -122,7 +122,7 @@ Page(
       this.initializeLocationSelection();
     },
 
-    configurePageScroll(resetToPrayerPage) {
+    configurePageScroll() {
       setScrollMode({
         mode: SCROLL_MODE_SWIPER,
         options: {
@@ -141,9 +141,11 @@ Page(
           },
         },
       });
-      if (resetToPrayerPage) {
-        swipeToIndex({ index: 0, animation: SCROLL_ANIMATION_NONE });
-      }
+    },
+
+    showPrayerPage() {
+      if (this.state.qibla) this.state.qibla.stopCompass();
+      swipeToIndex({ index: 0, animation: SCROLL_ANIMATION_NONE });
     },
 
     initializeLocationSelection() {
@@ -447,7 +449,10 @@ Page(
 
     onCall(data) {
       if (data && data.type === "LOCATION_SETTINGS_CHANGED") {
-        this.configurePageScroll(true);
+        if (!data.key || data.key === "defaultCityKey") {
+          this.showLoading(t("loadingPrayerTimes"));
+        }
+        this.showPrayerPage();
         this.initializeLocationSelection();
       }
     },
@@ -474,7 +479,7 @@ Page(
       if (loadingKey) this.showLoading(t(loadingKey));
       if (!loadingKey && Date.now() - this.state.lastLocationSyncAt < 200) return;
 
-      this.configurePageScroll(true);
+      this.showPrayerPage();
       this.initializeLocationSelection();
     },
 

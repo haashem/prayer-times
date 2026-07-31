@@ -230,7 +230,10 @@ AppSideService(
                 if (key === SAVED_CITIES_KEY) getLocationSettings();
                 if (key === SAVED_CITIES_KEY || key === DEFAULT_CITY_KEY) {
                     try {
-                        const pendingCall = this.call({ type: "LOCATION_SETTINGS_CHANGED" });
+                        const pendingCall = this.call({
+                            type: "LOCATION_SETTINGS_CHANGED",
+                            key,
+                        });
                         if (pendingCall && pendingCall.catch) pendingCall.catch(() => { });
                     } catch (e) {
                         // The watch app may not currently be open.
