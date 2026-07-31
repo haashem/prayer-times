@@ -7,7 +7,12 @@ import { setScrollMode, SCROLL_MODE_SWIPER } from "@zos/page";
 import { localStorage } from "@zos/storage";
 import { BasePage } from "@zeppos/zml/base-page";
 import { isRtl, t } from "../../../utils/i18n";
-import { getLocationKey, persistLocationChoice } from "../../../utils/location-storage";
+import {
+    getLocationKey,
+    persistLocationChoice,
+    readLocationSettings,
+    saveLocationSettings,
+} from "../../../utils/location-storage";
 import {
     TITLE_STYLE,
     SCROLL_ITEM_HEIGHT,
@@ -47,13 +52,14 @@ Page(
                 ...TITLE_STYLE,
                 text: t("location"),
             }));
-            this.state.options = [
-                { key: "auto", name: t("autoDetect"), city: null },
-            ];
-            this.state.defaultCityKey = localStorage.getItem("defaultCityKey") || "auto";
+            const cachedSettings = readLocationSettings();
+            this.applyLocationSettings(cachedSettings || {
+                cities: [],
+                defaultCityKey: localStorage.getItem("defaultCityKey") || "auto",
+            });
             this.registerSelectionKey();
             this.renderOptions();
-            this.loadLocations();
+            if (!cachedSettings) this.loadLocations();
         },
 
         track(w) {
@@ -75,27 +81,24 @@ Page(
         loadLocations() {
             this.request({ method: "GET_LOCATION_SETTINGS" })
                 .then((data) => {
-                    const result = data && data.result ? data.result : {};
-                    const cities = Array.isArray(result.cities) ? result.cities.slice(0, 5) : [];
-                    this.state.defaultCityKey = result.defaultCityKey || "auto";
-                    this.state.options = [
-                        { key: "auto", name: t("autoDetect"), city: null },
-                    ].concat(
-                        cities.map((city) => ({
-                            key: getLocationKey(city),
-                            name: city.name,
-                            city,
-                        }))
-                    );
+                    if (!data || !data.result) return;
+                    this.applyLocationSettings(saveLocationSettings(data.result));
                     this.renderOptions();
                 })
-                .catch(() => {
-                    this.state.options = [
-                        { key: "auto", name: t("autoDetect"), city: null },
-                    ];
-                    this.state.defaultCityKey = "auto";
-                    this.renderOptions();
-                });
+                .catch(() => { });
+        },
+
+        applyLocationSettings(settings) {
+            this.state.defaultCityKey = settings.defaultCityKey || "auto";
+            this.state.options = [
+                { key: "auto", name: t("autoDetect"), city: null },
+            ].concat(
+                settings.cities.map((city) => ({
+                    key: getLocationKey(city),
+                    name: city.name,
+                    city,
+                }))
+            );
         },
 
         renderOptions() {

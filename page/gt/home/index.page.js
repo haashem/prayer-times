@@ -18,6 +18,7 @@ import {
   getLocationKey,
   getPersistedLocationSelection,
   persistLocation,
+  saveLocationSettings,
 } from "../../../utils/location-storage";
 import {
   loadTodayPrayerData,
@@ -151,7 +152,8 @@ Page(
       this.request({ method: "GET_LOCATION_SETTINGS" })
         .then((data) => {
           if (syncToken !== this.state.locationSyncToken) return;
-          const selection = getConfiguredLocationSelection(data && data.result);
+          const settings = saveLocationSettings(data && data.result);
+          const selection = getConfiguredLocationSelection(settings);
           if (selection) {
             this.activateLocation(selection);
             return;

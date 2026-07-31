@@ -2,6 +2,8 @@ import { localStorage } from "@zos/storage";
 import { PRAYER_CACHE_KEY, PRAYER_TODAY_CACHE_KEY } from "./prayer-cache";
 import { deferPrayerNotificationScheduleInvalidation } from "./prayer-notifications";
 
+const LOCATION_SETTINGS_KEY = "locationSettingsV1";
+
 export function getAppCache() {
   try {
     const app = getApp();
@@ -17,6 +19,38 @@ export function getLocationKey(location) {
   const longitude = Number(location.longitude);
   if (!isFinite(latitude) || !isFinite(longitude)) return "";
   return latitude.toFixed(5) + "," + longitude.toFixed(5);
+}
+
+function normalizeLocationSettings(result) {
+  const source = result || {};
+  const cities = Array.isArray(source.cities)
+    ? source.cities
+        .filter((city) => city && city.name && getLocationKey(city))
+        .slice(0, 5)
+    : [];
+  const requestedDefault = source.defaultCityKey || "auto";
+  const defaultCityKey = cities.some((city) => getLocationKey(city) === requestedDefault)
+    ? requestedDefault
+    : "auto";
+  return { cities, defaultCityKey };
+}
+
+export function saveLocationSettings(result) {
+  const settings = normalizeLocationSettings(result);
+  localStorage.setItem(LOCATION_SETTINGS_KEY, JSON.stringify(settings));
+  return settings;
+}
+
+export function readLocationSettings() {
+  try {
+    const stored = localStorage.getItem(LOCATION_SETTINGS_KEY);
+    if (!stored) return null;
+    return normalizeLocationSettings(
+      typeof stored === "string" ? JSON.parse(stored) : stored
+    );
+  } catch (e) {
+    return null;
+  }
 }
 
 export function readStoredLocation() {
@@ -79,11 +113,14 @@ export function persistLocationChoice(city, defaultCityKey) {
   } else if (defaultCityKey === "auto" && previousDefaultCityKey === "auto") {
     location = readStoredLocation();
   }
-  return persistLocation(
+  const changed = persistLocation(
     location,
     defaultCityKey === "auto" ? "auto" : "city",
     defaultCityKey
   );
+  const settings = readLocationSettings();
+  if (settings) saveLocationSettings({ ...settings, defaultCityKey });
+  return changed;
 }
 
 export function getPersistedLocationSelection() {
@@ -98,9 +135,9 @@ export function getPersistedLocationSelection() {
 }
 
 export function getConfiguredLocationSelection(result) {
-  const settings = result || {};
-  const cities = Array.isArray(settings.cities) ? settings.cities : [];
-  const defaultCityKey = settings.defaultCityKey || "auto";
+  const settings = normalizeLocationSettings(result);
+  const cities = settings.cities;
+  const defaultCityKey = settings.defaultCityKey;
   const city = cities.find((item) => getLocationKey(item) === defaultCityKey);
 
   if (city) {
