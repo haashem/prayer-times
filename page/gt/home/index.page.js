@@ -18,7 +18,6 @@ import {
   getLocationKey,
   getPersistedLocationSelection,
   persistLocation,
-  readStoredLocation,
 } from "../../../utils/location-storage";
 import {
   loadTodayPrayerData,
@@ -109,12 +108,15 @@ Page(
 
       // Restore the last location and today's compact cache immediately. The
       // phone sync below only needs to update the UI if its selected city changed.
-      this.state.location = readStoredLocation();
+      const initialSelection = getPersistedLocationSelection();
+      this.state.location = initialSelection ? initialSelection.location : null;
       const storedTodayData = loadTodayPrayerData(this.state.location);
       if (storedTodayData) {
         this.renderUI(storedTodayData);
         this.state.qibla.build(this.state.location);
         this.state.qibla.stopCompass();
+      } else {
+        this.showLoading(t(this.getLocationLoadingKey(initialSelection)));
       }
       this.initializeLocationSelection();
     },
@@ -448,9 +450,28 @@ Page(
       }
     },
 
+    getLocationLoadingKey(selection) {
+      return selection && selection.mode === "city"
+        ? "loadingPrayerTimes"
+        : "detectingLocation";
+    },
+
+    applyPersistedLocationChange() {
+      const selection = getPersistedLocationSelection();
+      const nextLocation = selection ? selection.location : null;
+      if (getLocationKey(nextLocation) === getLocationKey(this.state.location)) return null;
+
+      this.state.location = nextLocation;
+      return this.getLocationLoadingKey(selection);
+    },
+
     onResume() {
       if (!this.state.prayerContainer) return;
-      if (Date.now() - this.state.lastLocationSyncAt < 200) return;
+
+      const loadingKey = this.applyPersistedLocationChange();
+      if (loadingKey) this.showLoading(t(loadingKey));
+      if (!loadingKey && Date.now() - this.state.lastLocationSyncAt < 200) return;
+
       this.configurePageScroll(true);
       this.initializeLocationSelection();
     },
