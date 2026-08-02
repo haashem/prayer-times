@@ -32,6 +32,8 @@ const TRANSLATIONS = {
         autoDetect: "Auto detect",
         addCitiesInZepp: "Add up to 5 cities in the Zepp app",
         contactUs: "Contact Us",
+        supportDeveloper: "Support the Developer",
+        scanToDonate: "Scan to donate securely",
         calculationMethod: "Calculation Method",
         school: "School",
         schoolShafaei: "Shafaei",
@@ -83,6 +85,8 @@ const TRANSLATIONS = {
         // Keep the sentence RTL while isolating the Latin brand name as LTR.
         addCitiesInZepp: "\u2067می‌توانید تا ۵ شهر در برنامه \u2066Zepp\u2069 اضافه کنید\u2069",
         contactUs: "تماس با ما",
+        supportDeveloper: "حمایت از توسعه‌دهنده",
+        scanToDonate: "برای حمایت اسکن کنید",
         calculationMethod: "روش محاسبه",
         school: "مبنای عصر",
         schoolShafaei: "شافعی",
@@ -133,6 +137,8 @@ const TRANSLATIONS = {
         // Keep the sentence RTL while isolating the Latin brand name as LTR.
         addCitiesInZepp: "\u2067يمكنك إضافة ما يصل إلى ٥ مدن في تطبيق \u2066Zepp\u2069\u2069",
         contactUs: "اتصل بنا",
+        supportDeveloper: "ادعم المطور",
+        scanToDonate: "امسح الرمز للتبرع بأمان",
         calculationMethod: "طريقة الحساب",
         school: "المذهب",
         schoolShafaei: "شافعي",

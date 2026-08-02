@@ -21,6 +21,7 @@ export const SETTINGS_ITEMS = [
     { labelKey: "school", url: "page/gt/school/index.page" },
     { labelKey: "selectLanguage", url: "page/gt/language/index.page" },
     { labelKey: "contactUs", url: "page/gt/contact/index.page" },
+    { labelKey: "supportDeveloper", url: "page/gt/support/index.page" },
     { labelKey: "help", url: "page/gt/help/index.page" },
 ];
 
@@ -71,7 +72,7 @@ export function getSettingsRowTextStyle(index, rtl = false) {
         color: 0xffffff,
         align_h: rtl ? align.RIGHT : align.LEFT,
         align_v: align.CENTER_V,
-        text_style: text_style.ELLIPSIS,
+        text_style: text_style.NONE,
     };
 }
 
