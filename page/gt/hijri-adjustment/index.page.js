@@ -7,13 +7,13 @@ import { BasePage } from "@zeppos/zml/base-page";
 import { formatHijriDate, isRtl, t } from "../../../utils/i18n";
 import { getHijriAdjustment, setHijriAdjustment } from "../../../utils/hijri-settings";
 import {
-    TITLE_STYLE,
+    getTitleStyle,
     PREVIEW_STYLE,
     HIJRI_OPTIONS,
     SCROLL_ITEM_COUNT,
     BOTTOM_PADDING,
     SCROLL_ITEM_HEIGHT,
-    RADIO_GROUP_STYLE,
+    getRadioGroupStyle,
     getHijriRowBgStyle,
     getHijriRowTextStyle,
     getHijriRowHitStyle,
@@ -70,7 +70,7 @@ Page(
 
             createWidget(widget.PAGE_SCROLLBAR);
             createWidget(widget.TEXT, {
-                ...TITLE_STYLE,
+                ...getTitleStyle(isRtl()),
                 text: t("hijriAdjustment"),
             });
 
@@ -108,7 +108,7 @@ Page(
             this.renderFocusIndicator();
 
             this.state.radioGroup = this.trackOptionWidget(createWidget(widget.RADIO_GROUP, {
-                ...RADIO_GROUP_STYLE,
+                ...getRadioGroupStyle(isRtl()),
                 select_src: "image/dot_select.png",
                 unselect_src: "image/dot_unselect.png",
                 check_func: (group, index, checked) => {
@@ -152,12 +152,13 @@ Page(
         },
 
         renderOptionRow(option, index) {
+            const rtl = isRtl();
             const rowBg = this.trackOptionWidget(createWidget(widget.FILL_RECT, getHijriRowBgStyle(index)));
             const rowText = this.trackOptionWidget(createWidget(widget.TEXT, {
-                ...getHijriRowTextStyle(index),
+                ...getHijriRowTextStyle(index, rtl),
                 text: t(option.labelKey),
             }));
-            const rowHit = this.trackOptionWidget(createWidget(widget.FILL_RECT, getHijriRowHitStyle(index)));
+            const rowHit = this.trackOptionWidget(createWidget(widget.FILL_RECT, getHijriRowHitStyle(index, rtl)));
 
             for (const w of [rowBg, rowText, rowHit]) {
                 w.addEventListener(event.SELECT, () => {

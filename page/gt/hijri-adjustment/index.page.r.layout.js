@@ -18,7 +18,7 @@ const ROW_START_Y = px(184);
 const ROW_HEIGHT = px(104);
 const ROW_PAD_X = px(76);
 const RADIO_SIZE = px(64);
-const RADIO_RIGHT_PAD = px(70);
+const RADIO_SIDE_PADDING = px(70);
 const FOCUS_LINE_HEIGHT = px(22);
 const INFO_OUTER_PAD_X = px(48);
 
@@ -41,7 +41,7 @@ export const TITLE_STYLE = {
     y: TITLE_Y,
     w: CONTENT_WIDTH,
     h: TITLE_HEIGHT,
-    text_size: px(36),
+    text_size: px(40),
     color: COLORS.text,
     align_h: align.CENTER_H,
     align_v: align.CENTER_V,
@@ -52,16 +52,27 @@ export const PREVIEW_STYLE = {
     ...TITLE_STYLE,
     y: TITLE_Y + TITLE_HEIGHT,
     h: px(40),
-    text_size: px(26),
+    text_size: px(28),
     color: 0xd4a843,
 };
 
-export const RADIO_GROUP_STYLE = {
-    x: DEVICE_WIDTH - RADIO_RIGHT_PAD - RADIO_SIZE,
-    y: ROW_START_Y,
-    w: RADIO_SIZE,
-    h: HIJRI_OPTIONS.length * ROW_HEIGHT,
-};
+export function getTitleStyle(rtl = false) {
+    return {
+        ...TITLE_STYLE,
+        x: ROW_PAD_X,
+        w: DEVICE_WIDTH - ROW_PAD_X * 2,
+        align_h: rtl ? align.RIGHT : align.LEFT,
+    };
+}
+
+export function getRadioGroupStyle(rtl = false) {
+    return {
+        x: rtl ? RADIO_SIDE_PADDING : DEVICE_WIDTH - RADIO_SIDE_PADDING - RADIO_SIZE,
+        y: ROW_START_Y,
+        w: RADIO_SIZE,
+        h: HIJRI_OPTIONS.length * ROW_HEIGHT,
+    };
+}
 
 function getRowY(index) {
     return ROW_START_Y + index * ROW_HEIGHT;
@@ -77,25 +88,25 @@ export function getHijriRowBgStyle(index) {
     };
 }
 
-export function getHijriRowTextStyle(index) {
+export function getHijriRowTextStyle(index, rtl = false) {
     return {
-        x: ROW_PAD_X,
+        x: rtl ? RADIO_SIDE_PADDING + RADIO_SIZE + px(16) : ROW_PAD_X,
         y: getRowY(index),
-        w: DEVICE_WIDTH - ROW_PAD_X - RADIO_RIGHT_PAD - RADIO_SIZE - px(16),
+        w: DEVICE_WIDTH - ROW_PAD_X - RADIO_SIDE_PADDING - RADIO_SIZE - px(16),
         h: ROW_HEIGHT,
-        text_size: px(32),
+        text_size: px(40),
         color: COLORS.text,
-        align_h: align.LEFT,
+        align_h: rtl ? align.RIGHT : align.LEFT,
         align_v: align.CENTER_V,
         text_style: text_style.ELLIPSIS,
     };
 }
 
-export function getHijriRowHitStyle(index) {
+export function getHijriRowHitStyle(index, rtl = false) {
     return {
-        x: 0,
+        x: rtl ? RADIO_SIDE_PADDING + RADIO_SIZE : 0,
         y: getRowY(index),
-        w: DEVICE_WIDTH - RADIO_RIGHT_PAD - RADIO_SIZE,
+        w: DEVICE_WIDTH - RADIO_SIDE_PADDING - RADIO_SIZE,
         h: ROW_HEIGHT,
         color: COLORS.rowBg,
         alpha: 0,

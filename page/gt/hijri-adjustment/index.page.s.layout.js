@@ -18,7 +18,7 @@ const ROW_START_Y = px(128);
 const ROW_HEIGHT = px(88);
 const ROW_PAD_X = px(44);
 const RADIO_SIZE = px(54);
-const RADIO_RIGHT_PAD = px(40);
+const RADIO_SIDE_PADDING = px(40);
 const FOCUS_LINE_HEIGHT = px(18);
 const INFO_OUTER_PAD_X = px(26);
 
@@ -51,17 +51,28 @@ export const TITLE_STYLE = {
 export const PREVIEW_STYLE = {
     ...TITLE_STYLE,
     y: TITLE_Y + TITLE_HEIGHT,
-    h: px(40),
-    text_size: px(26),
+    h: px(34),
+    text_size: px(24),
     color: 0xd4a843,
 };
 
-export const RADIO_GROUP_STYLE = {
-    x: DEVICE_WIDTH - RADIO_RIGHT_PAD - RADIO_SIZE,
-    y: ROW_START_Y,
-    w: RADIO_SIZE,
-    h: HIJRI_OPTIONS.length * ROW_HEIGHT,
-};
+export function getTitleStyle(rtl = false) {
+    return {
+        ...TITLE_STYLE,
+        x: SIDE_PADDING,
+        w: DEVICE_WIDTH - SIDE_PADDING * 2,
+        align_h: rtl ? align.RIGHT : align.LEFT,
+    };
+}
+
+export function getRadioGroupStyle(rtl = false) {
+    return {
+        x: rtl ? RADIO_SIDE_PADDING : DEVICE_WIDTH - RADIO_SIDE_PADDING - RADIO_SIZE,
+        y: ROW_START_Y,
+        w: RADIO_SIZE,
+        h: HIJRI_OPTIONS.length * ROW_HEIGHT,
+    };
+}
 
 function getRowY(index) {
     return ROW_START_Y + index * ROW_HEIGHT;
@@ -77,25 +88,25 @@ export function getHijriRowBgStyle(index) {
     };
 }
 
-export function getHijriRowTextStyle(index) {
+export function getHijriRowTextStyle(index, rtl = false) {
     return {
-        x: ROW_PAD_X,
+        x: rtl ? RADIO_SIDE_PADDING + RADIO_SIZE + px(14) : ROW_PAD_X,
         y: getRowY(index),
-        w: DEVICE_WIDTH - ROW_PAD_X - RADIO_RIGHT_PAD - RADIO_SIZE - px(14),
+        w: DEVICE_WIDTH - ROW_PAD_X - RADIO_SIDE_PADDING - RADIO_SIZE - px(14),
         h: ROW_HEIGHT,
-        text_size: px(30),
+        text_size: px(36),
         color: COLORS.text,
-        align_h: align.LEFT,
+        align_h: rtl ? align.RIGHT : align.LEFT,
         align_v: align.CENTER_V,
         text_style: text_style.ELLIPSIS,
     };
 }
 
-export function getHijriRowHitStyle(index) {
+export function getHijriRowHitStyle(index, rtl = false) {
     return {
-        x: 0,
+        x: rtl ? RADIO_SIDE_PADDING + RADIO_SIZE : 0,
         y: getRowY(index),
-        w: DEVICE_WIDTH - RADIO_RIGHT_PAD - RADIO_SIZE,
+        w: DEVICE_WIDTH - RADIO_SIDE_PADDING - RADIO_SIZE,
         h: ROW_HEIGHT,
         color: COLORS.rowBg,
         alpha: 0,

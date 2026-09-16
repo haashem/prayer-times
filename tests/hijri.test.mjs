@@ -172,10 +172,11 @@ test('old cache entries require a fresh fetch; new caches have no version metada
     assert.equal(c.getStoredPrayerWindow(storage, time), null);
 });
 
-for (const shape of ['r', 's']) {
-    test(`${shape} layout: offset radio controls, hardware selection, and preview`, async () => {
+for (const [shape, language] of ['r', 's'].flatMap((shape) => ['english', 'arabic', 'farsi'].map((language) => [shape, language]))) {
+    test(`${shape} ${language}: offset controls, title scrolling, and RTL geometry`, async () => {
         let page;
         let keyCallback;
+        const createdWidgets = [];
         const ui = {
             widget: Object.fromEntries(['TEXT', 'RADIO_GROUP', 'STATE_BUTTON', 'FILL_RECT', 'IMG', 'PAGE_SCROLLBAR'].map((key) => [key, key])),
             prop: { TEXT: 'TEXT', INIT: 'INIT', MORE: 'MORE', CHECKED: 'CHECKED' },
@@ -183,6 +184,7 @@ for (const shape of ['r', 's']) {
             align: { LEFT: 0, RIGHT: 1, CENTER_H: 2, CENTER_V: 3, TOP: 4 },
             text_style: { NONE: 0, WRAP: 1, ELLIPSIS: 2 },
             createWidget(type, options) {
+                createdWidgets.push({ type, options });
                 const children = [];
                 return {
                     type, options, children,
@@ -212,6 +214,7 @@ for (const shape of ['r', 's']) {
             },
         };
         const r = await runtime(config);
+        r.storage.setItem("appLanguage", language);
         const c = await r.load('utils/prayer-cache.js');
         const h = await r.load('utils/hijri-settings.js');
         const { cache, dates } = calendar(c);
@@ -225,13 +228,30 @@ for (const shape of ['r', 's']) {
         assert.equal(h.getHijriAdjustment(), 0); // Programmatic radio initialization must not change it.
         assert.equal(keyCallback(1, 3), true); // First focused option is -2 days.
         assert.equal(h.getHijriAdjustment(), -2);
-        assert.equal(page.state.previewWidget.options.text, '29 Rabi al-awwal 1448');
+        const i18n = await r.load('utils/i18n.js');
+        assert.equal(page.state.previewWidget.options.text, i18n.formatHijriDate(today.date.hijri, language));
         page.selectIndex(2);
-        assert.equal(page.state.previewWidget.options.text, '02 Rabi al-thani 1448');
-        page.onDestroy();
+        assert.equal(page.state.previewWidget.options.text, i18n.formatHijriDate(today.date.hijri, language));
         const layout = r.mocks['zosLoader:./index.page.[pf].layout.js'];
         assert.ok(layout.PREVIEW_STYLE.y + layout.PREVIEW_STYLE.h <= layout.getHijriRowBgStyle(0).y);
         assert.ok(layout.getHijriRowTextStyle(0).w > 0);
+        const rtl = language !== 'english';
+        const radio = page.state.radioGroup.options;
+        const label = page.state.optionWidgets.find((w) => w.type === 'TEXT' && w.options.text === i18n.t('hijriMinusTwo')).options;
+        const hit = layout.getHijriRowHitStyle(0, rtl);
+        assert.equal(label.align_h, rtl ? ui.align.RIGHT : ui.align.LEFT);
+        if (rtl) {
+            assert.ok(radio.x + radio.w <= label.x);
+            assert.ok(radio.x + radio.w <= hit.x);
+        } else {
+            assert.ok(label.x + label.w <= radio.x);
+            assert.ok(hit.x + hit.w <= radio.x);
+        }
+        const title = createdWidgets.find((w) => w.type === 'TEXT' && w.options.text === i18n.t('hijriAdjustment')).options;
+        assert.equal(title.text_style, ui.text_style.NONE);
+        assert.equal(title.align_h, rtl ? ui.align.RIGHT : ui.align.LEFT);
+        assert.ok(title.x >= 0 && title.x + title.w <= (shape === 'r' ? 480 : 390));
+        page.onDestroy();
     });
 }
 
