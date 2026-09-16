@@ -8,23 +8,25 @@ The slow path to avoid is storing a full API-shaped monthly JSON array and then 
 
 ## Storage Model
 
-Prayer times are stored in one local storage entry:
+The monthly prayer cache is stored under an unversioned local storage key:
 
 ```js
-prayerMonthV2
+prayerMonth
 ```
+
+There are no cache versions or legacy readers. Previous storage entries are ignored, so users fetch fresh dates after this update. A separate `prayerToday` snapshot speeds up home-page loading.
 
 The value is a compact monthly cache:
 
 ```js
 {
-  v: 2,
   year: "2026",
   month: "06",
   days: 30,
-  recordSize: 32,
   records: "...",
-  nextMonthFirst: "..."
+  nextMonthFirst: "...",
+  hijriBefore: "...",
+  hijriAfter: "..."
 }
 ```
 
@@ -60,22 +62,22 @@ The watch does not search the month.
 For today:
 
 ```js
-offset = (day - 1) * recordSize
-record = records.slice(offset, offset + recordSize)
+offset = (day - 1) * RECORD_SIZE
+record = records.slice(offset, offset + RECORD_SIZE)
 ```
 
 For tomorrow:
 
-- If today is not the last cached day, use `day * recordSize`.
+- If today is not the last cached day, use `day * RECORD_SIZE`.
 - If today is the last cached day, decode `nextMonthFirst`.
 
 This keeps the widget load path cheap: one `localStorage.getItem`, one `JSON.parse` of a small object, and one or two string slices.
 
 ## Writer Flow
 
-The phone-side service fetches the monthly calendar from AlAdhan, strips each API day to the fields the UI needs, then packs the month with `createPrayerMonthCache`.
+The phone-side service makes one AlAdhan `calendar/from/{start}/to/{end}` request for the current month plus two days on either side. It verifies that the entire date range is present and consecutive, strips each API day to the fields needed by the UI, and packs the current month with `createPrayerMonthCache`.
 
-It also fetches the first day of the next month. This is stored as `nextMonthFirst` so that after Isha on the last day of the month, widgets can still calculate tomorrow Fajr while offline.
+The four boundary Hijri dates are retained in `hijriBefore` and `hijriAfter`. The first day of the next month also retains its prayer times in `nextMonthFirst` for the offline next-prayer calculation. No separate daily or adjacent-month requests are made. Incomplete or invalid responses return an error without writing a new cache.
 
 ## Reader Flow
 
@@ -94,7 +96,7 @@ The helper returns:
 }
 ```
 
-The decoded objects intentionally match the old render shape:
+The decoded objects use the UI render shape:
 
 ```js
 {

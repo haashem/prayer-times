@@ -178,26 +178,22 @@ async function fetchPrayerTimes(params, res) {
         const today = new Date();
         const mm = today.getMonth() + 1;
         const yyyy = today.getFullYear();
-        const nextMonth = mm === 12 ? 1 : mm + 1;
-        const nextMonthYear = mm === 12 ? yyyy + 1 : yyyy;
 
-        const resBody = await fetchCalendar(yyyy, mm, params);
+        const resBody = await fetchPrayerCalendarRange(yyyy, mm, params);
 
         console.log("Fetch response code: " + (resBody && resBody.code));
 
         if (resBody && resBody.code === 200 && Array.isArray(resBody.data)) {
-            let nextMonthFirst = null;
-            try {
-                const nextMonthBody = await fetchCalendar(nextMonthYear, nextMonth, params);
-                if (nextMonthBody && nextMonthBody.code === 200 && Array.isArray(nextMonthBody.data)) {
-                    nextMonthFirst = stripDay(nextMonthBody.data[0]);
-                }
-            } catch (e) {
-                console.log("Failed to fetch next month first day: " + e.message);
-            }
-
-            const slim = resBody.data.map(stripDay);
-            const cache = createPrayerMonthCache(slim, yyyy, mm, nextMonthFirst);
+            validatePrayerCalendarRange(resBody.data, yyyy, mm);
+            const prayerDays = resBody.data.map(stripDay);
+            const previousMonthLastTwoHijriDates = prayerDays.slice(0, 2).map((day) => day.date.hijri);
+            const currentMonthPrayerDays = prayerDays.slice(2, -2);
+            const nextMonthFirstTwoDays = prayerDays.slice(-2);
+            const cache = createPrayerMonthCache(
+                currentMonthPrayerDays, yyyy, mm, nextMonthFirstTwoDays[0],
+                previousMonthLastTwoHijriDates, nextMonthFirstTwoDays.map((day) => day.date.hijri)
+            );
+            cache.calendarMethod = "HJCoSA";
             res(null, { result: { code: 200, cache } });
         } else {
             console.log("Fetch error body: " + JSON.stringify(resBody).substring(0, 500));
@@ -209,16 +205,32 @@ async function fetchPrayerTimes(params, res) {
     }
 }
 
-async function fetchCalendar(year, month, params) {
+function validatePrayerCalendarRange(days, year, month) {
+    const daysInMonth = new Date(year, month, 0).getDate();
+    if (days.length !== daysInMonth + 4) throw new Error("Incomplete prayer calendar date range");
+    for (let index = 0; index < days.length; index++) {
+        const expectedDate = formatApiDate(new Date(year, month - 1, index - 1));
+        if (days[index].date.gregorian.date !== expectedDate) {
+            throw new Error("Unexpected date in prayer calendar range");
+        }
+    }
+}
+
+function formatApiDate(date) {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${day}-${month}-${date.getFullYear()}`;
+}
+
+async function fetchPrayerCalendarRange(year, month, params) {
+    const start = formatApiDate(new Date(year, month - 1, -1));
+    const end = formatApiDate(new Date(year, month, 2));
     const method = params.method || 3;
     const school = params.school === 1 ? 1 : 0;
-    const url = `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${params.latitude}&longitude=${params.longitude}&method=${method}&school=${school}`;
-    console.log("Fetching prayer times: " + url);
-
+    const url = `https://api.aladhan.com/v1/calendar/from/${start}/to/${end}?latitude=${params.latitude}&longitude=${params.longitude}&method=${method}&school=${school}&calendarMethod=HJCoSA`;
+    console.log("Fetching prayer calendar: " + url);
     const response = await fetch({ url, method: "GET" });
-    return typeof response.body === "string"
-        ? JSON.parse(response.body)
-        : response.body;
+    return typeof response.body === "string" ? JSON.parse(response.body) : response.body;
 }
 
 AppSideService(
