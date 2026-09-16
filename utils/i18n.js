@@ -14,7 +14,6 @@ let cachedAppLanguage = null;
 
 const TRANSLATIONS = {
     english: {
-        hijriDate: "Hijri Date",
         hijriAdjustment: "Hijri Date Adjustment",
         hijriMinusTwo: "−2 days",
         hijriMinusOne: "−1 day",
@@ -75,7 +74,6 @@ const TRANSLATIONS = {
         minuteUnit: "m",
     },
     farsi: {
-        hijriDate: "تاریخ قمری",
         hijriAdjustment: "تنظیم تاریخ قمری",
         hijriMinusTwo: "۲ روز قبل",
         hijriMinusOne: "۱ روز قبل",
@@ -136,7 +134,6 @@ const TRANSLATIONS = {
         minuteUnit: "دقیقه",
     },
     arabic: {
-        hijriDate: "التاريخ الهجري",
         hijriAdjustment: "تعديل التاريخ الهجري",
         hijriMinusTwo: "قبل يومين",
         hijriMinusOne: "قبل يوم",

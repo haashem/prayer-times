@@ -29,13 +29,11 @@ Page(
             hijriDate: null,
             previewWidget: null,
             optionWidgets: [],
-            titleWidget: null,
             radioGroup: null,
             stateButtons: [],
             focusTop: null,
             focusBottom: null,
             focusIndex: 0,
-            selectedIndex: null,
             updatingRadio: false,
         },
 
@@ -71,7 +69,7 @@ Page(
             });
 
             createWidget(widget.PAGE_SCROLLBAR);
-            this.state.titleWidget = createWidget(widget.TEXT, {
+            createWidget(widget.TEXT, {
                 ...TITLE_STYLE,
                 text: t("hijriAdjustment"),
             });
@@ -181,17 +179,8 @@ Page(
         },
 
         getSelectedIndex() {
-            if (this.state.selectedIndex !== null && this.state.selectedIndex >= 0 && this.state.selectedIndex < HIJRI_OPTIONS.length) {
-                return this.state.selectedIndex;
-            }
-
             const adjustment = getHijriAdjustment();
-            for (let i = 0; i < HIJRI_OPTIONS.length; i++) {
-                if (HIJRI_OPTIONS[i].value === adjustment) {
-                    return i;
-                }
-            }
-            return 0;
+            return HIJRI_OPTIONS.findIndex((option) => option.value === adjustment);
         },
 
         setFocusedIndex(index) {
@@ -248,7 +237,6 @@ Page(
 
         selectIndex(index, updateRadio = true) {
             const nextIndex = Math.max(0, Math.min(HIJRI_OPTIONS.length - 1, index));
-            this.state.selectedIndex = nextIndex;
             setHijriAdjustment(HIJRI_OPTIONS[nextIndex].value);
             this.state.previewWidget.setProperty(prop.TEXT, formatHijriDate(this.state.hijriDate) || t("noDataToday"));
             if (updateRadio && this.state.radioGroup && this.state.stateButtons[nextIndex]) {

@@ -22,8 +22,9 @@ export function setHijriAdjustment(value) {
     return adjustment;
 }
 
-export function getDisplayHijriDate(hijri, adjustment = getHijriAdjustment()) {
+export function getDisplayHijriDate(hijri) {
     if (!hijri) return hijri;
+    const adjustment = getHijriAdjustment();
     try {
         if (adjustment === 0) return hijri;
         const stored = localStorage.getItem(PRAYER_CACHE_KEY);

@@ -54,16 +54,6 @@ function normalizeMonthName(name) {
         .trim();
 }
 
-function getGregorianParts(day) {
-    const date = day && day.date && day.date.gregorian && day.date.gregorian.date;
-    const parts = date ? String(date).split("-") : [];
-    return {
-        day: Number(parts[0] || 0),
-        month: parts[1] || "",
-        year: parts[2] || "",
-    };
-}
-
 function getHijriMonthNumber(hijri) {
     if (!hijri) return 0;
     if (hijri.month && hijri.month.number) return Number(hijri.month.number);
@@ -161,24 +151,11 @@ function parseStoredJson(value) {
 }
 
 export function createPrayerMonthCache(days, year, month, nextMonthFirstPrayerDay, previousMonthLastTwoHijriDates = [], nextMonthFirstTwoHijriDates = []) {
-    const paddedMonth = pad(month, 2);
-    const records = [];
-
-    for (let i = 0; i < days.length; i++) {
-        records.push(EMPTY_RECORD);
-    }
-
-    for (const day of days) {
-        const parts = getGregorianParts(day);
-        const index = parts.day - 1;
-        if (index >= 0 && index < records.length) {
-            records[index] = packDay(day);
-        }
-    }
+    const records = days.map(packDay);
 
     return {
         year: String(year),
-        month: paddedMonth,
+        month: pad(month, 2),
         days: records.length,
         records: records.join(""),
         nextMonthFirst: nextMonthFirstPrayerDay ? packDay(nextMonthFirstPrayerDay) : "",
@@ -209,9 +186,7 @@ export function getAdjustedHijriDate(cache, hijri, adjustment) {
 }
 
 function findHijriDateIndex(cache, hijri) {
-    const dateParts = hijri.date ? String(hijri.date).split("-") : [];
-    const dateRecord = pad(hijri.day || dateParts[0], 2) +
-        pad(getHijriMonthNumber(hijri), 2) + pad(hijri.year || dateParts[2], 4);
+    const dateRecord = packHijriDate(hijri);
 
     for (let dayIndex = 0; dayIndex < cache.days; dayIndex++) {
         if (readHijriDateRecord(cache, dayIndex) === dateRecord) return dayIndex;

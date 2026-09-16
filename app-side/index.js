@@ -193,7 +193,6 @@ async function fetchPrayerTimes(params, res) {
                 currentMonthPrayerDays, yyyy, mm, nextMonthFirstTwoDays[0],
                 previousMonthLastTwoHijriDates, nextMonthFirstTwoDays.map((day) => day.date.hijri)
             );
-            cache.calendarMethod = "HJCoSA";
             res(null, { result: { code: 200, cache } });
         } else {
             console.log("Fetch error body: " + JSON.stringify(resBody).substring(0, 500));

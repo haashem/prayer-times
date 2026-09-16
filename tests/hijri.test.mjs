@@ -50,29 +50,26 @@ async function runtime(extra = {}) {
     return { load, storage, values, appCache, mocks };
 }
 
-function calendar(cacheModule, method = 'HJCoSA') {
-    const dates = fixture.calendars[method].map(day);
+function calendar(cacheModule) {
+    const dates = fixture.calendars.HJCoSA.map(day);
     const cache = cacheModule.createPrayerMonthCache(dates.slice(2, -2), 2026, 9, dates.at(-2), dates.slice(0, 2).map((d) => d.date.hijri), dates.slice(-2).map((d) => d.date.hijri));
-    cache.calendarMethod = method;
     return { cache, dates };
 }
 
 test('default calendar: every September date and all five offsets match saved API responses', async () => {
     const { load } = await runtime();
     const c = await load('utils/prayer-cache.js');
-    for (const method of ['HJCoSA']) {
-        const { cache, dates } = calendar(c, method);
-        const original = JSON.stringify(cache);
-        for (let i = 2; i < dates.length - 2; i++) {
-            for (let offset = -2; offset <= 2; offset++) {
-                assert.deepEqual(parts(c.getAdjustedHijriDate(cache, dates[i].date.hijri, offset)), parts(dates[i + offset].date.hijri));
-            }
+    const { cache, dates } = calendar(c);
+    const original = JSON.stringify(cache);
+    for (let i = 2; i < dates.length - 2; i++) {
+        for (let offset = -2; offset <= 2; offset++) {
+            assert.deepEqual(parts(c.getAdjustedHijriDate(cache, dates[i].date.hijri, offset)), parts(dates[i + offset].date.hijri));
         }
-        assert.equal(JSON.stringify(cache), original);
-        const window = c.getPrayerWindow(cache, { getFullYear: () => 2026, getMonth: () => 9, getDate: () => 30 });
-        assert.equal(JSON.stringify(window.today.timings), JSON.stringify(timings));
-        assert.equal(window.tomorrow.date.gregorian.date, '01-10-2026');
     }
+    assert.equal(JSON.stringify(cache), original);
+    const window = c.getPrayerWindow(cache, { getFullYear: () => 2026, getMonth: () => 9, getDate: () => 30 });
+    assert.equal(JSON.stringify(window.today.timings), JSON.stringify(timings));
+    assert.equal(window.tomorrow.date.gregorian.date, '01-10-2026');
 });
 
 test('a 29-day month rolls into the next month without inventing day 30', async () => {
