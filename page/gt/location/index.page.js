@@ -157,13 +157,13 @@ Page(
                 }
             }
 
-            this.state.focusIndex = selectedIndex;
+            this.state.focusIndex = 0;
             this.state.focusTop = this.track(createWidget(widget.IMG, {
-                ...getFocusLineTopStyle(selectedIndex),
+                ...getFocusLineTopStyle(0),
                 src: "image/focus_line_top.png",
             }));
             this.state.focusBottom = this.track(createWidget(widget.IMG, {
-                ...getFocusLineBottomStyle(selectedIndex),
+                ...getFocusLineBottomStyle(0),
                 src: "image/focus_line_bottom.png",
             }));
             this.track(createWidget(widget.TEXT, {
