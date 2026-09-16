@@ -329,3 +329,80 @@ for (const failure of ['network', 'api', 'json', 'missing-day', 'duplicate-day']
         assert.equal(response.result, undefined);
     });
 }
+
+for (const shape of ['r', 's']) {
+    for (const name of ['school', 'language']) {
+        test(`${shape} ${name}: RTL controls and language switching preserve selection`, async () => {
+            const language = 'arabic';
+            let page;
+            let keyCallback;
+            const createdWidgets = [];
+            const ui = {
+                widget: Object.fromEntries(['TEXT', 'RADIO_GROUP', 'STATE_BUTTON', 'FILL_RECT', 'IMG', 'PAGE_SCROLLBAR'].map((key) => [key, key])),
+                prop: { TEXT: 'TEXT', INIT: 'INIT', MORE: 'MORE', CHECKED: 'CHECKED' },
+                event: { SELECT: 'SELECT' },
+                align: { LEFT: 0, RIGHT: 1, CENTER_H: 2, CENTER_V: 3, TOP: 4 },
+                text_style: { NONE: 0, WRAP: 1, ELLIPSIS: 2 },
+                createWidget(type, options) {
+                    createdWidgets.push({ type, options });
+                    const children = [];
+                    return {
+                        type, options, children,
+                        setProperty(key, value) {
+                            if (key === 'TEXT') this.options.text = value;
+                            if (key === 'INIT' || key === 'CHECKED') {
+                                this.selected = value;
+                                options.check_func?.(this, children.indexOf(value), true);
+                            }
+                        },
+                        addEventListener() {},
+                        createWidget(type, opts) { const w = ui.createWidget(type, opts); children.push(w); return w; },
+                    };
+                },
+                deleteWidget() {}, setStatusBarVisible() {},
+            };
+            const config = {
+                globals: { Page: (definition) => { page = definition; } },
+                mocks: {
+                    '@zos/ui': ui,
+                    '@zos/device': { getDeviceInfo: () => ({ width: shape === 'r' ? 480 : 390, screenShape: shape }), SCREEN_SHAPE_SQUARE: 's' },
+                    '@zos/utils': { px: (value) => value },
+                    '@zos/display': { setPageBrightTime() {} },
+                    '@zos/interaction': { onKey: ({ callback }) => { keyCallback = callback; }, offKey() {}, KEY_HOME: 1, KEY_SELECT: 2, KEY_EVENT_CLICK: 3, KEY_EVENT_PRESS: 4, KEY_EVENT_RELEASE: 5 },
+                    '@zos/page': { setScrollMode() {}, SCROLL_MODE_SWIPER: 1 },
+                    '@zeppos/zml/base-page': { BasePage: (value) => value },
+                },
+            };
+            config.mocks[resolve(root, 'utils/prayer-settings.js')] = { getPrayerSchool: () => 0, setPrayerSchool() {} };
+            const r = await runtime(config);
+            r.storage.setItem("appLanguage", language);
+
+            const layout = await r.load(`page/gt/${name}/index.page.${shape}.layout.js`);
+            r.mocks['zosLoader:./index.page.[pf].layout.js'] = layout;
+            await r.load(`page/gt/${name}/index.page.js`);
+            page.build();
+            function checkRows(rtl) {
+                const radio = page.state.radioGroup.options;
+                const labels = page.state.optionWidgets.filter((w) => w.type === 'TEXT');
+                const options = name === 'language' ? layout.LANGUAGE_OPTIONS : layout.SCHOOL_OPTIONS;
+                for (const label of labels.slice(0, options.length)) {
+                    assert.equal(label.options.align_h, rtl ? ui.align.RIGHT : ui.align.LEFT);
+                    assert.ok(rtl ? radio.x + radio.w <= label.options.x : label.options.x + label.options.w <= radio.x);
+                }
+                assert.equal(page.state.radioGroup.selected, page.state.stateButtons[page.getSelectedIndex()]);
+            }
+            checkRows(true);
+            if (name === 'language') {
+                page.setFocusedIndex(1);
+                for (const value of ['english', 'farsi', 'arabic', 'english']) {
+                    const index = layout.LANGUAGE_OPTIONS.findIndex((option) => option.value === value);
+                    page.selectIndex(index);
+                    checkRows(value !== 'english');
+                    assert.equal(page.state.focusIndex, 1);
+                    assert.equal(r.storage.getItem('appLanguage'), value);
+                }
+            }
+            page.onDestroy();
+        });
+    }
+}

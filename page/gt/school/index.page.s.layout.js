@@ -18,7 +18,7 @@ const ROW_START_Y = px(128);
 const ROW_HEIGHT = px(88);
 const ROW_PAD_X = px(44);
 const RADIO_SIZE = px(54);
-const RADIO_RIGHT_PAD = px(40);
+const RADIO_SIDE_PADDING = px(40);
 const FOCUS_LINE_HEIGHT = px(18);
 const INFO_OUTER_PAD_X = px(26);
 
@@ -45,12 +45,14 @@ export const TITLE_STYLE = {
     text_style: text_style.NONE,
 };
 
-export const RADIO_GROUP_STYLE = {
-    x: DEVICE_WIDTH - RADIO_RIGHT_PAD - RADIO_SIZE,
-    y: ROW_START_Y,
-    w: RADIO_SIZE,
-    h: SCHOOL_OPTIONS.length * ROW_HEIGHT,
-};
+export function getRadioGroupStyle(rtl = false) {
+    return {
+        x: rtl ? RADIO_SIDE_PADDING : DEVICE_WIDTH - RADIO_SIDE_PADDING - RADIO_SIZE,
+        y: ROW_START_Y,
+        w: RADIO_SIZE,
+        h: SCHOOL_OPTIONS.length * ROW_HEIGHT,
+    };
+}
 
 function getRowY(index) {
     return ROW_START_Y + index * ROW_HEIGHT;
@@ -66,25 +68,25 @@ export function getSchoolRowBgStyle(index) {
     };
 }
 
-export function getSchoolRowTextStyle(index) {
+export function getSchoolRowTextStyle(index, rtl = false) {
     return {
-        x: ROW_PAD_X,
+        x: rtl ? RADIO_SIDE_PADDING + RADIO_SIZE + px(14) : ROW_PAD_X,
         y: getRowY(index),
-        w: DEVICE_WIDTH - ROW_PAD_X - RADIO_RIGHT_PAD - RADIO_SIZE - px(14),
+        w: DEVICE_WIDTH - ROW_PAD_X - RADIO_SIDE_PADDING - RADIO_SIZE - px(14),
         h: ROW_HEIGHT,
         text_size: px(36),
         color: COLORS.text,
-        align_h: align.LEFT,
+        align_h: rtl ? align.RIGHT : align.LEFT,
         align_v: align.CENTER_V,
         text_style: text_style.ELLIPSIS,
     };
 }
 
-export function getSchoolRowHitStyle(index) {
+export function getSchoolRowHitStyle(index, rtl = false) {
     return {
-        x: 0,
+        x: rtl ? RADIO_SIDE_PADDING + RADIO_SIZE : 0,
         y: getRowY(index),
-        w: DEVICE_WIDTH - RADIO_RIGHT_PAD - RADIO_SIZE,
+        w: DEVICE_WIDTH - RADIO_SIDE_PADDING - RADIO_SIZE,
         h: ROW_HEIGHT,
         color: COLORS.rowBg,
         alpha: 0,

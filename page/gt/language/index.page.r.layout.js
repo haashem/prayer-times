@@ -18,7 +18,7 @@ const ROW_START_Y = px(184);
 const ROW_HEIGHT = px(104);
 const ROW_PAD_X = px(76);
 const RADIO_SIZE = px(64);
-const RADIO_RIGHT_PAD = px(70);
+const RADIO_SIDE_PADDING = px(70);
 const FOCUS_LINE_HEIGHT = px(22);
 
 export const LANGUAGE_OPTIONS = [
@@ -42,12 +42,14 @@ export const TITLE_STYLE = {
     text_style: text_style.NONE,
 };
 
-export const RADIO_GROUP_STYLE = {
-    x: DEVICE_WIDTH - RADIO_RIGHT_PAD - RADIO_SIZE,
-    y: ROW_START_Y,
-    w: RADIO_SIZE,
-    h: LANGUAGE_OPTIONS.length * ROW_HEIGHT,
-};
+export function getRadioGroupStyle(rtl = false) {
+    return {
+        x: rtl ? RADIO_SIDE_PADDING : DEVICE_WIDTH - RADIO_SIDE_PADDING - RADIO_SIZE,
+        y: ROW_START_Y,
+        w: RADIO_SIZE,
+        h: LANGUAGE_OPTIONS.length * ROW_HEIGHT,
+    };
+}
 
 function getRowY(index) {
     return ROW_START_Y + index * ROW_HEIGHT;
@@ -63,25 +65,25 @@ export function getLanguageRowBgStyle(index) {
     };
 }
 
-export function getLanguageRowTextStyle(index) {
+export function getLanguageRowTextStyle(index, rtl = false) {
     return {
-        x: ROW_PAD_X,
+        x: rtl ? RADIO_SIDE_PADDING + RADIO_SIZE + px(16) : ROW_PAD_X,
         y: getRowY(index),
-        w: DEVICE_WIDTH - ROW_PAD_X - RADIO_RIGHT_PAD - RADIO_SIZE - px(16),
+        w: DEVICE_WIDTH - ROW_PAD_X - RADIO_SIDE_PADDING - RADIO_SIZE - px(16),
         h: ROW_HEIGHT,
         text_size: px(40),
         color: COLORS.text,
-        align_h: align.LEFT,
+        align_h: rtl ? align.RIGHT : align.LEFT,
         align_v: align.CENTER_V,
         text_style: text_style.ELLIPSIS,
     };
 }
 
-export function getLanguageRowHitStyle(index) {
+export function getLanguageRowHitStyle(index, rtl = false) {
     return {
-        x: 0,
+        x: rtl ? RADIO_SIDE_PADDING + RADIO_SIZE : 0,
         y: getRowY(index),
-        w: DEVICE_WIDTH - RADIO_RIGHT_PAD - RADIO_SIZE,
+        w: DEVICE_WIDTH - RADIO_SIDE_PADDING - RADIO_SIZE,
         h: ROW_HEIGHT,
         color: COLORS.rowBg,
         alpha: 0,

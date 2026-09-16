@@ -4,13 +4,13 @@ import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { onKey, offKey, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK, KEY_EVENT_PRESS, KEY_EVENT_RELEASE } from "@zos/interaction";
 import { setScrollMode, SCROLL_MODE_SWIPER } from "@zos/page";
 import { BasePage } from "@zeppos/zml/base-page";
-import { getAppLanguage, setAppLanguage, t } from "../../../utils/i18n";
+import { getAppLanguage, setAppLanguage, isRtl, t } from "../../../utils/i18n";
 import {
     TITLE_STYLE,
     LANGUAGE_OPTIONS,
     BOTTOM_PADDING,
     SCROLL_ITEM_HEIGHT,
-    RADIO_GROUP_STYLE,
+    getRadioGroupStyle,
     getLanguageRowBgStyle,
     getLanguageRowTextStyle,
     getLanguageRowHitStyle,
@@ -92,7 +92,7 @@ Page(
             this.renderFocusIndicator();
 
             this.state.radioGroup = this.trackOptionWidget(createWidget(widget.RADIO_GROUP, {
-                ...RADIO_GROUP_STYLE,
+                ...getRadioGroupStyle(isRtl()),
                 select_src: "image/dot_select.png",
                 unselect_src: "image/dot_unselect.png",
                 check_func: (group, index, checked) => {
@@ -129,10 +129,10 @@ Page(
         renderOptionRow(option, index) {
             const rowBg = this.trackOptionWidget(createWidget(widget.FILL_RECT, getLanguageRowBgStyle(index)));
             const rowText = this.trackOptionWidget(createWidget(widget.TEXT, {
-                ...getLanguageRowTextStyle(index),
+                ...getLanguageRowTextStyle(index, isRtl()),
                 text: option.label,
             }));
-            const rowHit = this.trackOptionWidget(createWidget(widget.FILL_RECT, getLanguageRowHitStyle(index)));
+            const rowHit = this.trackOptionWidget(createWidget(widget.FILL_RECT, getLanguageRowHitStyle(index, isRtl())));
 
             for (const w of [rowBg, rowText, rowHit]) {
                 w.addEventListener(event.SELECT, () => {
@@ -200,7 +200,13 @@ Page(
         selectIndex(index, updateRadio = true) {
             const nextIndex = Math.max(0, Math.min(LANGUAGE_OPTIONS.length - 1, index));
             this.state.selectedIndex = nextIndex;
+            const wasRtl = isRtl();
             setAppLanguage(LANGUAGE_OPTIONS[nextIndex].value);
+            if (wasRtl !== isRtl()) {
+                const focusIndex = this.state.focusIndex;
+                this.renderOptions();
+                this.setFocusedIndex(focusIndex);
+            }
             if (updateRadio && this.state.radioGroup && this.state.stateButtons[nextIndex]) {
                 this.state.updatingRadio = true;
                 try {

@@ -12,7 +12,7 @@ import {
     SCROLL_ITEM_COUNT,
     BOTTOM_PADDING,
     SCROLL_ITEM_HEIGHT,
-    RADIO_GROUP_STYLE,
+    getRadioGroupStyle,
     getSchoolRowBgStyle,
     getSchoolRowTextStyle,
     getSchoolRowHitStyle,
@@ -94,7 +94,7 @@ Page(
             this.renderFocusIndicator();
 
             this.state.radioGroup = this.trackOptionWidget(createWidget(widget.RADIO_GROUP, {
-                ...RADIO_GROUP_STYLE,
+                ...getRadioGroupStyle(isRtl()),
                 select_src: "image/dot_select.png",
                 unselect_src: "image/dot_unselect.png",
                 check_func: (group, index, checked) => {
@@ -140,10 +140,10 @@ Page(
         renderOptionRow(option, index) {
             const rowBg = this.trackOptionWidget(createWidget(widget.FILL_RECT, getSchoolRowBgStyle(index)));
             const rowText = this.trackOptionWidget(createWidget(widget.TEXT, {
-                ...getSchoolRowTextStyle(index),
+                ...getSchoolRowTextStyle(index, isRtl()),
                 text: t(option.labelKey),
             }));
-            const rowHit = this.trackOptionWidget(createWidget(widget.FILL_RECT, getSchoolRowHitStyle(index)));
+            const rowHit = this.trackOptionWidget(createWidget(widget.FILL_RECT, getSchoolRowHitStyle(index, isRtl())));
 
             for (const w of [rowBg, rowText, rowHit]) {
                 w.addEventListener(event.SELECT, () => {
