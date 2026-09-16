@@ -23,6 +23,7 @@ Page(
     BasePage({
         state: {
             hijriDate: null,
+            hijriWidget: null,
             rowWidgets: [],
             focusIndex: 0,
             focusTop: null,
@@ -65,7 +66,7 @@ Page(
 
             const hijriText = formatHijriDate(this.state.hijriDate);
             if (hijriText) {
-                createWidget(widget.TEXT, {
+                this.state.hijriWidget = createWidget(widget.TEXT, {
                     ...HIJRI_DATE_STYLE,
                     text: hijriText,
                 });
@@ -159,7 +160,7 @@ Page(
         openItem(index) {
             const item = SETTINGS_ITEMS[index];
             if (!item) return;
-            push({ url: item.url });
+            push({ url: item.url, params: JSON.stringify({ hijriDate: this.state.hijriDate }) });
         },
 
         getHijriDateParam(params) {
@@ -169,6 +170,13 @@ Page(
                 return data && data.hijriDate ? data.hijriDate : null;
             } catch (e) {
                 return null;
+            }
+        },
+
+        onResume() {
+            if (this.state.rowWidgets.length) this.registerSelectionKey();
+            if (this.state.hijriWidget) {
+                this.state.hijriWidget.setProperty(prop.TEXT, formatHijriDate(this.state.hijriDate));
             }
         },
 

@@ -1,4 +1,5 @@
 import { localStorage } from "@zos/storage";
+import { getDisplayHijriDate } from "./hijri-settings";
 
 export const APP_LANGUAGE_KEY = "appLanguage";
 export const DEFAULT_LANGUAGE = "english";
@@ -13,6 +14,15 @@ let cachedAppLanguage = null;
 
 const TRANSLATIONS = {
     english: {
+        hijriDate: "Hijri Date",
+        hijriAdjustment: "Hijri Date Adjustment",
+        hijriMinusTwo: "−2 days",
+        hijriMinusOne: "−1 day",
+        hijriNoAdjustment: "No change",
+        hijriPlusOne: "+1 day",
+        hijriPlusTwo: "+2 days",
+        hijriDateUnavailable: "Date unavailable",
+        hijriAdjustmentInfo: "Shift the Hijri date to match your local calendar. Prayer times stay the same. If an adjusted date is unavailable, choose No change to show the original date.",
         appName: "Prayer Times",
         settings: "Settings",
         help: "Help",
@@ -65,6 +75,15 @@ const TRANSLATIONS = {
         minuteUnit: "m",
     },
     farsi: {
+        hijriDate: "تاریخ قمری",
+        hijriAdjustment: "تنظیم تاریخ قمری",
+        hijriMinusTwo: "۲ روز قبل",
+        hijriMinusOne: "۱ روز قبل",
+        hijriNoAdjustment: "بدون تغییر",
+        hijriPlusOne: "۱ روز بعد",
+        hijriPlusTwo: "۲ روز بعد",
+        hijriDateUnavailable: "تاریخ موجود نیست",
+        hijriAdjustmentInfo: "تاریخ قمری را با تقویم محلی خود هماهنگ کنید. اوقات شرعی تغییر نمی‌کند. اگر تاریخ تنظیم‌شده موجود نیست، برای نمایش تاریخ اصلی «بدون تغییر» را انتخاب کنید.",
         appName: "اوقات شرعی",
         settings: "تنظیمات",
         help: "راهنما",
@@ -117,6 +136,15 @@ const TRANSLATIONS = {
         minuteUnit: "دقیقه",
     },
     arabic: {
+        hijriDate: "التاريخ الهجري",
+        hijriAdjustment: "تعديل التاريخ الهجري",
+        hijriMinusTwo: "قبل يومين",
+        hijriMinusOne: "قبل يوم",
+        hijriNoAdjustment: "بدون تعديل",
+        hijriPlusOne: "بعد يوم",
+        hijriPlusTwo: "بعد يومين",
+        hijriDateUnavailable: "التاريخ غير متوفر",
+        hijriAdjustmentInfo: "عدّل التاريخ الهجري ليتوافق مع تقويمك المحلي. لا تتغير أوقات الصلاة. إذا لم يتوفر التاريخ المعدّل، اختر «بدون تعديل» لعرض التاريخ الأصلي.",
         appName: "مواقيت الصلاة",
         settings: "الإعدادات",
         help: "المساعدة",
@@ -408,6 +436,8 @@ export function formatNextPrayer(label, remainingMinutes, language = getAppLangu
 
 export function formatHijriDate(hijri, language = getAppLanguage()) {
     if (!hijri) return "";
+    hijri = getDisplayHijriDate(hijri);
+    if (!hijri) return t("hijriDateUnavailable", language);
     const normalized = normalizeLanguage(language);
     const parts = getHijriDateParts(hijri);
     const monthNumber = getHijriMonthNumber(hijri);

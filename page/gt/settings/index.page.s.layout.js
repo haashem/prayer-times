@@ -19,6 +19,7 @@ const FOCUS_LINE_HEIGHT = px(18);
 export const SETTINGS_ITEMS = [
     { labelKey: "prayerAlerts", url: "page/gt/notifications/index.page" },
     { labelKey: "school", url: "page/gt/school/index.page" },
+    { labelKey: "hijriAdjustment", url: "page/gt/hijri-adjustment/index.page" },
     { labelKey: "selectLanguage", url: "page/gt/language/index.page" },
     { labelKey: "contactUs", url: "page/gt/contact/index.page" },
     { labelKey: "supportDeveloper", url: "page/gt/support/index.page" },
