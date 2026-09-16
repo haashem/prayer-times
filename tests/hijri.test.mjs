@@ -249,7 +249,7 @@ for (const [shape, language] of ['r', 's'].flatMap((shape) => ['english', 'arabi
         }
         const title = createdWidgets.find((w) => w.type === 'TEXT' && w.options.text === i18n.t('hijriAdjustment')).options;
         assert.equal(title.text_style, ui.text_style.NONE);
-        assert.equal(title.align_h, rtl ? ui.align.RIGHT : ui.align.LEFT);
+        assert.equal(title.align_h, ui.align.CENTER_H);
         assert.ok(title.x >= 0 && title.x + title.w <= (shape === 'r' ? 480 : 390));
         page.onDestroy();
     });

@@ -70,7 +70,7 @@ Page(
 
             createWidget(widget.PAGE_SCROLLBAR);
             createWidget(widget.TEXT, {
-                ...getTitleStyle(isRtl()),
+                ...getTitleStyle(),
                 text: t("hijriAdjustment"),
             });
 

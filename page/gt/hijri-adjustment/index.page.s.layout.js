@@ -56,12 +56,11 @@ export const PREVIEW_STYLE = {
     color: 0xd4a843,
 };
 
-export function getTitleStyle(rtl = false) {
+export function getTitleStyle() {
     return {
         ...TITLE_STYLE,
         x: SIDE_PADDING,
         w: DEVICE_WIDTH - SIDE_PADDING * 2,
-        align_h: rtl ? align.RIGHT : align.LEFT,
     };
 }
 
