@@ -76,7 +76,7 @@ export function loadTodayPrayerData(location) {
 
 export function storePrayerMonthCache(cache) {
   localStorage.setItem(PRAYER_CACHE_KEY, JSON.stringify(cache));
-  localStorage.removeItem("prayerData");
+  localStorage.removeItem(PRAYER_TODAY_CACHE_KEY);
 
   const appCache = getAppCache();
   if (appCache) {

@@ -1,10 +1,11 @@
-export const PRAYER_CACHE_KEY = "prayerMonthV2";
-export const PRAYER_TODAY_CACHE_KEY = "prayerTodayV1";
-export const LEGACY_PRAYER_DATA_KEY = "prayerData";
+export const PRAYER_CACHE_KEY = "prayerMonth";
+export const PRAYER_TODAY_CACHE_KEY = "prayerToday";
 
 export const PRAYER_KEYS = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 const RECORD_SIZE = 32;
+const HIJRI_RECORD_SIZE = 8;
+const HIJRI_RECORD_OFFSET = RECORD_SIZE - HIJRI_RECORD_SIZE;
 const EMPTY_RECORD = "00000000000000000000000000000000";
 
 const HIJRI_MONTHS_EN = [
@@ -95,13 +96,16 @@ function packDay(day) {
         record += toCompactTime(day.timings[key]);
     }
 
-    const hijri = day.date.hijri || {};
-    const hijriDay = hijri.day || (hijri.date ? String(hijri.date).split("-")[0] : "");
-    record += pad(hijriDay, 2);
-    record += pad(getHijriMonthNumber(hijri), 2);
-    record += pad(hijri.year || (hijri.date ? String(hijri.date).split("-")[2] : ""), 4);
+    record += packHijriDate(day.date.hijri);
 
     return record.length === RECORD_SIZE ? record : EMPTY_RECORD;
+}
+
+function packHijriDate(hijri) {
+    if (!hijri) return "00000000";
+    const dateParts = hijri.date ? String(hijri.date).split("-") : [];
+    return pad(hijri.day || dateParts[0], 2) +
+        pad(getHijriMonthNumber(hijri), 2) + pad(hijri.year || dateParts[2], 4);
 }
 
 function unpackDay(record, year, month, day) {
@@ -156,7 +160,7 @@ function parseStoredJson(value) {
     return typeof value === "object" ? value : null;
 }
 
-export function createPrayerMonthCache(days, year, month, nextMonthFirstDay) {
+export function createPrayerMonthCache(days, year, month, nextMonthFirstPrayerDay, previousMonthLastTwoHijriDates = [], nextMonthFirstTwoHijriDates = []) {
     const paddedMonth = pad(month, 2);
     const records = [];
 
@@ -173,19 +177,82 @@ export function createPrayerMonthCache(days, year, month, nextMonthFirstDay) {
     }
 
     return {
-        v: 2,
         year: String(year),
         month: paddedMonth,
         days: records.length,
-        recordSize: RECORD_SIZE,
         records: records.join(""),
-        nextMonthFirst: nextMonthFirstDay ? packDay(nextMonthFirstDay) : "",
+        nextMonthFirst: nextMonthFirstPrayerDay ? packDay(nextMonthFirstPrayerDay) : "",
+        // Only Hijri dates are needed for the two-day display adjustment.
+        hijriBefore: previousMonthLastTwoHijriDates.slice(-2).map(packHijriDate).join(""),
+        hijriAfter: nextMonthFirstTwoHijriDates.slice(0, 2).map(packHijriDate).join(""),
+    };
+}
+
+function isPrayerMonthCache(cache) {
+    return !!cache && Number.isInteger(cache.days) && cache.days > 0 && cache.days <= 31 &&
+        typeof cache.records === "string" && cache.records.length === cache.days * RECORD_SIZE &&
+        typeof cache.hijriBefore === "string" && typeof cache.hijriAfter === "string";
+}
+
+export function getAdjustedHijriDate(cache, hijri, adjustment) {
+    if (!hijri) return null;
+    if (adjustment === 0) return hijri;
+    if (!Number.isInteger(adjustment) || Math.abs(adjustment) > 2) return null;
+    if (!isPrayerMonthCache(cache)) return null;
+
+    const currentDayIndex = findHijriDateIndex(cache, hijri);
+    if (currentDayIndex === -1) return null;
+
+    const adjustedDayIndex = currentDayIndex + adjustment;
+    const adjustedDateRecord = readHijriDateRecord(cache, adjustedDayIndex);
+    return decodeHijriDateRecord(adjustedDateRecord);
+}
+
+function findHijriDateIndex(cache, hijri) {
+    const dateParts = hijri.date ? String(hijri.date).split("-") : [];
+    const dateRecord = pad(hijri.day || dateParts[0], 2) +
+        pad(getHijriMonthNumber(hijri), 2) + pad(hijri.year || dateParts[2], 4);
+
+    for (let dayIndex = 0; dayIndex < cache.days; dayIndex++) {
+        if (readHijriDateRecord(cache, dayIndex) === dateRecord) return dayIndex;
+    }
+    return -1;
+}
+
+function readHijriDateRecord(cache, dayIndex) {
+    if (dayIndex < 0) {
+        const previousMonthDates = cache.hijriBefore;
+        const start = previousMonthDates.length + dayIndex * HIJRI_RECORD_SIZE;
+        return start < 0 ? null : previousMonthDates.slice(start, start + HIJRI_RECORD_SIZE);
+    }
+
+    if (dayIndex >= cache.days) {
+        const nextMonthDates = cache.hijriAfter;
+        const start = (dayIndex - cache.days) * HIJRI_RECORD_SIZE;
+        return nextMonthDates.slice(start, start + HIJRI_RECORD_SIZE);
+    }
+
+    const start = dayIndex * RECORD_SIZE + HIJRI_RECORD_OFFSET;
+    return cache.records.slice(start, start + HIJRI_RECORD_SIZE);
+}
+
+function decodeHijriDateRecord(record) {
+    if (!record || record.length !== HIJRI_RECORD_SIZE) return null;
+
+    const day = Number(record.slice(0, 2));
+    const month = Number(record.slice(2, 4));
+    const year = record.slice(4);
+    if (!(day >= 1 && day <= 30 && month >= 1 && month <= 12 && Number(year) > 0)) return null;
+
+    return {
+        day: pad(day, 2),
+        month: { number: month, en: HIJRI_MONTHS_EN[month - 1] },
+        year,
     };
 }
 
 export function getPrayerWindow(cache, time) {
-    if (!cache || cache.v !== 2 || cache.recordSize !== RECORD_SIZE) return null;
-    if (!cache.records || cache.records.length < cache.days * RECORD_SIZE) return null;
+    if (!isPrayerMonthCache(cache)) return null;
 
     const year = String(time.getFullYear());
     const month = pad(time.getMonth(), 2);
@@ -221,50 +288,10 @@ export function getPrayerWindow(cache, time) {
     return { today, tomorrow };
 }
 
-export function getLegacyPrayerWindow(cache, time) {
-    if (!cache || !Array.isArray(cache.data)) return null;
-
-    const day = pad(time.getDate(), 2);
-    const month = pad(time.getMonth(), 2);
-    const year = String(time.getFullYear());
-    const todayText = day + "-" + month + "-" + year;
-
-    if (cache.month !== month || cache.year !== year) return null;
-
-    const today = cache.data.find(
-        (d) => d.date && d.date.gregorian && d.date.gregorian.date === todayText
-    );
-    if (!today) return null;
-
-    let tomorrow = null;
-    const tomorrowDate = new Date(
-        Number(year),
-        Number(month) - 1,
-        Number(day) + 1
-    );
-    const tomorrowText = pad(tomorrowDate.getDate(), 2) + "-" +
-        pad(tomorrowDate.getMonth() + 1, 2) + "-" +
-        String(tomorrowDate.getFullYear());
-
-    if (cache.month === pad(tomorrowDate.getMonth() + 1, 2) &&
-        cache.year === String(tomorrowDate.getFullYear())) {
-        tomorrow = cache.data.find(
-            (d) => d.date && d.date.gregorian && d.date.gregorian.date === tomorrowText
-        ) || null;
-    }
-
-    return { today, tomorrow };
-}
-
 export function getStoredPrayerWindow(storage, time) {
     if (!storage || !storage.getItem) return null;
-
-    const cached = parseStoredJson(storage.getItem(PRAYER_CACHE_KEY));
-    const prayerWindow = getPrayerWindow(cached, time);
-    if (prayerWindow) return prayerWindow;
-
-    const legacy = parseStoredJson(storage.getItem(LEGACY_PRAYER_DATA_KEY));
-    return getLegacyPrayerWindow(legacy, time);
+    const cache = parseStoredJson(storage.getItem(PRAYER_CACHE_KEY));
+    return getPrayerWindow(cache, time);
 }
 
 function getPrayerDateTime(day, prayerKey) {

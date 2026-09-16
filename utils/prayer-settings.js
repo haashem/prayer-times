@@ -35,7 +35,6 @@ function clearCachedPrayerTimes() {
     try {
         localStorage.removeItem(PRAYER_CACHE_KEY);
         localStorage.removeItem(PRAYER_TODAY_CACHE_KEY);
-        localStorage.removeItem("prayerData");
     } catch (e) {
         // Ignore storage failures; the next API fetch will still use current settings.
     }

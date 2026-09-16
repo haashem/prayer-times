@@ -72,7 +72,6 @@ export function readStoredLocation() {
 export function clearPrayerCaches() {
   localStorage.removeItem(PRAYER_CACHE_KEY);
   localStorage.removeItem(PRAYER_TODAY_CACHE_KEY);
-  localStorage.removeItem("prayerData");
 
   const appCache = getAppCache();
   if (appCache) {
