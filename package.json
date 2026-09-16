@@ -4,7 +4,7 @@
   "description": "Prayer times app for Crawley - ZeppOS",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --experimental-vm-modules --test tests/*.test.mjs"
   },
   "author": "",
   "license": "ISC",
