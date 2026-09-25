@@ -6,8 +6,8 @@
     "appName": "Prayer Times",
     "appType": "app",
     "version": {
-      "code": 8,
-      "name": "1.9.0"
+      "code": 9,
+      "name": "1.10.0"
     },
     "icon": "icon.png",
     "vender": "zepp",
