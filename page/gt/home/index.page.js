@@ -12,7 +12,7 @@ import { log as Logger } from "@zos/utils";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { BasePage } from "@zeppos/zml/base-page";
 import { createQiblaCompass } from "./qibla";
-import { getPrayerLabel, localizeDigits, t } from "../../../utils/i18n";
+import { getPrayerLabel, localizeDigits, isRtl, t } from "../../../utils/i18n";
 import {
   getConfiguredLocationSelection,
   getLocationKey,
@@ -409,10 +409,11 @@ Page(
     renderPrayerGrid(todayData) {
       const container = this.state.prayerContainer;
       const currentIndex = this.getCurrentPrayerIndex(todayData);
+      const rtl = isRtl();
 
       for (let i = 0; i < PRAYER_KEYS.length; i++) {
         const row = Math.floor(i / 2);
-        const col = i % 2;
+        const col = rtl ? 1 - (i % 2) : i % 2;
         const x = GRID_START_X + col * (GRID_CELL_W + GRID_COL_GAP);
         const y = GRID_START_Y + row * (GRID_CELL_H + GRID_ROW_GAP);
         const isActive = i === currentIndex;
