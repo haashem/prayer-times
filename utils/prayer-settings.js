@@ -2,7 +2,9 @@ import { localStorage } from "@zos/storage";
 import { PRAYER_CACHE_KEY, PRAYER_TODAY_CACHE_KEY } from "./prayer-cache";
 import { invalidatePrayerNotificationSchedule } from "./prayer-notifications";
 
-export const DEFAULT_PRAYER_METHOD = 3;
+import { DEFAULT_PRAYER_METHOD, normalizePrayerMethod } from "./prayer-methods";
+export { DEFAULT_PRAYER_METHOD } from "./prayer-methods";
+const APPLIED_SETTINGS_KEY = "prayerAppliedCalculationV1";
 export const DEFAULT_PRAYER_SCHOOL = 0;
 
 export const PRAYER_METHOD_KEY = "prayerCalculationMethod";
@@ -59,7 +61,7 @@ function clearCachedPrayerTimes() {
 }
 
 export function getPrayerMethod() {
-    return readNumber(PRAYER_METHOD_KEY, DEFAULT_PRAYER_METHOD);
+    return normalizePrayerMethod(readNumber(PRAYER_METHOD_KEY, DEFAULT_PRAYER_METHOD));
 }
 
 export function getPrayerSchool() {
@@ -72,8 +74,8 @@ export function setPrayerSchool(school) {
         ? Number(school)
         : DEFAULT_PRAYER_SCHOOL;
     if (getPrayerSchool() !== nextSchool) {
+        getAppliedPrayerCalculationSettings();
         localStorage.setItem(PRAYER_SCHOOL_KEY, String(nextSchool));
-        clearCachedPrayerTimes();
     }
     return nextSchool;
 }
@@ -83,4 +85,35 @@ export function getPrayerCalculationSettings() {
         method: getPrayerMethod(),
         school: getPrayerSchool(),
     };
+}
+
+export function setPrayerMethod(method) {
+    const nextMethod = normalizePrayerMethod(Number(method));
+    getAppliedPrayerCalculationSettings();
+    localStorage.setItem(PRAYER_METHOD_KEY, String(nextMethod));
+    return nextMethod;
+}
+
+// Preserve the settings of existing caches before a user edits their selection.
+export function getAppliedPrayerCalculationSettings() {
+    const stored = localStorage.getItem(APPLIED_SETTINGS_KEY);
+    if (stored) {
+        try {
+            const value = typeof stored === "string" ? JSON.parse(stored) : stored;
+            if (value && normalizePrayerMethod(value.method) === value.method && isValidSchool(value.school)) return value;
+        } catch (e) { /* Reinitialize legacy or invalid metadata. */ }
+    }
+    const current = getPrayerCalculationSettings();
+    localStorage.setItem(APPLIED_SETTINGS_KEY, JSON.stringify(current));
+    return current;
+}
+
+// Called only when entering the home page, never by settings screens or widgets.
+export function applyPrayerCalculationSettings() {
+    const selected = getPrayerCalculationSettings();
+    const applied = getAppliedPrayerCalculationSettings();
+    if (selected.method === applied.method && selected.school === applied.school) return false;
+    clearCachedPrayerTimes();
+    localStorage.setItem(APPLIED_SETTINGS_KEY, JSON.stringify(selected));
+    return true;
 }

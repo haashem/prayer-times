@@ -6,7 +6,7 @@ import {
   getPrayerWindow,
   getStoredPrayerWindow,
 } from "./prayer-cache";
-import { getPrayerCalculationSettings } from "./prayer-settings";
+import { getAppliedPrayerCalculationSettings } from "./prayer-settings";
 import { getAppCache, getLocationKey } from "./location-storage";
 
 function getDayKey(time) {
@@ -19,7 +19,7 @@ export function loadTodayPrayerData(location) {
   const time = new Time();
   const dayKey = getDayKey(time);
   const locationKey = getLocationKey(location);
-  const settings = getPrayerCalculationSettings();
+  const settings = getAppliedPrayerCalculationSettings();
   const appCache = getAppCache();
 
   if (appCache && appCache.prayerDayKey === dayKey && appCache.prayerData) {

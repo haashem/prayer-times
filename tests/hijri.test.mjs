@@ -24,7 +24,7 @@ async function runtime(extra = {}) {
         '@zos/storage': { localStorage: storage },
         '@zos/sensor': { Time: class { getFullYear() { return 2026; } getMonth() { return 9; } getDate() { return 13; } } },
         [resolve(root, 'utils/location-storage.js')]: { getAppCache: () => appCache, getLocationKey: () => 'test-city' },
-        [resolve(root, 'utils/prayer-settings.js')]: { getPrayerCalculationSettings: () => ({ method: 3, school: 0 }) },
+        [resolve(root, 'utils/prayer-settings.js')]: { getAppliedPrayerCalculationSettings: () => ({ method: 3, school: 0 }) },
         ...extra.mocks,
     };
     const modules = new Map();
@@ -255,7 +255,7 @@ for (const [shape, language] of ['r', 's'].flatMap((shape) => ['english', 'arabi
     });
 }
 
-async function requestCalendarRange(year, month, fetchResponse) {
+async function requestCalendarRange(year, month, fetchResponse, method = 3) {
     let service;
     const urls = [];
     const r = await runtime({
@@ -268,7 +268,7 @@ async function requestCalendarRange(year, month, fetchResponse) {
         mocks: { '@zeppos/zml/base-side': { BaseSideService: (definition) => definition } },
     });
     await r.load('app-side/index.js');
-    const response = await new Promise((resolve) => service.onRequest({ method: 'FETCH_PRAYER_TIMES', params: { latitude: 51.5, longitude: -0.1, method: 3, school: 1 } }, (_, result) => resolve(result)));
+    const response = await new Promise((resolve) => service.onRequest({ method: 'FETCH_PRAYER_TIMES', params: { latitude: 51.5, longitude: -0.1, method, school: 1 } }, (_, result) => resolve(result)));
     return { response, urls, load: r.load };
 }
 
@@ -331,7 +331,7 @@ for (const failure of ['network', 'api', 'json', 'missing-day', 'duplicate-day']
 }
 
 for (const shape of ['r', 's']) {
-    for (const name of ['school', 'language']) {
+    for (const name of ['school', 'language', 'calculation-method']) {
         test(`${shape} ${name}: RTL controls and language switching preserve selection`, async () => {
             const language = 'arabic';
             let page;
@@ -373,7 +373,7 @@ for (const shape of ['r', 's']) {
                     '@zeppos/zml/base-page': { BasePage: (value) => value },
                 },
             };
-            config.mocks[resolve(root, 'utils/prayer-settings.js')] = { getPrayerSchool: () => 0, setPrayerSchool() {} };
+            config.mocks[resolve(root, 'utils/prayer-settings.js')] = { getPrayerSchool: () => 0, setPrayerSchool() {}, getPrayerMethod: () => 3, setPrayerMethod() {} };
             const r = await runtime(config);
             r.storage.setItem("appLanguage", language);
 
@@ -384,7 +384,7 @@ for (const shape of ['r', 's']) {
             function checkRows(rtl) {
                 const radio = page.state.radioGroup.options;
                 const labels = page.state.optionWidgets.filter((w) => w.type === 'TEXT');
-                const options = name === 'language' ? layout.LANGUAGE_OPTIONS : layout.SCHOOL_OPTIONS;
+                const options = name === 'language' ? layout.LANGUAGE_OPTIONS : (layout.METHOD_OPTIONS || layout.SCHOOL_OPTIONS);
                 for (const label of labels.slice(0, options.length)) {
                     assert.equal(label.options.align_h, rtl ? ui.align.RIGHT : ui.align.LEFT);
                     assert.ok(rtl ? radio.x + radio.w <= label.options.x : label.options.x + label.options.w <= radio.x);
@@ -406,3 +406,44 @@ for (const shape of ['r', 's']) {
         });
     }
 }
+
+test('method zero reaches AlAdhan unchanged; invalid methods fall back to MWL', async () => {
+    for (const [method, expected] of [[0, '0'], [23, '23'], [99, '3'], [-1, '3']]) {
+        const { urls } = await requestCalendarRange(2026, 9, () => ({ body: { code: 400 } }), method);
+        assert.equal(urls[0].searchParams.get('method'), expected);
+    }
+});
+
+test('calculation edits preserve caches and alerts until home applies the final selection', async () => {
+    let invalidations = 0;
+    const r = await runtime({ mocks: {
+        [resolve(root, 'utils/prayer-settings.js')]: null,
+        [resolve(root, 'utils/prayer-notifications.js')]: { invalidatePrayerNotificationSchedule: () => invalidations++ },
+    } });
+    const settings = await r.load('utils/prayer-settings.js');
+    const cache = await r.load('utils/prayer-cache.js');
+    r.storage.setItem(cache.PRAYER_CACHE_KEY, 'old-month');
+    r.storage.setItem(cache.PRAYER_TODAY_CACHE_KEY, 'old-day');
+    settings.setPrayerMethod(0);
+    settings.setPrayerSchool(1);
+    assert.equal(r.storage.getItem(cache.PRAYER_CACHE_KEY), 'old-month');
+    assert.equal(r.storage.getItem(cache.PRAYER_TODAY_CACHE_KEY), 'old-day');
+    assert.equal(invalidations, 0);
+    assert.equal(settings.getAppliedPrayerCalculationSettings().method, 3);
+    // A restart still sees the pending selection and the old applied settings.
+    assert.equal(settings.getPrayerMethod(), 0);
+    assert.equal(settings.applyPrayerCalculationSettings(), true);
+    assert.equal(r.storage.getItem(cache.PRAYER_CACHE_KEY), null);
+    assert.equal(r.storage.getItem(cache.PRAYER_TODAY_CACHE_KEY), null);
+    assert.equal(invalidations, 1);
+    assert.equal(settings.getAppliedPrayerCalculationSettings().method, 0);
+    assert.equal(settings.getAppliedPrayerCalculationSettings().school, 1);
+    assert.equal(settings.applyPrayerCalculationSettings(), false);
+    assert.equal(invalidations, 1);
+    settings.setPrayerMethod(4);
+    settings.setPrayerMethod(0);
+    settings.setPrayerSchool(0);
+    settings.setPrayerSchool(1);
+    assert.equal(settings.applyPrayerCalculationSettings(), false);
+    assert.equal(invalidations, 1);
+});

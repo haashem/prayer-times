@@ -1,6 +1,8 @@
 import { BaseSideService } from "@zeppos/zml/base-side";
 import { createPrayerMonthCache } from "../utils/prayer-cache";
 
+import { normalizePrayerMethod } from "../utils/prayer-methods";
+
 const CITY_SEARCH_REQUEST_KEY = "citySearchRequest";
 const CITY_SEARCH_RESULTS_KEY = "citySearchResults";
 const CITY_SEARCH_STATUS_KEY = "citySearchStatus";
@@ -224,7 +226,7 @@ function formatApiDate(date) {
 async function fetchPrayerCalendarRange(year, month, params) {
     const start = formatApiDate(new Date(year, month - 1, -1));
     const end = formatApiDate(new Date(year, month, 2));
-    const method = params.method || 3;
+    const method = normalizePrayerMethod(params.method);
     const school = params.school === 1 ? 1 : 0;
     const url = `https://api.aladhan.com/v1/calendar/from/${start}/to/${end}?latitude=${params.latitude}&longitude=${params.longitude}&method=${method}&school=${school}&calendarMethod=HJCoSA`;
     console.log("Fetching prayer calendar: " + url);

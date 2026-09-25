@@ -25,7 +25,7 @@ import {
   storePrayerMonthCache,
 } from "../../../utils/prayer-data-cache";
 import { deferPrayerNotificationScheduleRefresh } from "../../../utils/prayer-notifications";
-import { getPrayerCalculationSettings } from "../../../utils/prayer-settings";
+import { getPrayerCalculationSettings, applyPrayerCalculationSettings } from "../../../utils/prayer-settings";
 import {
   DEVICE_WIDTH,
   DEVICE_HEIGHT,
@@ -64,6 +64,8 @@ Page(
       qibla: null,
       lastLocationSyncAt: 0,
       locationSyncToken: 0,
+      prayerRequestToken: 0,
+      homeActive: false,
     },
 
     onInit() {
@@ -72,6 +74,7 @@ Page(
 
     build() {
       logger.debug("prayer-times page build");
+      this.state.homeActive = true;
       // Keep the screen bright while the user views prayer times.
       // Without this, AOD will dismiss the app back to the watch face.
       setPageBrightTime({ brightTime: 30000 });
@@ -109,6 +112,7 @@ Page(
 
       // Restore the last location and today's compact cache immediately. The
       // phone sync below only needs to update the UI if its selected city changed.
+      applyPrayerCalculationSettings();
       const initialSelection = getPersistedLocationSelection();
       this.state.location = initialSelection ? initialSelection.location : null;
       const storedTodayData = loadTodayPrayerData(this.state.location);
@@ -254,6 +258,14 @@ Page(
       const loc = this.state.location;
       if (!loc) return;
       const requestedLocationKey = getLocationKey(loc);
+      const requestedSettings = getPrayerCalculationSettings();
+      const requestToken = ++this.state.prayerRequestToken;
+      const isCurrentRequest = () => {
+        const selected = getPrayerCalculationSettings();
+        return requestToken === this.state.prayerRequestToken &&
+          requestedLocationKey === getLocationKey(this.state.location) &&
+          selected.method === requestedSettings.method && selected.school === requestedSettings.school;
+      };
 
       const timeout = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Request timed out")), 15000)
@@ -265,13 +277,13 @@ Page(
           params: {
             latitude: loc.latitude,
             longitude: loc.longitude,
-            ...getPrayerCalculationSettings(),
+            ...requestedSettings,
           },
         }),
         timeout,
       ])
         .then((data) => {
-          if (requestedLocationKey !== getLocationKey(this.state.location)) return;
+          if (!isCurrentRequest()) return;
           if (data && data.result && data.result.code === 200 && data.result.cache) {
             storePrayerMonthCache(data.result.cache);
             deferPrayerNotificationScheduleRefresh();
@@ -290,7 +302,7 @@ Page(
           }
         })
         .catch((err) => {
-          if (requestedLocationKey !== getLocationKey(this.state.location)) return;
+          if (!isCurrentRequest()) return;
           logger.error("Fetch error: " + (err && err.message ? err.message : JSON.stringify(err)));
           this.clearLoading();
           this.showLoading(t("networkError"));
@@ -448,6 +460,7 @@ Page(
     },
 
     onCall(data) {
+      if (!this.state.homeActive) return;
       if (data && data.type === "LOCATION_SETTINGS_CHANGED") {
         if (!data.key || data.key === "defaultCityKey") {
           this.showLoading(t("loadingPrayerTimes"));
@@ -474,8 +487,11 @@ Page(
 
     onResume() {
       if (!this.state.prayerContainer) return;
+      this.state.homeActive = true;
 
-      const loadingKey = this.applyPersistedLocationChange();
+      const calculationChanged = applyPrayerCalculationSettings();
+      if (calculationChanged) this.state.prayerRequestToken++;
+      const loadingKey = this.applyPersistedLocationChange() || (calculationChanged ? "loadingPrayerTimes" : null);
       if (loadingKey) this.showLoading(t(loadingKey));
       if (!loadingKey && Date.now() - this.state.lastLocationSyncAt < 200) return;
 
@@ -483,7 +499,17 @@ Page(
       this.initializeLocationSelection();
     },
 
+    onPause() {
+      this.state.homeActive = false;
+      this.state.lastLocationSyncAt = 0;
+      this.state.prayerRequestToken++;
+      this.state.locationSyncToken++;
+    },
+
     onDestroy() {
+      this.state.homeActive = false;
+      this.state.prayerRequestToken++;
+      this.state.locationSyncToken++;
       if (this.state.qibla) {
         this.state.qibla.stopCompass();
         this.state.qibla.destroy();
