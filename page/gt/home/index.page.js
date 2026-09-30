@@ -12,7 +12,7 @@ import { log as Logger } from "@zos/utils";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { BasePage } from "@zeppos/zml/base-page";
 import { createQiblaCompass } from "./qibla";
-import { getPrayerLabel, localizeDigits, isRtl, t } from "../../../utils/i18n";
+import { getAppLanguage, getPrayerLabel, localizeDigits, isRtl, t } from "../../../utils/i18n";
 import {
   getConfiguredLocationSelection,
   getLocationKey,
@@ -57,6 +57,7 @@ Page(
       prayerData: null,
       loadingWidget: null,
       uiWidgets: [],
+      renderedUI: null,
       // Page groups
       prayerContainer: null,
       qiblaContainer: null,
@@ -356,12 +357,23 @@ Page(
         deleteWidget(w);
       }
       this.state.uiWidgets = [];
+      this.state.renderedUI = null;
+    },
+
+    isPrayerDisplayUnchanged(todayData, cityName, language, activePrayerIndex) {
+      const previous = this.state.renderedUI;
+      return previous !== null && previous.data === todayData && previous.city === cityName &&
+        previous.language === language && previous.activePrayerIndex === activePrayerIndex;
     },
 
     renderUI(todayData) {
+      const cityName = this.state.location.city;
+      const language = getAppLanguage();
+      const activePrayerIndex = this.getCurrentPrayerIndex(todayData);
+      if (this.isPrayerDisplayUnchanged(todayData, cityName, language, activePrayerIndex)) return;
+
       this.clearUI();
       const container = this.state.prayerContainer;
-      const cityName = this.state.location.city;
 
       // ── Header: City with fixed width ──
       const fixedCityW = DEVICE_WIDTH / 2.4;
@@ -403,12 +415,12 @@ Page(
       cityText.addEventListener(event.SELECT, onCitySelect);
 
       // ── Prayer grid ──
-      this.renderPrayerGrid(todayData);
+      this.renderPrayerGrid(todayData, activePrayerIndex);
+      this.state.renderedUI = { data: todayData, city: cityName, language, activePrayerIndex };
     },
 
-    renderPrayerGrid(todayData) {
+    renderPrayerGrid(todayData, activePrayerIndex) {
       const container = this.state.prayerContainer;
-      const currentIndex = this.getCurrentPrayerIndex(todayData);
       const rtl = isRtl();
 
       for (let i = 0; i < PRAYER_KEYS.length; i++) {
@@ -416,7 +428,7 @@ Page(
         const col = rtl ? 1 - (i % 2) : i % 2;
         const x = GRID_START_X + col * (GRID_CELL_W + GRID_COL_GAP);
         const y = GRID_START_Y + row * (GRID_CELL_H + GRID_ROW_GAP);
-        const isActive = i === currentIndex;
+        const isActive = i === activePrayerIndex;
         this.trackWidget(container.createWidget(widget.FILL_RECT, getPrayerCellBgStyle(x, y, isActive)));
         this.trackWidget(container.createWidget(widget.TEXT, {
           ...getPrayerLabelStyle(x, y, isActive),
