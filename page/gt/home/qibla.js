@@ -260,13 +260,19 @@ export function createQiblaCompass(container) {
          * Compass sensor is NOT started — call startCompass() separately.
          */
         build(location) {
+            const bearing = location
+                ? calculateQiblaBearing(location.latitude, location.longitude)
+                : null;
+            // Calibration text may need rebuilding after a language change.
+            if (state.ringWidget && !state.calibrateWidget && bearing === state.qiblaBearing) return;
+
             clearUI();
             if (!location) {
                 renderNoData();
                 return;
             }
 
-            state.qiblaBearing = calculateQiblaBearing(location.latitude, location.longitude);
+            state.qiblaBearing = bearing;
             renderCompass();
 
             try {
