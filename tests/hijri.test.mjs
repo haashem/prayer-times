@@ -172,7 +172,7 @@ test('old cache entries require a fresh fetch; new caches have no version metada
     assert.equal(c.getStoredPrayerWindow(storage, time), null);
 });
 
-for (const [shape, language] of ['r', 's'].flatMap((shape) => ['english', 'arabic', 'farsi'].map((language) => [shape, language]))) {
+for (const [shape, language] of ['r', 's'].flatMap((shape) => ['english', 'arabic', 'arabic-latin', 'farsi'].map((language) => [shape, language]))) {
     test(`${shape} ${language}: offset controls, title scrolling, and RTL geometry`, async () => {
         let page;
         let keyCallback;
@@ -394,7 +394,7 @@ for (const shape of ['r', 's']) {
             checkRows(true);
             if (name === 'language') {
                 page.setFocusedIndex(1);
-                for (const value of ['english', 'farsi', 'arabic', 'english']) {
+                for (const value of ['english', 'farsi', 'arabic', 'arabic-latin', 'english']) {
                     const index = layout.LANGUAGE_OPTIONS.findIndex((option) => option.value === value);
                     page.selectIndex(index);
                     checkRows(value !== 'english');
@@ -446,4 +446,24 @@ test('calculation edits preserve caches and alerts until home applies the final 
     settings.setPrayerSchool(1);
     assert.equal(settings.applyPrayerCalculationSettings(), false);
     assert.equal(invalidations, 1);
+});
+
+
+test('Arabic with English digits preserves Arabic text, RTL, and the saved selection', async () => {
+    const { load } = await runtime();
+    const i18n = await load('utils/i18n.js');
+    i18n.setAppLanguage('arabic-latin');
+    assert.equal(i18n.refreshAppLanguage(), 'arabic-latin');
+    assert.equal(i18n.isRtl(), true);
+    assert.equal(i18n.t('settings'), 'الإعدادات');
+    assert.equal(i18n.getPrayerLabel('Fajr'), 'الفجر');
+    assert.equal(i18n.localizeDigits('05:19'), '05:19');
+    assert.equal(i18n.formatRemaining(65), '1 ساعة و 5 دقيقة');
+    assert.equal(i18n.formatRelativeRemaining(5), 'باقي 5 دقيقة');
+    assert.equal(i18n.formatNextPrayer('الفجر', 5), '5 دقيقة حتى الفجر');
+    assert.equal(i18n.formatHijriDate({ day: '09', month: { number: 9 }, year: '1448' }), '09 رمضان 1448');
+    assert.match(i18n.t('addCitiesInZepp'), /5/);
+    assert.doesNotMatch(i18n.t('addCitiesInZepp'), /[٠-٩]/);
+    assert.equal(i18n.localizeDigits('05:19', 'arabic'), '٠٥:١٩');
+    assert.match(i18n.t('addCitiesInZepp', 'arabic'), /٥/);
 });

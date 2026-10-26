@@ -1,6 +1,9 @@
 import { align, text_style } from "@zos/ui";
 import { getDeviceInfo } from "@zos/device";
 import { px } from "@zos/utils";
+import { LANGUAGE_OPTIONS } from "../../../utils/i18n";
+
+export { LANGUAGE_OPTIONS };
 
 export const { width: DEVICE_WIDTH } = getDeviceInfo();
 
@@ -21,11 +24,6 @@ const RADIO_SIZE = px(54);
 const RADIO_SIDE_PADDING = px(40);
 const FOCUS_LINE_HEIGHT = px(18);
 
-export const LANGUAGE_OPTIONS = [
-    { value: "farsi", label: "فارسی" },
-    { value: "arabic", label: "العربية" },
-    { value: "english", label: "English" },
-];
 
 const BOTTOM_PADDING_Y = ROW_START_Y + LANGUAGE_OPTIONS.length * ROW_HEIGHT;
 export const SCROLL_ITEM_HEIGHT = ROW_HEIGHT;

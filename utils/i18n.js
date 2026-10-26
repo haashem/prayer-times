@@ -7,6 +7,7 @@ export const DEFAULT_LANGUAGE = "english";
 export const LANGUAGE_OPTIONS = [
     { value: "farsi", label: "فارسی" },
     { value: "arabic", label: "العربية" },
+    { value: "arabic-latin", label: "العربية (123)" },
     { value: "english", label: "English" },
 ];
 
@@ -232,7 +233,7 @@ const TRANSLATIONS = {
         location: "الموقع",
         autoDetect: "تحديد تلقائي",
         // Keep the sentence RTL while isolating the Latin brand name as LTR.
-        addCitiesInZepp: "\u2067يمكنك إضافة ما يصل إلى ٥ مدن في تطبيق \u2066Zepp\u2069\u2069",
+        addCitiesInZepp: "\u2067يمكنك إضافة ما يصل إلى 5 مدن في تطبيق \u2066Zepp\u2069\u2069",
         contactUs: "اتصل بنا",
         supportDeveloper: "ادعم المطور",
         scanToDonate: "امسح الرمز للتبرع بأمان",
@@ -394,6 +395,12 @@ export function normalizeLanguage(language) {
     return DEFAULT_LANGUAGE;
 }
 
+// Share Arabic wording and layout while retaining the selected numeral style.
+function getTextLanguage(language) {
+    const normalized = normalizeLanguage(language);
+    return normalized === "arabic-latin" ? "arabic" : normalized;
+}
+
 export function getAppLanguage() {
     if (cachedAppLanguage !== null) {
         return cachedAppLanguage;
@@ -422,14 +429,15 @@ export function setAppLanguage(language) {
 }
 
 export function isRtl(language = getAppLanguage()) {
-    const normalized = normalizeLanguage(language);
+    const normalized = getTextLanguage(language);
     return normalized === "farsi" || normalized === "arabic";
 }
 
 export function t(key, language = getAppLanguage()) {
     const normalized = normalizeLanguage(language);
+    const textLanguage = getTextLanguage(normalized);
     const text = (
-        (TRANSLATIONS[normalized] && TRANSLATIONS[normalized][key]) ||
+        (TRANSLATIONS[textLanguage] && TRANSLATIONS[textLanguage][key]) ||
         TRANSLATIONS[DEFAULT_LANGUAGE][key] ||
         key
     );
@@ -437,7 +445,7 @@ export function t(key, language = getAppLanguage()) {
 }
 
 export function getPrayerLabel(key, language = getAppLanguage()) {
-    const normalized = normalizeLanguage(language);
+    const normalized = getTextLanguage(language);
     return (
         (PRAYER_LABELS[normalized] && PRAYER_LABELS[normalized][key]) ||
         PRAYER_LABELS[DEFAULT_LANGUAGE][key] ||
@@ -482,13 +490,13 @@ export function formatRelativeRemaining(remainingMinutes, language = getAppLangu
     const remaining = formatRemaining(remainingMinutes, normalized);
 
     if (normalized === "farsi") return `${remaining} مانده`;
-    if (normalized === "arabic") return `باقي ${remaining}`;
+    if (getTextLanguage(normalized) === "arabic") return `باقي ${remaining}`;
     return `in ${remaining}`;
 }
 
 export function formatNextPrayer(label, remainingMinutes, language = getAppLanguage()) {
     const normalized = normalizeLanguage(language);
-    if (normalized !== "farsi" && normalized !== "arabic") {
+    if (!isRtl(normalized)) {
         return `${formatRemaining(remainingMinutes, normalized)} to ${label}`;
     }
 
@@ -499,7 +507,7 @@ export function formatNextPrayer(label, remainingMinutes, language = getAppLangu
         : `${localizeDigits(minutes, normalized)} ${t("minuteUnit", normalized)}`;
 
     if (normalized === "farsi") return `${remaining} تا ${label}`;
-    if (normalized === "arabic") return `${remaining} حتى ${label}`;
+    if (getTextLanguage(normalized) === "arabic") return `${remaining} حتى ${label}`;
     return "";
 }
 
@@ -512,7 +520,7 @@ export function formatHijriDate(hijri, language = getAppLanguage()) {
     const monthNumber = getHijriMonthNumber(hijri);
     let month = hijri.month && hijri.month.en;
 
-    if (normalized === "arabic") {
+    if (getTextLanguage(normalized) === "arabic") {
         month = (hijri.month && hijri.month.ar) || (HIJRI_MONTHS.arabic && HIJRI_MONTHS.arabic[monthNumber - 1]);
     } else if (normalized === "farsi") {
         month = HIJRI_MONTHS.farsi && HIJRI_MONTHS.farsi[monthNumber - 1];
