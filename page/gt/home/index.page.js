@@ -1,3 +1,4 @@
+import { getHighlightedPrayer } from "../../../utils/prayer-highlight";
 import { createWidget, deleteWidget, widget, prop, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { push } from "@zos/router";
@@ -317,32 +318,10 @@ Page(
       return timeStr.replace(/\s*\(.*\)/, "").trim();
     },
 
-    timeToMinutes(timeStr) {
-      const t = this.formatTime(timeStr);
-      const parts = t.split(":");
-      return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-    },
-
-    getCurrentPrayerIndex(todayData) {
+    getHighlightedPrayerIndex(todayData) {
       const time = new Time();
       const nowMinutes = time.getHours() * 60 + time.getMinutes();
-      const fajr = this.timeToMinutes(todayData.timings["Fajr"]);
-      const sunrise = this.timeToMinutes(todayData.timings["Sunrise"]);
-      const dhuhr = this.timeToMinutes(todayData.timings["Dhuhr"]);
-      const asr = this.timeToMinutes(todayData.timings["Asr"]);
-      const maghrib = this.timeToMinutes(todayData.timings["Maghrib"]);
-      const isha = this.timeToMinutes(todayData.timings["Isha"]);
-
-      let activeKey = "Isha";
-      if (nowMinutes < fajr) activeKey = "Isha";
-      else if (nowMinutes < sunrise) activeKey = "Fajr";
-      else if (nowMinutes < dhuhr) activeKey = "Dhuhr";
-      else if (nowMinutes < asr) activeKey = "Dhuhr";
-      else if (nowMinutes < maghrib) activeKey = "Asr";
-      else if (nowMinutes < isha) activeKey = "Maghrib";
-      else activeKey = "Isha";
-
-      return PRAYER_KEYS.indexOf(activeKey);
+      return PRAYER_KEYS.indexOf(getHighlightedPrayer(todayData.timings, nowMinutes));
     },
 
     // ── Render ──
@@ -369,7 +348,7 @@ Page(
     renderUI(todayData) {
       const cityName = this.state.location.city;
       const language = getAppLanguage();
-      const activePrayerIndex = this.getCurrentPrayerIndex(todayData);
+      const activePrayerIndex = this.getHighlightedPrayerIndex(todayData);
       if (this.isPrayerDisplayUnchanged(todayData, cityName, language, activePrayerIndex)) return;
 
       this.clearUI();

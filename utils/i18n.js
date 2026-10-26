@@ -15,6 +15,10 @@ let cachedAppLanguage = null;
 
 const TRANSLATIONS = {
     english: {
+        prayerHighlight: "Prayer Highlight",
+        currentPrayer: "Current prayer",
+        nextPrayer: "Next prayer",
+        prayerHighlightInfo: "Choose which prayer to highlight on the home screen.",
         methodInfo: "Local official prayer timetables may differ.",
         method3: "Muslim World League (default)",
         method2: "North America (ISNA)",
@@ -99,6 +103,10 @@ const TRANSLATIONS = {
         minuteUnit: "m",
     },
     farsi: {
+        prayerHighlight: "برجسته‌سازی نماز",
+        currentPrayer: "نماز فعلی",
+        nextPrayer: "نماز بعدی",
+        prayerHighlightInfo: "نمازی را که در صفحه اصلی برجسته می‌شود انتخاب کنید.",
         methodInfo: "اوقات شرعی تقویم رسمی محلی ممکن است متفاوت باشد.",
         method3: "اتحادیه جهانی مسلمانان (پیش‌فرض)",
         method2: "آمریکای شمالی (ISNA)",
@@ -183,6 +191,10 @@ const TRANSLATIONS = {
         minuteUnit: "دقیقه",
     },
     arabic: {
+        prayerHighlight: "تمييز الصلاة",
+        currentPrayer: "الصلاة الحالية",
+        nextPrayer: "الصلاة القادمة",
+        prayerHighlightInfo: "اختر الصلاة التي تريد تمييزها في الشاشة الرئيسية.",
         methodInfo: "قد تختلف مواقيت الصلاة الرسمية المحلية.",
         method3: "رابطة العالم الإسلامي (الافتراضي)",
         method2: "أمريكا الشمالية (ISNA)",

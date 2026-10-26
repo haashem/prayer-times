@@ -331,7 +331,7 @@ for (const failure of ['network', 'api', 'json', 'missing-day', 'duplicate-day']
 }
 
 for (const shape of ['r', 's']) {
-    for (const name of ['school', 'language', 'calculation-method']) {
+    for (const name of ['school', 'language', 'calculation-method', 'prayer-highlight']) {
         test(`${shape} ${name}: RTL controls and language switching preserve selection`, async () => {
             const language = 'arabic';
             let page;
@@ -384,7 +384,7 @@ for (const shape of ['r', 's']) {
             function checkRows(rtl) {
                 const radio = page.state.radioGroup.options;
                 const labels = page.state.optionWidgets.filter((w) => w.type === 'TEXT');
-                const options = name === 'language' ? layout.LANGUAGE_OPTIONS : (layout.METHOD_OPTIONS || layout.SCHOOL_OPTIONS);
+                const options = name === 'language' ? layout.LANGUAGE_OPTIONS : (layout.METHOD_OPTIONS || layout.SCHOOL_OPTIONS || layout.HIGHLIGHT_OPTIONS);
                 for (const label of labels.slice(0, options.length)) {
                     assert.equal(label.options.align_h, rtl ? ui.align.RIGHT : ui.align.LEFT);
                     assert.ok(rtl ? radio.x + radio.w <= label.options.x : label.options.x + label.options.w <= radio.x);
@@ -401,6 +401,16 @@ for (const shape of ['r', 's']) {
                     assert.equal(page.state.focusIndex, 1);
                     assert.equal(r.storage.getItem('appLanguage'), value);
                 }
+            }
+            if (name === 'prayer-highlight') {
+                page.selectIndex(1);
+                assert.equal(r.storage.getItem('prayerHighlight'), 'next');
+                page.state.selectedIndex = null;
+                assert.equal(page.getSelectedIndex(), 1);
+                page.setFocusedIndex(0);
+                keyCallback(1, 3);
+                assert.equal(r.storage.getItem('prayerHighlight'), 'current');
+                checkRows(true);
             }
             page.onDestroy();
         });
@@ -466,4 +476,26 @@ test('Arabic with English digits preserves Arabic text, RTL, and the saved selec
     assert.doesNotMatch(i18n.t('addCitiesInZepp'), /[٠-٩]/);
     assert.equal(i18n.localizeDigits('05:19', 'arabic'), '٠٥:١٩');
     assert.match(i18n.t('addCitiesInZepp', 'arabic'), /٥/);
+});
+
+
+test('prayer highlight persists and handles prayer boundaries, sunrise, and midnight', async () => {
+    const { load, storage } = await runtime();
+    const highlight = await load('utils/prayer-highlight.js');
+    assert.equal(highlight.getPrayerHighlight(), 'current');
+    for (const [minute, current, next] of [
+        [0, 'Isha', 'Fajr'], [300, 'Isha', 'Fajr'], [301, 'Fajr', 'Dhuhr'],
+        [369, 'Fajr', 'Dhuhr'], [370, 'Dhuhr', 'Dhuhr'],
+        [540, 'Dhuhr', 'Dhuhr'], [724, 'Dhuhr', 'Dhuhr'], [725, 'Dhuhr', 'Asr'],
+        [920, 'Asr', 'Maghrib'], [1095, 'Maghrib', 'Isha'], [1170, 'Isha', 'Fajr'],
+        [1439, 'Isha', 'Fajr'],
+    ]) {
+        assert.equal(highlight.getHighlightedPrayer(timings, minute, 'current'), current);
+        assert.equal(highlight.getHighlightedPrayer(timings, minute, 'next'), next);
+    }
+    highlight.setPrayerHighlight('next');
+    assert.equal(highlight.getPrayerHighlight(), 'next');
+    assert.equal(highlight.getHighlightedPrayer(timings, 725), 'Asr');
+    storage.setItem(highlight.PRAYER_HIGHLIGHT_KEY, 'invalid');
+    assert.equal(highlight.getPrayerHighlight(), 'current');
 });
