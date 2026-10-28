@@ -73,7 +73,7 @@ export function getLanguageRowTextStyle(index, rtl = false) {
         color: COLORS.text,
         align_h: rtl ? align.RIGHT : align.LEFT,
         align_v: align.CENTER_V,
-        text_style: text_style.ELLIPSIS,
+        text_style: text_style.NONE,
     };
 }
 

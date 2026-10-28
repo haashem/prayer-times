@@ -1,6 +1,17 @@
 import { localStorage } from "@zos/storage";
 import { getDisplayHijriDate } from "./hijri-settings";
 
+import indonesian from "./locales/indonesian";
+import turkish from "./locales/turkish";
+import urdu from "./locales/urdu";
+import malay from "./locales/malay";
+import bengali from "./locales/bengali";
+import french from "./locales/french";
+import russian from "./locales/russian";
+
+// Locale metadata also drives the language picker and formatting.
+const ADDITIONAL_LOCALES = { indonesian, turkish, urdu, malay, bengali, french, russian };
+
 export const APP_LANGUAGE_KEY = "appLanguage";
 export const DEFAULT_LANGUAGE = "english";
 
@@ -9,6 +20,7 @@ export const LANGUAGE_OPTIONS = [
     { value: "arabic", label: "العربية" },
     { value: "arabic-latin", label: "العربية (123)" },
     { value: "english", label: "English" },
+    ...Object.keys(ADDITIONAL_LOCALES).map((value) => ({ value, label: ADDITIONAL_LOCALES[value].label })),
 ];
 
 let cachedAppLanguage = null;
@@ -343,6 +355,14 @@ const LOCAL_DIGITS = {
     arabic: ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"],
 };
 
+for (const language of Object.keys(ADDITIONAL_LOCALES)) {
+    const locale = ADDITIONAL_LOCALES[language];
+    TRANSLATIONS[language] = locale.translations;
+    PRAYER_LABELS[language] = locale.prayers;
+    HIJRI_MONTHS[language] = locale.months;
+    if (locale.digits) LOCAL_DIGITS[language] = locale.digits;
+}
+
 const HIJRI_MONTH_EN_TO_INDEX = {
     muharram: 1,
     safar: 2,
@@ -442,7 +462,8 @@ export function setAppLanguage(language) {
 
 export function isRtl(language = getAppLanguage()) {
     const normalized = getTextLanguage(language);
-    return normalized === "farsi" || normalized === "arabic";
+    return normalized === "farsi" || normalized === "arabic" ||
+        !!(ADDITIONAL_LOCALES[normalized] && ADDITIONAL_LOCALES[normalized].rtl);
 }
 
 export function t(key, language = getAppLanguage()) {
@@ -478,7 +499,7 @@ export function formatRemaining(totalMinutes, language = getAppLanguage()) {
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     const minute = t("minuteUnit", normalized);
-    const hour = t("hourUnit", normalized);
+    const hour = normalized === "urdu" && hours === 1 ? "گھنٹہ" : t("hourUnit", normalized);
 
     if (totalMinutes < 60) {
         return normalized === "english"
@@ -494,13 +515,17 @@ export function formatRemaining(totalMinutes, language = getAppLanguage()) {
         : `${localizeDigits(minutes, normalized)} ${minute}`;
 
     if (minutes === 0) return hourText;
-    return normalized === "english" ? `${hourText} ${minuteText}` : `${hourText} و ${minuteText}`;
+    const locale = ADDITIONAL_LOCALES[normalized];
+    const separator = locale ? (locale.separator || " ") : normalized === "english" ? " " : " و ";
+    return `${hourText}${separator}${minuteText}`;
 }
 
 export function formatRelativeRemaining(remainingMinutes, language = getAppLanguage()) {
     const normalized = normalizeLanguage(language);
     const remaining = formatRemaining(remainingMinutes, normalized);
 
+    const locale = ADDITIONAL_LOCALES[normalized];
+    if (locale) return locale.relative.replace("{remaining}", remaining);
     if (normalized === "farsi") return `${remaining} مانده`;
     if (getTextLanguage(normalized) === "arabic") return `باقي ${remaining}`;
     return `in ${remaining}`;
@@ -508,6 +533,10 @@ export function formatRelativeRemaining(remainingMinutes, language = getAppLangu
 
 export function formatNextPrayer(label, remainingMinutes, language = getAppLanguage()) {
     const normalized = normalizeLanguage(language);
+    const locale = ADDITIONAL_LOCALES[normalized];
+    if (locale) {
+        return locale.next.replace("{label}", label).replace("{remaining}", formatRemaining(remainingMinutes, normalized));
+    }
     if (!isRtl(normalized)) {
         return `${formatRemaining(remainingMinutes, normalized)} to ${label}`;
     }
@@ -534,8 +563,8 @@ export function formatHijriDate(hijri, language = getAppLanguage()) {
 
     if (getTextLanguage(normalized) === "arabic") {
         month = (hijri.month && hijri.month.ar) || (HIJRI_MONTHS.arabic && HIJRI_MONTHS.arabic[monthNumber - 1]);
-    } else if (normalized === "farsi") {
-        month = HIJRI_MONTHS.farsi && HIJRI_MONTHS.farsi[monthNumber - 1];
+    } else if (HIJRI_MONTHS[normalized]) {
+        month = HIJRI_MONTHS[normalized][monthNumber - 1];
     }
 
     return month && parts.day && parts.year

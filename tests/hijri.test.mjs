@@ -172,7 +172,7 @@ test('old cache entries require a fresh fetch; new caches have no version metada
     assert.equal(c.getStoredPrayerWindow(storage, time), null);
 });
 
-for (const [shape, language] of ['r', 's'].flatMap((shape) => ['english', 'arabic', 'arabic-latin', 'farsi'].map((language) => [shape, language]))) {
+for (const [shape, language] of ['r', 's'].flatMap((shape) => ['english', 'arabic', 'arabic-latin', 'farsi', 'indonesian', 'turkish', 'urdu', 'malay', 'bengali', 'french', 'russian'].map((language) => [shape, language]))) {
     test(`${shape} ${language}: offset controls, title scrolling, and RTL geometry`, async () => {
         let page;
         let keyCallback;
@@ -235,7 +235,7 @@ for (const [shape, language] of ['r', 's'].flatMap((shape) => ['english', 'arabi
         const layout = r.mocks['zosLoader:./index.page.[pf].layout.js'];
         assert.ok(layout.PREVIEW_STYLE.y + layout.PREVIEW_STYLE.h <= layout.getHijriRowBgStyle(0).y);
         assert.ok(layout.getHijriRowTextStyle(0).w > 0);
-        const rtl = language !== 'english';
+        const rtl = i18n.isRtl(language);
         const radio = page.state.radioGroup.options;
         const label = page.state.optionWidgets.find((w) => w.type === 'TEXT' && w.options.text === i18n.t('hijriMinusTwo')).options;
         const hit = layout.getHijriRowHitStyle(0, rtl);
@@ -394,10 +394,10 @@ for (const shape of ['r', 's']) {
             checkRows(true);
             if (name === 'language') {
                 page.setFocusedIndex(1);
-                for (const value of ['english', 'farsi', 'arabic', 'arabic-latin', 'english']) {
+                for (const value of ['english', 'farsi', 'arabic', 'arabic-latin', 'indonesian', 'turkish', 'urdu', 'malay', 'bengali', 'french', 'russian', 'english']) {
                     const index = layout.LANGUAGE_OPTIONS.findIndex((option) => option.value === value);
                     page.selectIndex(index);
-                    checkRows(value !== 'english');
+                    checkRows(['farsi', 'arabic', 'arabic-latin', 'urdu'].includes(value));
                     assert.equal(page.state.focusIndex, 1);
                     assert.equal(r.storage.getItem('appLanguage'), value);
                 }
@@ -498,4 +498,73 @@ test('prayer highlight persists and handles prayer boundaries, sunrise, and midn
     assert.equal(highlight.getHighlightedPrayer(timings, 725), 'Asr');
     storage.setItem(highlight.PRAYER_HIGHLIGHT_KEY, 'invalid');
     assert.equal(highlight.getPrayerHighlight(), 'current');
+});
+
+// Check the source catalogs as well as public lookups: English fallback must not
+// hide a missing translation when a new language is shipped.
+test('additional languages have complete catalogs and localized dates and digits', async () => {
+    const { load } = await runtime();
+    const i18n = await load('utils/i18n.js');
+    const source = await readFile(resolve(root, 'utils/i18n.js'), 'utf8');
+    const english = source.split('    english: {')[1].split('    farsi: {')[0];
+    const keys = [...english.matchAll(/^        (\w+):/gm)].map((match) => match[1]).sort();
+    const cases = [
+        ['indonesian', 'Subuh', 'Ramadan', '12'],
+        ['turkish', 'İmsak', 'Ramazan', '12'],
+        ['urdu', 'فجر', 'رمضان', '۱۲'],
+        ['malay', 'Subuh', 'Ramadan', '12'],
+        ['bengali', 'ফজর', 'রমজান', '১২'],
+        ['french', 'Fajr', 'Ramadan', '12'],
+        ['russian', 'Фаджр', 'Рамадан', '12'],
+    ];
+    for (const [language, fajr, ramadan, digits] of cases) {
+        const locale = (await load(`utils/locales/${language}.js`)).default;
+        assert.deepEqual(Object.keys(locale.translations).sort(), keys, language);
+        for (const key of keys) {
+            assert.ok(locale.translations[key].trim(), `${language}: ${key}`);
+            assert.equal(i18n.t(key, language), i18n.localizeDigits(locale.translations[key], language));
+        }
+        assert.match(i18n.t('prayerNotificationTitle', language), /\{prayer\}/);
+        assert.equal(Object.keys(locale.prayers).length, 6);
+        assert.equal(locale.months.length, 12);
+        assert.equal(i18n.getPrayerLabel('Fajr', language), fajr);
+        assert.equal(i18n.localizeDigits('12', language), digits);
+        for (let month = 1; month <= 12; month++) {
+            const formatted = i18n.formatHijriDate({ day: '12', month: { number: month }, year: '1448' }, language);
+            assert.equal(formatted, `${digits} ${locale.months[month - 1]} ${i18n.localizeDigits('1448', language)}`);
+        }
+        assert.ok(i18n.formatHijriDate({ date: '12-09-1448' }, language).includes(ramadan));
+        i18n.setAppLanguage(language);
+        assert.equal(i18n.refreshAppLanguage(), language);
+        assert.equal(i18n.isRtl(), language === 'urdu');
+        assert.equal(i18n.t('settings'), locale.translations.settings);
+    }
+    assert.equal(i18n.normalizeLanguage('unknown'), 'english');
+});
+
+test('countdowns use each language’s word order and handle minute/hour boundaries', async () => {
+    const { load } = await runtime();
+    const i18n = await load('utils/i18n.js');
+    const cases = [
+        ['indonesian', '1 j 5 mnt', '1 j 5 mnt lagi', 'Subuh dalam 1 j 5 mnt'],
+        ['turkish', '1 sa 5 dk', '1 sa 5 dk sonra', 'İmsak vaktine 1 sa 5 dk'],
+        ['urdu', '۱ گھنٹہ اور ۵ منٹ', '۱ گھنٹہ اور ۵ منٹ باقی', 'فجر میں ۱ گھنٹہ اور ۵ منٹ باقی'],
+        ['malay', '1 j 5 min', '1 j 5 min lagi', 'Subuh dalam 1 j 5 min'],
+        ['bengali', '১ ঘণ্টা ৫ মিনিট', 'আর ১ ঘণ্টা ৫ মিনিট', 'ফজর শুরু হতে ১ ঘণ্টা ৫ মিনিট'],
+        ['french', '1 h 5 min', 'dans 1 h 5 min', 'Fajr dans 1 h 5 min'],
+        ['russian', '1 ч 5 мин', 'через 1 ч 5 мин', 'Фаджр через 1 ч 5 мин'],
+    ];
+    for (const [language, duration, relative, next] of cases) {
+        assert.equal(i18n.formatRemaining(65, language), duration);
+        assert.equal(i18n.formatRelativeRemaining(65, language), relative);
+        assert.equal(i18n.formatNextPrayer(i18n.getPrayerLabel('Fajr', language), 65, language), next);
+        for (const minutes of [0, 1, 59]) {
+            assert.equal(i18n.formatRemaining(minutes, language), `${i18n.localizeDigits(minutes, language)} ${i18n.t('minuteUnit', language)}`);
+        }
+        assert.equal(i18n.formatRemaining(120, language), `${i18n.localizeDigits(2, language)} ${i18n.t('hourUnit', language)}`);
+    }
+    assert.equal(i18n.formatRemaining(60, 'urdu'), '۱ گھنٹہ');
+    assert.equal(i18n.formatRemaining(65, 'english'), '1h 5m');
+    assert.equal(i18n.formatNextPrayer('Fajr', 65, 'english'), '1h 5m to Fajr');
+    assert.equal(i18n.formatRelativeRemaining(65, 'arabic-latin'), 'باقي 1 ساعة و 5 دقيقة');
 });
