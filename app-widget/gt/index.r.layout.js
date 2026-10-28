@@ -11,7 +11,7 @@ export const MARGIN = px(16);
 const GAP = px(8);
 
 const REMAINING_H = px(40); // Body 32px
-const PRAYER_H = px(50); // Title1 40px
+const PRAYER_H = px(56); // Title1 40px
 const HIJRI_H = px(35); // Subheadline 28px
 
 // Icon dimensions

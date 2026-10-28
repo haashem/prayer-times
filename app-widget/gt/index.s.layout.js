@@ -11,7 +11,7 @@ export const MARGIN = px(16);
 const GAP = px(8);
 
 const REMAINING_H = px(35); // 28px text
-const PRAYER_H = px(45); // 36px text
+const PRAYER_H = px(51); // 36px text
 const HIJRI_H = px(30); // 24px text
 
 // Icon dimensions
