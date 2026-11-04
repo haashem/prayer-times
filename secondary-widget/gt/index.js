@@ -1,3 +1,4 @@
+import { getHighlightedPrayer } from "../../utils/prayer-highlight";
 import { createWidget, deleteWidget, widget, event } from "@zos/ui";
 import { Time } from "@zos/sensor";
 import { push } from "@zos/router";
@@ -218,21 +219,7 @@ SecondaryWidget({
         const time = new Time();
         const nowMinutes = time.getHours() * 60 + time.getMinutes();
 
-        const fajr = this.timeToMinutes(todayData.timings["Fajr"]);
-        const sunrise = this.timeToMinutes(todayData.timings["Sunrise"]);
-        const dhuhr = this.timeToMinutes(todayData.timings["Dhuhr"]);
-        const asr = this.timeToMinutes(todayData.timings["Asr"]);
-        const maghrib = this.timeToMinutes(todayData.timings["Maghrib"]);
-        const isha = this.timeToMinutes(todayData.timings["Isha"]);
-
-        let activeKey = "Isha";
-        if (nowMinutes < fajr) activeKey = "Isha";
-        else if (nowMinutes < sunrise) activeKey = "Fajr";
-        else if (nowMinutes < dhuhr) activeKey = "Dhuhr";
-        else if (nowMinutes < asr) activeKey = "Dhuhr";
-        else if (nowMinutes < maghrib) activeKey = "Asr";
-        else if (nowMinutes < isha) activeKey = "Maghrib";
-        else activeKey = "Isha";
+        const activeKey = getHighlightedPrayer(todayData.timings, nowMinutes);
 
         return PRAYER_KEYS.indexOf(activeKey);
     },

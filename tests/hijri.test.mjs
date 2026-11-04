@@ -568,3 +568,46 @@ test('countdowns use each language’s word order and handle minute/hour boundar
     assert.equal(i18n.formatNextPrayer('Fajr', 65, 'english'), '1h 5m to Fajr');
     assert.equal(i18n.formatRelativeRemaining(65, 'arabic-latin'), 'باقي 1 ساعة و 5 دقيقة');
 });
+
+test('secondary widget follows highlight mode on build and resume for both screen shapes', async () => {
+    for (const shape of ['r', 's']) {
+        let secondary;
+        let minute = 800;
+        const drawn = [];
+        const r = await runtime({
+            globals: { SecondaryWidget: (definition) => { secondary = definition; } },
+            mocks: {
+                '@zos/ui': {
+                    widget: { FILL_RECT: 'rect', TEXT: 'text' }, event: { SELECT: 'select' },
+                    align: { CENTER_H: 0, CENTER_V: 0 }, text_style: { NONE: 0, ELLIPSIS: 1, WRAP: 2 },
+                    createWidget: (type, options) => { drawn.push({ type, ...options }); return { addEventListener() {} }; },
+                    deleteWidget() {},
+                },
+                '@zos/device': { getDeviceInfo: () => ({ width: 480, height: 480 }) },
+                '@zos/utils': { px: (value) => value, log: { getLogger: () => ({ debug() {}, error(message) { throw new Error(message); } }) } },
+                '@zos/router': { push() {} },
+                '@zos/sensor': { Time: class { getHours() { return Math.floor(minute / 60); } getMinutes() { return minute % 60; } } },
+                [resolve(root, 'utils/prayer-cache.js')]: { getStoredPrayerWindow: () => ({ today: { timings }, tomorrow: { timings } }) },
+                [resolve(root, 'utils/i18n.js')]: { formatNextPrayer: (key) => key, getPrayerLabel: (key) => key, localizeDigits: (value) => value, refreshAppLanguage() {}, t: (key) => key },
+            },
+        });
+        const layout = await r.load(`secondary-widget/gt/index.${shape}.layout.js`);
+        r.mocks['zosLoader:./index.[pf].layout.js'] = layout;
+        await r.load('secondary-widget/gt/index.js');
+        const keys = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+        for (const [now, mode, expected] of [
+            [800, 'next', 'Asr'], [800, 'current', 'Dhuhr'],
+            [301, 'next', 'Dhuhr'], [370, 'current', 'Dhuhr'],
+            [920, 'next', 'Maghrib'], [0, 'current', 'Isha'], [0, 'next', 'Fajr'],
+            [1170, 'next', 'Fajr'], [1439, 'current', 'Isha'],
+        ]) {
+            minute = now;
+            r.storage.setItem('prayerHighlight', mode);
+            drawn.length = 0;
+            if (secondary.state.prayerData) secondary.onResume();
+            else secondary.build();
+            const cells = drawn.filter((w) => w.type === 'rect' && w.w === layout.GRID_CELL_W);
+            assert.deepEqual(cells.flatMap((cell, index) => cell.color === layout.COLORS.cellBgPressed ? [keys[index]] : []), [expected], `${shape}: ${mode} at ${now}`);
+        }
+    }
+});
