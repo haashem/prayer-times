@@ -4,7 +4,7 @@ import { Time } from "@zos/sensor";
 import { push } from "@zos/router";
 import { localStorage } from "@zos/storage";
 import { log as Logger } from "@zos/utils";
-import { formatNextPrayer, getPrayerLabel, localizeDigits, refreshAppLanguage, t } from "../../utils/i18n";
+import { formatNextPrayer, getPrayerLabel, localizeDigits, refreshAppLanguage, isRtl, t } from "../../utils/i18n";
 import { getStoredPrayerWindow } from "../../utils/prayer-cache";
 import {
     DEVICE_WIDTH,
@@ -44,6 +44,7 @@ SecondaryWidget({
         try {
             logger.debug("prayer widget build");
 
+            refreshAppLanguage();
             this.loadData();
 
             if (!this.state.prayerData) {
@@ -162,9 +163,10 @@ SecondaryWidget({
 
         // ── Prayer grid ──
         const currentIndex = this.getCurrentPrayerIndex(data);
+        const rtl = isRtl();
         for (let i = 0; i < PRAYER_KEYS.length; i++) {
             const row = Math.floor(i / 2);
-            const col = i % 2;
+            const col = rtl ? 1 - (i % 2) : i % 2;
             const x = GRID_START_X + col * (GRID_CELL_W + GRID_COL_GAP);
             const y = GRID_START_Y + row * (GRID_CELL_H + GRID_ROW_GAP);
             const isActive = i === currentIndex;

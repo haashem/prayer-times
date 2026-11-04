@@ -569,7 +569,7 @@ test('countdowns use each language’s word order and handle minute/hour boundar
     assert.equal(i18n.formatRelativeRemaining(65, 'arabic-latin'), 'باقي 1 ساعة و 5 دقيقة');
 });
 
-test('secondary widget follows highlight mode on build and resume for both screen shapes', async () => {
+test('secondary widget follows highlight mode and language on build and resume for both screen shapes', async () => {
     for (const shape of ['r', 's']) {
         let secondary;
         let minute = 800;
@@ -588,26 +588,40 @@ test('secondary widget follows highlight mode on build and resume for both scree
                 '@zos/router': { push() {} },
                 '@zos/sensor': { Time: class { getHours() { return Math.floor(minute / 60); } getMinutes() { return minute % 60; } } },
                 [resolve(root, 'utils/prayer-cache.js')]: { getStoredPrayerWindow: () => ({ today: { timings }, tomorrow: { timings } }) },
-                [resolve(root, 'utils/i18n.js')]: { formatNextPrayer: (key) => key, getPrayerLabel: (key) => key, localizeDigits: (value) => value, refreshAppLanguage() {}, t: (key) => key },
+                [resolve(root, 'utils/hijri-settings.js')]: { getDisplayHijriDate: (value) => value },
             },
         });
         const layout = await r.load(`secondary-widget/gt/index.${shape}.layout.js`);
         r.mocks['zosLoader:./index.[pf].layout.js'] = layout;
         await r.load('secondary-widget/gt/index.js');
+        const i18n = await r.load('utils/i18n.js');
+        // Prime the cached language to check that build refreshes it too.
+        i18n.getAppLanguage();
         const keys = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-        for (const [now, mode, expected] of [
-            [800, 'next', 'Asr'], [800, 'current', 'Dhuhr'],
-            [301, 'next', 'Dhuhr'], [370, 'current', 'Dhuhr'],
-            [920, 'next', 'Maghrib'], [0, 'current', 'Isha'], [0, 'next', 'Fajr'],
-            [1170, 'next', 'Fajr'], [1439, 'current', 'Isha'],
-        ]) {
-            minute = now;
-            r.storage.setItem('prayerHighlight', mode);
-            drawn.length = 0;
-            if (secondary.state.prayerData) secondary.onResume();
-            else secondary.build();
-            const cells = drawn.filter((w) => w.type === 'rect' && w.w === layout.GRID_CELL_W);
-            assert.deepEqual(cells.flatMap((cell, index) => cell.color === layout.COLORS.cellBgPressed ? [keys[index]] : []), [expected], `${shape}: ${mode} at ${now}`);
+        for (const language of ['arabic', 'arabic-latin', 'farsi', 'urdu', 'english', 'french']) {
+            r.storage.setItem('appLanguage', language);
+            for (const [now, mode, expected] of [
+                [800, 'next', 'Asr'], [800, 'current', 'Dhuhr'],
+                [301, 'next', 'Dhuhr'], [370, 'current', 'Dhuhr'],
+                [920, 'next', 'Maghrib'], [0, 'current', 'Isha'], [0, 'next', 'Fajr'],
+                [1170, 'next', 'Fajr'], [1439, 'current', 'Isha'],
+            ]) {
+                minute = now;
+                r.storage.setItem('prayerHighlight', mode);
+                drawn.length = 0;
+                if (secondary.state.prayerData) secondary.onResume();
+                else secondary.build();
+                const cells = drawn.filter((w) => w.type === 'rect' && w.w === layout.GRID_CELL_W);
+                assert.deepEqual(cells.flatMap((cell, index) => cell.color === layout.COLORS.cellBgPressed ? [keys[index]] : []), [expected], `${shape}: ${mode} at ${now}`);
+                const rtl = i18n.isRtl(language);
+                for (let i = 0; i < keys.length; i++) {
+                    const col = rtl ? 1 - (i % 2) : i % 2;
+                    assert.equal(cells[i].x, layout.GRID_START_X + col * (layout.GRID_CELL_W + layout.GRID_COL_GAP), `${shape}: ${language} ${keys[i]}`);
+                    const texts = drawn.filter((w) => w.type === 'text' && w.x === cells[i].x && w.y >= cells[i].y && w.y < cells[i].y + layout.GRID_CELL_H);
+                    assert.equal(texts[0].text, i18n.getPrayerLabel(keys[i], language));
+                    assert.equal(texts[1].text, i18n.localizeDigits(timings[keys[i]], language));
+                }
+            }
         }
     }
 });
