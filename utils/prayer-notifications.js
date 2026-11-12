@@ -29,7 +29,7 @@ export function getPrayerNotificationPreferences() {
     const stored = readJson(PRAYER_NOTIFICATION_PREFS_KEY, {});
     const preferences = {};
     for (const key of PRAYER_NOTIFICATION_KEYS) {
-        preferences[key] = stored[key] === true;
+        preferences[key] = stored[key] !== false;
     }
     return preferences;
 }
