@@ -4,6 +4,10 @@ export default {
     months: ["Muharrem", "Safer", "Rebiülevvel", "Rebiülahir", "Cemaziyelevvel", "Cemaziyelahir", "Recep", "Şaban", "Ramazan", "Şevval", "Zilkade", "Zilhicce"],
     relative: "{remaining} sonra", next: "{label} vaktine {remaining}",
     translations: {
+        timeFormat: "Saat biçimi",
+        timeFormat24: "24 saat",
+        timeFormat12: "12 saat (AM/PM)",
+        timeFormatInfo: "Namaz vakitlerinin gösterimini seçin.",
         prayerHighlight: "Namaz Vurgusu",
         currentPrayer: "Şimdiki namaz",
         nextPrayer: "Sonraki namaz",

@@ -4,6 +4,10 @@ export default {
     months: ["Мухаррам", "Сафар", "Раби аль-авваль", "Раби ас-сани", "Джумада аль-уля", "Джумада ас-сания", "Раджаб", "Шаабан", "Рамадан", "Шавваль", "Зуль-када", "Зуль-хиджа"],
     relative: "через {remaining}", next: "{label} через {remaining}",
     translations: {
+        timeFormat: "Формат времени",
+        timeFormat24: "24 часа",
+        timeFormat12: "12 часов (AM/PM)",
+        timeFormatInfo: "Выберите формат времени намаза.",
         prayerHighlight: "Выделение Намаза",
         currentPrayer: "Текущий намаз",
         nextPrayer: "Следующий намаз",

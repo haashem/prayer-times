@@ -1,3 +1,4 @@
+import { formatPrayerTime } from "../../utils/time-format";
 import { createWidget, deleteWidget, widget, event, setAppWidgetSize, getAppWidgetSize } from "@zos/ui";
 import { Time } from "@zos/sensor";
 import { push } from "@zos/router";
@@ -200,12 +201,11 @@ AppWidget({
     },
 
     formatTime(timeStr) {
-        if (!timeStr) return "--:--";
-        return timeStr.replace(/\s*\(.*\)/, "").trim();
+        return formatPrayerTime(timeStr);
     },
 
     timeToMinutes(timeStr) {
-        const t = this.formatTime(timeStr);
+        const t = String(timeStr || "");
         const parts = t.split(":");
         return parseInt(parts[0]) * 60 + parseInt(parts[1]);
     },

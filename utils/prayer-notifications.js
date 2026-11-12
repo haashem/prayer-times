@@ -1,7 +1,7 @@
 import { set as setAlarm, cancel as cancelAlarm, REPEAT_ONCE } from "@zos/alarm";
 import { localStorage } from "@zos/storage";
-import { getTimeFormat, TIME_FORMAT_12 } from "@zos/settings";
-import { getPrayerLabel, localizeDigits, t } from "./i18n";
+import { formatPrayerTime } from "./time-format";
+import { getPrayerLabel, t } from "./i18n";
 import { PRAYER_CACHE_KEY, getNextPrayerOccurrence } from "./prayer-cache";
 
 export const PRAYER_NOTIFICATION_KEYS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
@@ -97,14 +97,7 @@ function padTimePart(value) {
 }
 
 function formatNotificationTime(occurrence) {
-    const hours = occurrence.getHours();
-    const minutes = padTimePart(occurrence.getMinutes());
-    if (getTimeFormat() === TIME_FORMAT_12) {
-        const displayHour = hours % 12 || 12;
-        const period = hours >= 12 ? t("pm") : t("am");
-        return localizeDigits(displayHour + ":" + minutes + " " + period);
-    }
-    return localizeDigits(padTimePart(hours) + ":" + minutes);
+    return formatPrayerTime(padTimePart(occurrence.getHours()) + ":" + padTimePart(occurrence.getMinutes()));
 }
 
 export function getPrayerNotificationDisplay(prayerKey, occurrence) {

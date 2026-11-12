@@ -1,3 +1,4 @@
+import { getPrayerTimeParts, formatPrayerTime } from "../../utils/time-format";
 import { getHighlightedPrayer } from "../../utils/prayer-highlight";
 import { createWidget, deleteWidget, widget, event } from "@zos/ui";
 import { Time } from "@zos/sensor";
@@ -20,6 +21,7 @@ import {
     getPrayerCellBgStyle,
     getPrayerLabelStyle,
     getPrayerTimeStyle,
+    getPrayerPeriodStyle,
     NO_DATA_STYLE,
 } from "zosLoader:./index.[pf].layout.js";
 
@@ -177,8 +179,15 @@ SecondaryWidget({
             }));
             this.trackWidget(createWidget(widget.TEXT, {
                 ...getPrayerTimeStyle(x, y, isActive),
-                text: localizeDigits(this.formatTime(data.timings[PRAYER_KEYS[i]])),
+                text: getPrayerTimeParts(data.timings[PRAYER_KEYS[i]]).time,
             }));
+        const period = getPrayerTimeParts(data.timings[PRAYER_KEYS[i]]).period;
+        if (period) {
+            this.trackWidget(createWidget(widget.TEXT, {
+                ...getPrayerPeriodStyle(x, y, isActive),
+                text: period,
+            }));
+        }
         }
     },
 
@@ -207,12 +216,11 @@ SecondaryWidget({
     },
 
     formatTime(timeStr) {
-        if (!timeStr) return "--:--";
-        return timeStr.replace(/\s*\(.*\)/, "").trim();
+        return formatPrayerTime(timeStr);
     },
 
     timeToMinutes(timeStr) {
-        const t = this.formatTime(timeStr);
+        const t = String(timeStr || "");
         const parts = t.split(":");
         return parseInt(parts[0]) * 60 + parseInt(parts[1]);
     },

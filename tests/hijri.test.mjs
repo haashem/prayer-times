@@ -331,7 +331,7 @@ for (const failure of ['network', 'api', 'json', 'missing-day', 'duplicate-day']
 }
 
 for (const shape of ['r', 's']) {
-    for (const name of ['school', 'language', 'calculation-method', 'prayer-highlight']) {
+    for (const name of ['school', 'language', 'calculation-method', 'prayer-highlight', 'time-format']) {
         test(`${shape} ${name}: RTL controls and language switching preserve selection`, async () => {
             const language = 'arabic';
             let page;
@@ -384,7 +384,7 @@ for (const shape of ['r', 's']) {
             function checkRows(rtl) {
                 const radio = page.state.radioGroup.options;
                 const labels = page.state.optionWidgets.filter((w) => w.type === 'TEXT');
-                const options = name === 'language' ? layout.LANGUAGE_OPTIONS : (layout.METHOD_OPTIONS || layout.SCHOOL_OPTIONS || layout.HIGHLIGHT_OPTIONS);
+                const options = name === 'language' ? layout.LANGUAGE_OPTIONS : (layout.METHOD_OPTIONS || layout.SCHOOL_OPTIONS || layout.HIGHLIGHT_OPTIONS || layout.TIME_FORMAT_OPTIONS);
                 for (const label of labels.slice(0, options.length)) {
                     assert.equal(label.options.align_h, rtl ? ui.align.RIGHT : ui.align.LEFT);
                     assert.ok(rtl ? radio.x + radio.w <= label.options.x : label.options.x + label.options.w <= radio.x);
@@ -401,6 +401,16 @@ for (const shape of ['r', 's']) {
                     assert.equal(page.state.focusIndex, 1);
                     assert.equal(r.storage.getItem('appLanguage'), value);
                 }
+            }
+            if (name === 'time-format') {
+                page.selectIndex(1);
+                assert.equal(r.storage.getItem('prayerTimeFormat'), '12');
+                page.state.selectedIndex = null;
+                assert.equal(page.getSelectedIndex(), 1);
+                page.setFocusedIndex(0);
+                keyCallback(1, 3);
+                assert.equal(r.storage.getItem('prayerTimeFormat'), '24');
+                checkRows(true);
             }
             if (name === 'prayer-highlight') {
                 page.selectIndex(1);
@@ -598,6 +608,19 @@ test('secondary widget follows highlight mode and language on build and resume f
         // Prime the cached language to check that build refreshes it too.
         i18n.getAppLanguage();
         const keys = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+        r.storage.setItem('prayerTimeFormat', '12');
+        secondary.build();
+        const timeText = drawn.find((w) => w.text === '3:20');
+        const periodText = drawn.find((w) => w.text === 'PM' && w.y === timeText?.y && w.x > timeText?.x && w.x < timeText.x + layout.GRID_CELL_W);
+        assert.ok(timeText);
+        assert.ok(periodText);
+        assert.equal(timeText.text_size, shape === 'r' ? 38 : 32);
+        assert.ok(periodText.text_size < timeText.text_size);
+        assert.ok(timeText.x + timeText.w < periodText.x);
+        assert.ok(periodText.x + periodText.w <= timeText.x + layout.GRID_CELL_W);
+        assert.equal(secondary.timeToMinutes('15:20'), 920);
+        r.storage.setItem('prayerTimeFormat', '24');
+
         for (const language of ['arabic', 'arabic-latin', 'farsi', 'urdu', 'english', 'french']) {
             r.storage.setItem('appLanguage', language);
             for (const [now, mode, expected] of [
@@ -624,4 +647,21 @@ test('secondary widget follows highlight mode and language on build and resume f
             }
         }
     }
+});
+
+
+test('time format persists and handles midnight, noon, suffixes and localized periods', async () => {
+    const r = await runtime();
+    const f = await r.load('utils/time-format.js');
+    assert.equal(f.getTimeFormat(), '24');
+    assert.equal(f.formatPrayerTime('18:15 (BST)'), '18:15');
+    f.setTimeFormat('12');
+    for (const [input, expected] of [['00:00', '12:00 AM'], ['12:00', '12:00 PM'], ['23:59', '11:59 PM'], ['05:01 (BST)', '5:01 AM'], [null, '--:--'], ['25:00', '--:--']]) {
+        assert.equal(f.formatPrayerTime(input), expected);
+    }
+    r.storage.setItem('appLanguage', 'arabic');
+    const i18n = await r.load('utils/i18n.js');
+    assert.equal(f.formatPrayerTime('18:15'), i18n.localizeDigits('6:15 ' + i18n.t('pm')));
+    f.setTimeFormat('invalid');
+    assert.equal(f.getTimeFormat(), '24');
 });

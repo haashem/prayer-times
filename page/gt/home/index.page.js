@@ -1,3 +1,4 @@
+import { getPrayerTimeParts, formatPrayerTime, getTimeFormat } from "../../../utils/time-format";
 import { getHighlightedPrayer } from "../../../utils/prayer-highlight";
 import { createWidget, deleteWidget, widget, prop, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
@@ -42,6 +43,7 @@ import {
   getPrayerCellBgStyle,
   getPrayerLabelStyle,
   getPrayerTimeStyle,
+  getPrayerPeriodStyle,
   NO_DATA_STYLE,
   HELP_ICON_STYLE,
   HELP_HIT_STYLE,
@@ -314,8 +316,7 @@ Page(
     // ── Helpers ──
 
     formatTime(timeStr) {
-      if (!timeStr) return "--:--";
-      return timeStr.replace(/\s*\(.*\)/, "").trim();
+      return formatPrayerTime(timeStr);
     },
 
     getHighlightedPrayerIndex(todayData) {
@@ -342,7 +343,7 @@ Page(
     isPrayerDisplayUnchanged(todayData, cityName, language, activePrayerIndex) {
       const previous = this.state.renderedUI;
       return previous !== null && previous.data === todayData && previous.city === cityName &&
-        previous.language === language && previous.activePrayerIndex === activePrayerIndex;
+        previous.timeFormat === getTimeFormat() && previous.language === language && previous.activePrayerIndex === activePrayerIndex;
     },
 
     renderUI(todayData) {
@@ -395,7 +396,7 @@ Page(
 
       // ── Prayer grid ──
       this.renderPrayerGrid(todayData, activePrayerIndex);
-      this.state.renderedUI = { data: todayData, city: cityName, language, activePrayerIndex };
+      this.state.renderedUI = { data: todayData, city: cityName, language, activePrayerIndex, timeFormat: getTimeFormat() };
     },
 
     renderPrayerGrid(todayData, activePrayerIndex) {
@@ -415,8 +416,15 @@ Page(
         }));
         this.trackWidget(container.createWidget(widget.TEXT, {
           ...getPrayerTimeStyle(x, y, isActive),
-          text: localizeDigits(this.formatTime(todayData.timings[PRAYER_KEYS[i]])),
+          text: getPrayerTimeParts(todayData.timings[PRAYER_KEYS[i]]).time,
         }));
+        const period = getPrayerTimeParts(todayData.timings[PRAYER_KEYS[i]]).period;
+        if (period) {
+            this.trackWidget(container.createWidget(widget.TEXT, {
+                ...getPrayerPeriodStyle(x, y, isActive),
+                text: period,
+            }));
+        }
       }
 
       // Settings/help entry icon

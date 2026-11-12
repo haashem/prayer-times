@@ -38,6 +38,7 @@
             "page/gt/notifications/index.page",
             "page/gt/school/index.page",
             "page/gt/prayer-highlight/index.page",
+            "page/gt/time-format/index.page",
             "page/gt/calculation-method/index.page",
             "page/gt/hijri-adjustment/index.page",
             "page/gt/help/index.page",

@@ -4,6 +4,10 @@ export default {
     months: ["মহররম", "সফর", "রবিউল আউয়াল", "রবিউস সানি", "জমাদিউল আউয়াল", "জমাদিউস সানি", "রজব", "শাবান", "রমজান", "শাওয়াল", "জিলকদ", "জিলহজ"],
     relative: "আর {remaining}", next: "{label} শুরু হতে {remaining}",
     translations: {
+        timeFormat: "সময়ের ধরন",
+        timeFormat24: "২৪ ঘণ্টা",
+        timeFormat12: "১২ ঘণ্টা (AM/PM)",
+        timeFormatInfo: "নামাজের সময় দেখানোর ধরন বেছে নিন।",
         prayerHighlight: "নামাজ চিহ্নিতকরণ",
         currentPrayer: "বর্তমান নামাজ",
         nextPrayer: "পরবর্তী নামাজ",

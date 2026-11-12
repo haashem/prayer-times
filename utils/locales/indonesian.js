@@ -5,6 +5,10 @@ export default {
     relative: "{remaining} lagi",
     next: "{label} dalam {remaining}",
     translations: {
+        timeFormat: "Format waktu",
+        timeFormat24: "24 jam",
+        timeFormat12: "12 jam (AM/PM)",
+        timeFormatInfo: "Pilih cara menampilkan waktu salat.",
         prayerHighlight: "Sorotan Salat",
         currentPrayer: "Salat saat ini",
         nextPrayer: "Salat berikutnya",

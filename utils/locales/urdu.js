@@ -4,6 +4,10 @@ export default {
     months: ["محرم", "صفر", "ربیع الاول", "ربیع الثانی", "جمادی الاول", "جمادی الثانی", "رجب", "شعبان", "رمضان", "شوال", "ذوالقعدہ", "ذوالحجہ"],
     relative: "{remaining} باقی", next: "{label} میں {remaining} باقی", separator: " اور ",
     translations: {
+        timeFormat: "وقت کا فارمیٹ",
+        timeFormat24: "24 گھنٹے",
+        timeFormat12: "12 گھنٹے (AM/PM)",
+        timeFormatInfo: "نماز کے اوقات دکھانے کا طریقہ منتخب کریں۔",
         prayerHighlight: "نماز نمایاں کریں",
         currentPrayer: "موجودہ نماز",
         nextPrayer: "اگلی نماز",

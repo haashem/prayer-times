@@ -27,6 +27,10 @@ let cachedAppLanguage = null;
 
 const TRANSLATIONS = {
     english: {
+        timeFormat: "Time format",
+        timeFormat24: "24-hour",
+        timeFormat12: "12-hour (AM/PM)",
+        timeFormatInfo: "Choose how prayer times are displayed.",
         prayerHighlight: "Prayer Highlight",
         currentPrayer: "Current prayer",
         nextPrayer: "Next prayer",
@@ -115,6 +119,10 @@ const TRANSLATIONS = {
         minuteUnit: "m",
     },
     farsi: {
+        timeFormat: "قالب زمان",
+        timeFormat24: "۲۴ ساعته",
+        timeFormat12: "۱۲ ساعته (AM/PM)",
+        timeFormatInfo: "نحوه نمایش اوقات نماز را انتخاب کنید.",
         prayerHighlight: "برجسته‌سازی نماز",
         currentPrayer: "نماز فعلی",
         nextPrayer: "نماز بعدی",
@@ -203,6 +211,10 @@ const TRANSLATIONS = {
         minuteUnit: "دقیقه",
     },
     arabic: {
+        timeFormat: "تنسيق الوقت",
+        timeFormat24: "24 ساعة",
+        timeFormat12: "12 ساعة (AM/PM)",
+        timeFormatInfo: "اختر طريقة عرض أوقات الصلاة.",
         prayerHighlight: "تمييز الصلاة",
         currentPrayer: "الصلاة الحالية",
         nextPrayer: "الصلاة القادمة",

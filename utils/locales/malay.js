@@ -4,6 +4,10 @@ export default {
     months: ["Muharam", "Safar", "Rabiulawal", "Rabiulakhir", "Jamadilawal", "Jamadilakhir", "Rejab", "Syaaban", "Ramadan", "Syawal", "Zulkaedah", "Zulhijah"],
     relative: "{remaining} lagi", next: "{label} dalam {remaining}",
     translations: {
+        timeFormat: "Format masa",
+        timeFormat24: "24 jam",
+        timeFormat12: "12 jam (AM/PM)",
+        timeFormatInfo: "Pilih cara waktu solat dipaparkan.",
         prayerHighlight: "Sorotan Solat",
         currentPrayer: "Solat semasa",
         nextPrayer: "Solat seterusnya",

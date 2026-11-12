@@ -4,6 +4,10 @@ export default {
     months: ["Mouharram", "Safar", "Rabi al-awwal", "Rabi ath-thani", "Joumada al-oula", "Joumada ath-thania", "Rajab", "Chaabane", "Ramadan", "Chawwal", "Dhou al-qi'da", "Dhou al-hijja"],
     relative: "dans {remaining}", next: "{label} dans {remaining}",
     translations: {
+        timeFormat: "Format de l’heure",
+        timeFormat24: "24 heures",
+        timeFormat12: "12 heures (AM/PM)",
+        timeFormatInfo: "Choisissez le format des horaires de prière.",
         prayerHighlight: "Prière en Surbrillance",
         currentPrayer: "Prière actuelle",
         nextPrayer: "Prochaine prière",

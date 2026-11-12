@@ -1,3 +1,4 @@
+import { getTimeFormat } from "../../../utils/time-format";
 import { align, text_style } from "@zos/ui";
 import { getDeviceInfo } from "@zos/device";
 import { px } from "@zos/utils";
@@ -95,17 +96,28 @@ export function getPrayerLabelStyle(x, y, isActive) {
 }
 
 export function getPrayerTimeStyle(x, y, isActive) {
-  return {
-    x,
-    y: y + GRID_CELL_H / 2,
-    w: GRID_CELL_W,
-    h: GRID_CELL_H / 2,
-    color: isActive ? COLORS.nextTime : COLORS.subtitle,
-    text_size: px(32),
-    align_h: align.CENTER_H,
-    align_v: align.CENTER_V,
-    text_style: text_style.ELLIPSIS,
-  };
+    const twelveHour = getTimeFormat() === "12";
+    return {
+        x,
+        y: y + GRID_CELL_H / 2,
+        w: twelveHour ? GRID_CELL_W * 0.70 : GRID_CELL_W,
+        h: GRID_CELL_H / 2,
+        color: isActive ? COLORS.nextTime : COLORS.subtitle,
+        text_size: px(32),
+        align_h: twelveHour ? align.RIGHT : align.CENTER_H,
+        align_v: align.CENTER_V,
+        text_style: text_style.ELLIPSIS,
+    };
+}
+
+export function getPrayerPeriodStyle(x, y, isActive) {
+    return {
+        ...getPrayerTimeStyle(x, y, isActive),
+        x: x + GRID_CELL_W * 0.70 + px(4),
+        w: GRID_CELL_W * 0.30 - px(4),
+        text_size: px(16),
+        align_h: align.LEFT,
+    };
 }
 
 // ── No Data ──
