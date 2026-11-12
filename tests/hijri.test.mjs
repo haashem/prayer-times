@@ -665,3 +665,70 @@ test('time format persists and handles midnight, noon, suffixes and localized pe
     f.setTimeFormat('invalid');
     assert.equal(f.getTimeFormat(), '24');
 });
+
+for (const shape of ['r', 's']) {
+    test(`${shape} settings restores scroll and crown focus after destruction and rebuild`, async () => {
+        let page, scrollOptions, keyCallback;
+        let visibleIndex = 0;
+        const opened = [];
+        const r = await runtime({
+            globals: { Page: (definition) => { page = definition; } },
+            mocks: {
+                '@zos/ui': {
+                    widget: { TEXT: 'text', IMG: 'image', FILL_RECT: 'rect', PAGE_SCROLLBAR: 'bar' },
+                    prop: { MORE: 'more', TEXT: 'text' }, event: { SELECT: 'select', CLICK_DOWN: 'down', MOVE: 'move' },
+                    align: { LEFT: 0, RIGHT: 1, CENTER_H: 2, CENTER_V: 3 }, text_style: { NONE: 0, WRAP: 1 },
+                    createWidget: (type, options) => ({ options, addEventListener() {}, setProperty(prop, value) { Object.assign(this.options, value); } }),
+                    setStatusBarVisible() {},
+                },
+                '@zos/router': { push: (value) => opened.push(value) },
+                '@zos/device': { getDeviceInfo: () => ({ width: shape === 'r' ? 480 : 390, screenShape: shape }), SCREEN_SHAPE_SQUARE: 's' },
+                '@zos/utils': { px: (value) => value },
+                '@zos/display': { setPageBrightTime() {} },
+                '@zos/interaction': { onKey: ({ callback }) => { keyCallback = callback; }, offKey() {}, KEY_HOME: 1, KEY_SELECT: 2, KEY_EVENT_CLICK: 3 },
+                '@zos/page': {
+                    SCROLL_MODE_SWIPER: 1, SCROLL_ANIMATION_NONE: 'none',
+                    setScrollMode: (options) => { scrollOptions = options; visibleIndex = 0; options.options.modeParams.on_page(0); },
+                    swipeToIndex: ({ index }) => { visibleIndex = index; scrollOptions.options.modeParams.on_page(index); },
+                },
+                '@zeppos/zml/base-page': { BasePage: (value) => value },
+            },
+        });
+        const layout = await r.load(`page/gt/settings/index.page.${shape}.layout.js`);
+        r.mocks['zosLoader:./index.page.[pf].layout.js'] = layout;
+        await r.load('page/gt/settings/index.page.js');
+        page.onInit();
+        page.build();
+        assert.equal(visibleIndex, 0);
+        for (const index of [5, 8, 2]) {
+            visibleIndex = index;
+            scrollOptions.options.modeParams.on_page(index);
+            page.openItem(index);
+            assert.equal(opened.at(-1).url, layout.SETTINGS_ITEMS[index].url);
+            // Zepp destroys the outgoing page and recreates it on back.
+            page.onDestroy();
+            visibleIndex = 0;
+            const source = await readFile(resolve(root, 'page/gt/settings/index.page.js'), 'utf8');
+            // A fresh module models a fresh Page instance, retaining only app memory.
+            const freshContext = vm.createContext({ Page: (definition) => { page = definition; } });
+            const fresh = new vm.SourceTextModule(source, { context: freshContext });
+            await fresh.link(async (name) => {
+                const exports = name === 'zosLoader:./index.page.[pf].layout.js' ? layout
+                    : name.startsWith('.') ? await r.load(resolve(root, 'page/gt/settings', name) + '.js')
+                    : r.mocks[name];
+                return new vm.SyntheticModule(Object.keys(exports), function () {
+                    for (const [key, value] of Object.entries(exports)) this.setExport(key, value);
+                }, { context: freshContext });
+            });
+            await fresh.evaluate();
+            page.onInit();
+            page.build();
+            assert.equal(visibleIndex, index, 'return must restore the previous settings row');
+            assert.equal(page.state.focusIndex, index);
+            assert.equal(page.state.focusTop.options.y, layout.getFocusLineTopStyle(index).y);
+            keyCallback(1, 3);
+            assert.equal(opened.at(-1).url, layout.SETTINGS_ITEMS[index].url);
+        }
+        page.onDestroy();
+    });
+}

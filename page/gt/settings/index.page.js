@@ -3,8 +3,9 @@ import { push } from "@zos/router";
 import { setPageBrightTime } from "@zos/display";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { onKey, offKey, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK } from "@zos/interaction";
-import { setScrollMode, SCROLL_MODE_SWIPER } from "@zos/page";
+import { setScrollMode, swipeToIndex, SCROLL_MODE_SWIPER, SCROLL_ANIMATION_NONE } from "@zos/page";
 import { BasePage } from "@zeppos/zml/base-page";
+import { getAppCache } from "../../../utils/location-storage";
 import { formatHijriDate, isRtl, t } from "../../../utils/i18n";
 import {
     TITLE_STYLE,
@@ -32,6 +33,12 @@ Page(
 
         onInit(params) {
             this.state.hijriDate = this.getHijriDateParam(params);
+            const cache = getAppCache();
+            const position = cache && cache.settingsReturnIndex;
+            if (typeof position === "number" && isFinite(position)) {
+                this.state.focusIndex = Math.max(0, Math.min(SETTINGS_ITEMS.length - 1, position));
+                delete cache.settingsReturnIndex;
+            }
         },
 
         build(params) {
@@ -46,17 +53,8 @@ Page(
                 setStatusBarVisible(false);
             }
 
-            setScrollMode({
-                mode: SCROLL_MODE_SWIPER,
-                options: {
-                    height: SCROLL_ITEM_HEIGHT,
-                    count: SETTINGS_ITEMS.length,
-                    modeParams: {
-                        crown_enable: true,
-                        on_page: (pageIndex) => this.setFocusedIndex(pageIndex),
-                    },
-                },
-            });
+            const returnIndex = this.state.focusIndex;
+            this.configureScroll();
 
             createWidget(widget.PAGE_SCROLLBAR);
             createWidget(widget.TEXT, {
@@ -85,7 +83,23 @@ Page(
                 color: 0x000000,
                 alpha: 0,
             }));
+            this.setFocusedIndex(returnIndex);
+            swipeToIndex({ index: returnIndex, animation: SCROLL_ANIMATION_NONE });
             this.registerSelectionKey();
+        },
+
+        configureScroll() {
+            setScrollMode({
+                mode: SCROLL_MODE_SWIPER,
+                options: {
+                    height: SCROLL_ITEM_HEIGHT,
+                    count: SETTINGS_ITEMS.length,
+                    modeParams: {
+                        crown_enable: true,
+                        on_page: (pageIndex) => this.setFocusedIndex(pageIndex),
+                    },
+                },
+            });
         },
 
         trackWidget(w) {
@@ -140,8 +154,8 @@ Page(
             if (nextIndex === this.state.focusIndex) return;
 
             this.state.focusIndex = nextIndex;
-            this.state.focusTop.setProperty(prop.MORE, getFocusLineTopStyle(nextIndex));
-            this.state.focusBottom.setProperty(prop.MORE, getFocusLineBottomStyle(nextIndex));
+            if (this.state.focusTop) this.state.focusTop.setProperty(prop.MORE, getFocusLineTopStyle(nextIndex));
+            if (this.state.focusBottom) this.state.focusBottom.setProperty(prop.MORE, getFocusLineBottomStyle(nextIndex));
         },
 
         registerSelectionKey() {
@@ -160,6 +174,10 @@ Page(
         openItem(index) {
             const item = SETTINGS_ITEMS[index];
             if (!item) return;
+            // Pages are destroyed on push and recreated on back. Keep this in app
+            // memory, then consume it once when Settings is initialized again.
+            const cache = getAppCache();
+            if (cache) cache.settingsReturnIndex = this.state.focusIndex;
             push({ url: item.url, params: JSON.stringify({ hijriDate: this.state.hijriDate }) });
         },
 
@@ -170,13 +188,6 @@ Page(
                 return data && data.hijriDate ? data.hijriDate : null;
             } catch (e) {
                 return null;
-            }
-        },
-
-        onResume() {
-            if (this.state.rowWidgets.length) this.registerSelectionKey();
-            if (this.state.hijriWidget) {
-                this.state.hijriWidget.setProperty(prop.TEXT, formatHijriDate(this.state.hijriDate));
             }
         },
 
