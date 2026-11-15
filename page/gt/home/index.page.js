@@ -139,6 +139,7 @@ Page(
           modeParams: {
             crown_enable: true,
             on_page: (pageIndex) => {
+              setPageBrightTime({ brightTime: pageIndex === 1 ? 60000 : 30000 });
               if (!this.state.qibla) return;
               if (pageIndex === 1) {
                 this.state.qibla.startCompass();
@@ -152,6 +153,7 @@ Page(
     },
 
     showPrayerPage() {
+      setPageBrightTime({ brightTime: 30000 });
       if (this.state.qibla) this.state.qibla.stopCompass();
       swipeToIndex({ index: 0, animation: SCROLL_ANIMATION_NONE });
     },
