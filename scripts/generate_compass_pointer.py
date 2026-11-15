@@ -15,9 +15,25 @@ def render(size, points, color):
     return image.resize(size, Image.Resampling.LANCZOS)
 
 
+def render_kaaba(size):
+    # Simple cube silhouette; the single dark band stays legible at watch scale.
+    image = Image.new('RGBA', (size * SCALE, size * SCALE))
+    draw = ImageDraw.Draw(image)
+    def polygon(points, color):
+        draw.polygon([(round(x * size * SCALE), round(y * size * SCALE))
+                      for x, y in points], fill=color)
+    polygon([(.10, .25), (.60, .10), (.90, .23), (.90, .80),
+             (.40, .94), (.10, .79)], '#d4a843')
+    polygon([(.10, .25), (.40, .39), (.40, .94), (.10, .79)], '#a88435')
+    polygon([(.10, .41), (.40, .55), (.90, .40), (.90, .49),
+             (.40, .64), (.10, .50)], '#000000')
+    return image.resize((size, size), Image.Resampling.LANCZOS)
+
+
 def main():
     for shape, size in [('r', 100), ('s', 80)]:
         directory = ROOT / f'assets/gt.{shape}/image'
+        render_kaaba(28 if shape == 'r' else 22).save(directory / 'kaaba_marker.png')
         for suffix, color in [('', '#d4a843'), ('_aligned', '#66bb6a')]:
             # Slender chevron with transparent padding for arbitrary rotation.
             points = [(size*.5, size*.08), (size*.76, size*.77),

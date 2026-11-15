@@ -179,7 +179,7 @@ export const KAABA_DOT_STYLE = {
   h: DOT_SIZE,
   center_x: DOT_SIZE / 2,
   center_y: DOT_SIZE / 2,
-  src: "image/kaaba_dot.png",
+  src: "image/kaaba_marker.png",
 };
 
 export const DOT_ORBIT_RADIUS = px(155);
