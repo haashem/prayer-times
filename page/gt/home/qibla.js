@@ -1,12 +1,14 @@
-import { createWidget, deleteWidget, widget, prop } from "@zos/ui";
-import { Compass, Vibrator, VIBRATOR_SCENE_SHORT_MIDDLE } from "@zos/sensor";
+import { deleteWidget, widget, prop } from "@zos/ui";
+import { Compass, Vibrator, VIBRATOR_SCENE_SHORT_LIGHT } from "@zos/sensor";
 import { log as Logger } from "@zos/utils";
+import { smoothHeading, isQiblaAligned } from "../../../utils/compass-motion";
 import { t } from "../../../utils/i18n";
 import {
     DEVICE_WIDTH,
     DEVICE_HEIGHT,
     COMPASS_RING_STYLE,
     ARROW_STYLE,
+    TOP_MARKER_STYLE,
     KAABA_DOT_STYLE,
     DOT_ORBIT_RADIUS,
     CALIBRATE_STYLE,
@@ -35,12 +37,18 @@ export function createQiblaCompass(container) {
         vibrate: null,
         qiblaBearing: 0,
         compassCallback: null,
+        heading: null,
+        headingTime: null,
+        markerWidget: null,
+        backingWidget: null,
+        backingBounds: null,
         ringWidget: null,
         arrowWidget: null,
         dotWidget: null,
         calibrateWidget: null,
         facingQibla: false,
         lastVibrateTime: 0,
+        visualAligned: false,
         widgets: [],
     };
 
@@ -56,6 +64,11 @@ export function createQiblaCompass(container) {
             deleteWidget(w);
         }
         state.widgets = [];
+        state.heading = null;
+        state.headingTime = null;
+        state.visualAligned = false;
+        state.markerWidget = null;
+        state.backingWidget = null;
         state.ringWidget = null;
         state.arrowWidget = null;
         state.dotWidget = null;
@@ -81,7 +94,7 @@ export function createQiblaCompass(container) {
     // ── Compass sensor ──
 
     function startCompass() {
-        if (state.compass) return; // Already running
+        if (!state.ringWidget || state.compass) return; // Already running
         try {
             state.compass = new Compass();
             state.compass.start();
@@ -97,6 +110,8 @@ export function createQiblaCompass(container) {
     }
 
     function stopCompass() {
+        state.heading = null;
+        state.headingTime = null;
         if (state.compass) {
             if (state.compassCallback) {
                 state.compass.offChange(state.compassCallback);
@@ -113,7 +128,7 @@ export function createQiblaCompass(container) {
         const calibrated = state.compass.getStatus();
         const angle = state.compass.getDirectionAngle();
 
-        if (!calibrated || angle === "INVALID") {
+        if (!calibrated || typeof angle !== "number" || !Number.isFinite(angle)) {
             if (!state.calibrateWidget) {
                 showCalibration();
             }
@@ -125,7 +140,11 @@ export function createQiblaCompass(container) {
             hideCalibration();
         }
 
-        const heading = typeof angle === "number" ? angle : 0;
+        const now = Date.now();
+        const heading = smoothHeading(state.heading, angle,
+            state.headingTime === null ? 0 : now - state.headingTime);
+        state.heading = heading;
+        state.headingTime = now;
         const arrowAngle = (state.qiblaBearing - heading + 360) % 360;
         const ringAngle = (360 - heading) % 360;
 
@@ -151,6 +170,11 @@ export function createQiblaCompass(container) {
             const dotX = cx + DOT_ORBIT_RADIUS * Math.cos(dotAngleRad);
             const dotY = cy + DOT_ORBIT_RADIUS * Math.sin(dotAngleRad);
 
+            state.backingBounds = {
+                x: Math.round(dotX) - 4, y: Math.round(dotY) - 4,
+                w: KAABA_DOT_STYLE.w + 8, h: KAABA_DOT_STYLE.h + 8,
+            };
+            state.backingWidget.setProperty(prop.MORE, state.backingBounds);
             state.dotWidget.setProperty(prop.MORE, {
                 x: Math.round(dotX),
                 y: Math.round(dotY),
@@ -159,25 +183,49 @@ export function createQiblaCompass(container) {
 
         // Gentle vibration when facing Qibla (within ±5°)
         const diff = Math.abs(arrowAngle <= 180 ? arrowAngle : 360 - arrowAngle);
-        const isFacing = diff < 5;
+        const isFacing = isQiblaAligned(diff, state.visualAligned);
+        if (isFacing !== state.visualAligned) {
+            state.arrowWidget.setProperty(prop.MORE, {
+                src: isFacing ? "image/qibla_pointer_aligned.png" : ARROW_STYLE.src,
+            });
+            state.markerWidget.setProperty(prop.MORE, {
+                src: isFacing ? "image/compass_top_aligned.png" : TOP_MARKER_STYLE.src,
+            });
+        }
 
-        if (isFacing && !state.facingQibla) {
-            const now = Date.now();
-            if (now - state.lastVibrateTime > 2000) {
-                state.lastVibrateTime = now;
-                if (state.vibrate) {
-                    state.vibrate.stop();
-                    state.vibrate.setMode(VIBRATOR_SCENE_SHORT_LIGHT);
-                    state.vibrate.start();
+        state.visualAligned = isFacing;
+
+        {
+            // Gentle vibration when facing Qibla (within ±5°)
+            const vibrationAngle = (state.qiblaBearing - angle + 360) % 360;
+            const diff = Math.abs(vibrationAngle <= 180 ? vibrationAngle : 360 - vibrationAngle);
+            const isFacing = diff < 5;
+
+            if (isFacing && !state.facingQibla) {
+                const now = Date.now();
+                if (now - state.lastVibrateTime > 2000) {
+                    state.lastVibrateTime = now;
+                    if (state.vibrate) {
+                        state.vibrate.stop();
+                        state.vibrate.setMode(VIBRATOR_SCENE_SHORT_LIGHT);
+                        state.vibrate.start();
+                    }
                 }
             }
+            state.facingQibla = isFacing;
         }
-        state.facingQibla = isFacing;
     }
 
     // ── Render ──
 
     function showCalibration() {
+        state.heading = null;
+        state.headingTime = null;
+        state.visualAligned = false;
+        state.arrowWidget.setProperty(prop.MORE, { src: ARROW_STYLE.src });
+        state.markerWidget.setProperty(prop.MORE, { src: TOP_MARKER_STYLE.src });
+        state.markerWidget.setProperty(prop.MORE, { alpha: 0 });
+        state.backingWidget.setProperty(prop.MORE, { ...state.backingBounds, alpha: 0 });
         // Hide compass elements
         if (state.ringWidget) {
             state.ringWidget.setProperty(prop.MORE, { alpha: 0 });
@@ -199,10 +247,13 @@ export function createQiblaCompass(container) {
 
     function hideCalibration() {
         if (state.calibrateWidget) {
+            state.widgets = state.widgets.filter(w => w !== state.calibrateWidget);
             deleteWidget(state.calibrateWidget);
             state.calibrateWidget = null;
         }
 
+        state.markerWidget.setProperty(prop.MORE, { alpha: 255 });
+        state.backingWidget.setProperty(prop.MORE, { ...state.backingBounds, alpha: 255 });
         // Show compass elements
         if (state.ringWidget) {
             state.ringWidget.setProperty(prop.MORE, { alpha: 255 });
@@ -226,6 +277,17 @@ export function createQiblaCompass(container) {
             })
         );
 
+        state.markerWidget = trackWidget(container.createWidget(widget.IMG, TOP_MARKER_STYLE));
+
+        state.backingBounds = {
+            x: KAABA_DOT_STYLE.x - 4, y: KAABA_DOT_STYLE.y - 4,
+            w: KAABA_DOT_STYLE.w + 8, h: KAABA_DOT_STYLE.h + 8,
+        };
+        state.backingWidget = trackWidget(container.createWidget(widget.FILL_RECT, {
+            ...state.backingBounds,
+            radius: (KAABA_DOT_STYLE.w + 8) / 2, color: 0x000000,
+        }));
+
         // Kaaba dot on compass edge
         state.dotWidget = trackWidget(
             container.createWidget(widget.IMG, {
@@ -241,6 +303,7 @@ export function createQiblaCompass(container) {
                 angle: 0,
             })
         );
+        showCalibration();
     }
 
     function renderNoData() {

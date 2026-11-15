@@ -168,7 +168,7 @@ export const ARROW_STYLE = {
   h: ARROW_SIZE,
   center_x: ARROW_SIZE / 2,
   center_y: ARROW_SIZE / 2,
-  src: "image/qibla_arrow.png",
+  src: "image/qibla_pointer.png",
 };
 
 const DOT_SIZE = px(28);
@@ -206,4 +206,13 @@ export const QIBLA_NO_DATA_STYLE = {
   align_h: align.CENTER_H,
   align_v: align.CENTER_V,
   text_style: text_style.WRAP,
+};
+
+// Fixed watch-facing reference, drawn above the rotating dial.
+export const TOP_MARKER_STYLE = {
+    x: DEVICE_WIDTH / 2 - px(12),
+    y: COMPASS_RING_STYLE.y - px(10),
+    w: px(24),
+    h: px(52),
+    src: "image/compass_top.png",
 };
