@@ -1,3 +1,4 @@
+import { parseAdhkarPayload } from "./utils/adhkar";
 import { BaseApp } from "@zeppos/zml/base-app";
 
 function parsePrayerAlertPayload(options) {
@@ -21,10 +22,12 @@ App(
       prayerData: null,
       prayerDayKey: null,
       pendingPrayerAlert: null,
+      pendingAdhkarAlert: null,
     },
     onCreate(options) {
       console.log("prayer-times app onCreate");
       this.globalData.pendingPrayerAlert = parsePrayerAlertPayload(options);
+      this.globalData.pendingAdhkarAlert = parseAdhkarPayload(options);
     },
 
     onDestroy(options) {

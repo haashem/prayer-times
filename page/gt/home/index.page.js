@@ -1,3 +1,4 @@
+import { ensureAdhkarSchedule } from "../../../utils/adhkar";
 import { getPrayerTimeParts, formatPrayerTime, getTimeFormat } from "../../../utils/time-format";
 import { getHighlightedPrayer } from "../../../utils/prayer-highlight";
 import { createWidget, deleteWidget, widget, prop, event, setStatusBarVisible } from "@zos/ui";
@@ -73,6 +74,7 @@ Page(
     },
 
     onInit() {
+      ensureAdhkarSchedule();
       logger.debug("prayer-times page onInit");
     },
 
@@ -488,6 +490,7 @@ Page(
     },
 
     onResume() {
+      ensureAdhkarSchedule();
       if (!this.state.prayerContainer) return;
       this.state.homeActive = true;
 
