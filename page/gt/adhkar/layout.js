@@ -18,11 +18,11 @@ export function createAdhkarLayout(settings, notifications, radio, square) {
             : (kind === 'radio' || kind === 'checkbox') ? radio.getTimeFormatRowTextStyle(index, rtl)
             : settings.getSettingsRowTextStyle(index, rtl);
         const bounds = row(index, height);
-        if (kind === 'info') {
+        if (kind === 'section') {
             const padding = settings.TITLE_STYLE.x;
             return { ...base, x: padding, y: bounds.y, w: settings.TITLE_STYLE.w,
-                h: height, text_size: bodySize, text_style: text_style.WRAP,
-                align_h: rtl ? align.RIGHT : align.LEFT };
+                h: height, text_size: px(32), color: 0xffffff, text_style: text_style.NONE,
+                align_h: align.CENTER_H };
         }
         return { ...base, y: bounds.y + (subtitle ? px(4) : 0),
             h: subtitle ? px(56) : height,

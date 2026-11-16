@@ -1,8 +1,9 @@
 # Adhkar reminders
 
 Open Settings → Adhkar. Reminders are off initially. Enabling selects all six
-phrases if none are selected. The collection shows each Arabic phrase and its translated meaning with an
-inline checkbox for inclusion in the reminder sequence; there are no phrase subpages.
+phrases if none are selected. The Collection section is directly below the reminder settings on the Adhkar
+page. Each Arabic phrase and its translated meaning has an inline checkbox for
+inclusion in the reminder sequence; there are no collection or phrase subpages.
 Disabling the final phrase turns reminders off and explains why.
 
 Schedules are every 30, 60 or 120 minutes, or three editable daily times

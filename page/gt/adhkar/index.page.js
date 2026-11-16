@@ -21,7 +21,7 @@ Page(BasePage({
     onInit(params) {
         try {
             const data = typeof params === 'string' ? JSON.parse(params) : params;
-            if (data) { this.state.view = data.view || 'main'; this.state.id = data.id; }
+            if (data) { this.state.view = data.view === 'schedule' ? 'schedule' : 'main'; this.state.id = data.id; }
         } catch (e) { /* Use the main screen for malformed route parameters. */ }
         const cache = getAppCache();
         const saved = cache && cache.adhkarReturnFocus;
@@ -70,7 +70,6 @@ Page(BasePage({
         const label = createWidget(widget.TEXT, { ...LAYOUT.text(index, kind, !!row.subtitle, rtl, this.rowHeight),
             text: row.text(), ...(row.size ? { text_size: row.size } : {}),
             ...(row.arabic ? { align_h: align.RIGHT } : {}),
-            ...(kind === 'info' ? { color: row.arabic ? 0xffffff : 0xa6a6a6 } : {}),
         });
         const entry = { label };
         const targets = [bg, label];
@@ -155,7 +154,6 @@ Page(BasePage({
     titleText() {
         const view = this.state.view;
         if (view === 'schedule') return t('adhkarSchedule');
-        if (view === 'collection') return t('adhkarCollection');
         return t('adhkar');
     },
     modeLabel() { return t(MODE_KEYS[ADHKAR_MODES.indexOf(this.state.settings.mode)]); },
@@ -165,12 +163,6 @@ Page(BasePage({
             text: () => t(MODE_KEYS[index]), kind: 'radio',
             action: () => this.selectMode(mode),
         }));
-        if (this.state.view === 'collection') return [
-            ...ADHKAR.map((item) => ({ text: () => item.arabic, subtitle: () => getAdhkarMeaning(item.id, getAppLanguage()),
-                kind: 'checkbox', checked: () => this.state.settings.enabledIds.indexOf(item.id) !== -1,
-                setChecked: checked => this.setAdhkarChecked(item.id, checked),
-                action: () => this.setAdhkarChecked(item.id, this.state.settings.enabledIds.indexOf(item.id) === -1), arabic: true })),
-        ];
         return [
             { text: () => t('adhkarEnabled'), kind: 'toggle', checked: () => this.state.settings.enabled, action: () => {
                 const current = this.state.settings;
@@ -184,7 +176,11 @@ Page(BasePage({
                 text: () => t('adhkarTimes') + ' ' + localizeDigits(index + 1), subtitle: () => timeLabel(this.state.settings.times[index]),
                 action: () => this.open('time', index),
             })) : []),
-            { text: () => t('adhkarCollection'), action: () => this.open('collection') },
+            { text: () => t('adhkarCollection'), kind: 'section' },
+            ...ADHKAR.map((item) => ({ text: () => item.arabic, subtitle: () => getAdhkarMeaning(item.id, getAppLanguage()),
+                kind: 'checkbox', checked: () => this.state.settings.enabledIds.indexOf(item.id) !== -1,
+                setChecked: checked => this.setAdhkarChecked(item.id, checked),
+                action: () => this.setAdhkarChecked(item.id, this.state.settings.enabledIds.indexOf(item.id) === -1), arabic: true })),
         ];
     },
     selectMode(mode) {
@@ -218,8 +214,9 @@ Page(BasePage({
     message(key) { createModal({ content: t(key), show: true, autoHide: true, okButton: 'image/ic_confirm_64px.png' }); },
     focus(index) {
         this.state.focus = Math.max(0, Math.min(this.state.rows.length - 1, index));
-        if (this.state.focusTop) this.state.focusTop.setProperty(prop.MORE, LAYOUT.focusTop(this.state.focus, this.rowHeight));
-        if (this.state.focusBottom) this.state.focusBottom.setProperty(prop.MORE, LAYOUT.focusBottom(this.state.focus, this.rowHeight));
+        const alpha = this.state.rows[this.state.focus].kind === 'section' ? 0 : 255;
+        if (this.state.focusTop) this.state.focusTop.setProperty(prop.MORE, { ...LAYOUT.focusTop(this.state.focus, this.rowHeight), alpha });
+        if (this.state.focusBottom) this.state.focusBottom.setProperty(prop.MORE, { ...LAYOUT.focusBottom(this.state.focus, this.rowHeight), alpha });
     },
     onDestroy() { offKey(); this.state.labels = []; },
 }));
