@@ -1,3 +1,4 @@
+import { SETTINGS_ROW_TITLE_SIZE } from "../../../utils/settings-typography";
 import { TIME_FORMAT_OPTIONS } from "../../../utils/time-format";
 export { TIME_FORMAT_OPTIONS };
 import { align, text_style } from "@zos/ui";
@@ -73,7 +74,7 @@ export function getTimeFormatRowTextStyle(index, rtl = false) {
         y: getRowY(index),
         w: DEVICE_WIDTH - ROW_PAD_X - RADIO_SIDE_PADDING - RADIO_SIZE - px(16),
         h: ROW_HEIGHT,
-        text_size: px(40),
+        text_size: SETTINGS_ROW_TITLE_SIZE,
         color: COLORS.text,
         align_h: rtl ? align.RIGHT : align.LEFT,
         align_v: align.CENTER_V,

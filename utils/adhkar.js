@@ -15,32 +15,38 @@ function read(key, fallback) {
 }
 function write(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 function minute(value, fallback) {
-    return Number.isInteger(value) && value >= 0 && value < 1440 ? value : fallback;
+    return Number.isInteger(value) && value >= 0 && value < 1440 ? Math.min(1425, Math.round(value / 15) * 15) : fallback;
 }
 export function getAdhkarSettings() {
     const stored = read(ADHKAR_SETTINGS_KEY, {});
-    const start = minute(stored.start, 480);
-    const end = minute(stored.end, 1320);
+    let start = minute(stored.start, 480);
+    let end = minute(stored.end, 1320);
+    if (start >= end) { start = 480; end = 1320; }
+    const mode = ADHKAR_MODES.indexOf(stored.mode) !== -1 ? stored.mode : 'daily';
+    let times = Array.isArray(stored.times) && stored.times.length === 3
+        ? stored.times.map((value, index) => minute(value, [540, 840, 1200][index]))
+        : [540, 840, 1200];
+    // Older versions allowed individual minutes. Rounding must not leave
+    // duplicate daily times that would prevent any subsequent settings edit.
+    if (times.some((time, index) => times.indexOf(time) !== index)) {
+        if (mode === 'daily' && end - start < 30) { start = 480; end = 1320; }
+        times = end - start >= 30 ? [start, Math.floor((start + end) / 30) * 15, end] : [540, 840, 1200];
+    }
     const enabledIds = Array.isArray(stored.enabledIds)
         ? ADHKAR.filter((item) => stored.enabledIds.indexOf(item.id) !== -1).map((item) => item.id)
         : ADHKAR.map((item) => item.id);
     return {
         enabled: stored.enabled === true && enabledIds.length > 0,
         enabledIds,
-        mode: ADHKAR_MODES.indexOf(stored.mode) !== -1 ? stored.mode : 'daily',
-        start: start < end ? start : 480,
-        end: start < end ? end : 1320,
-        times: Array.isArray(stored.times) && stored.times.length === 3
-            ? stored.times.map((value, index) => minute(value, [540, 840, 1200][index]))
-            : [540, 840, 1200],
+        mode, start, end, times,
     };
 }
 
 export function saveAdhkarSettings(settings) {
     if (!Number.isInteger(settings.start) || !Number.isInteger(settings.end) ||
-        settings.start < 0 || settings.end >= 1440 || settings.start >= settings.end ||
+        settings.start < 0 || settings.end >= 1440 || settings.start % 15 !== 0 || settings.end % 15 !== 0 || settings.start >= settings.end ||
         ADHKAR_MODES.indexOf(settings.mode) === -1 || settings.times.length !== 3 ||
-        settings.times.some((time) => !Number.isInteger(time) || time < 0 || time >= 1440) ||
+        settings.times.some((time) => !Number.isInteger(time) || time < 0 || time >= 1440 || time % 15 !== 0) ||
         (settings.mode === 'daily' && settings.times.some((time) => time < settings.start || time > settings.end)) ||
         settings.times.some((time, index) => settings.times.indexOf(time) !== index)) return false;
     settings.enabled = settings.enabled === true && settings.enabledIds.length > 0;
@@ -95,7 +101,7 @@ export function refreshAdhkarSchedule(now = new Date()) {
         url: 'page/gt/adhkar-alert/index.page', time: Math.floor(time / 1000),
         param: JSON.stringify(payload), repeat_type: REPEAT_ONCE, store: true,
     });
-    if (id > 0) write(ALARM_KEY, { ...payload, id, timezoneOffset: occurrence.getTimezoneOffset() });
+    if (id > 0) write(ALARM_KEY, { ...payload, id, timezoneOffset: occurrence.getTimezoneOffset(), settingsSignature: JSON.stringify(getAdhkarSettings()) });
     return id;
 }
 
@@ -103,7 +109,7 @@ export function ensureAdhkarSchedule(now = new Date()) {
     const settings = getAdhkarSettings();
     const alarm = read(ALARM_KEY, null);
     if (!settings.enabled) { if (alarm) cancelCurrent(); return; }
-    if (!alarm || !(alarm.id > 0) || alarm.occurrenceTime <= now.getTime() ||
+    if (!alarm || !(alarm.id > 0) || alarm.occurrenceTime <= now.getTime() || alarm.settingsSignature !== JSON.stringify(settings) ||
         alarm.timezoneOffset !== new Date(alarm.occurrenceTime).getTimezoneOffset()) refreshAdhkarSchedule(now);
 }
 
@@ -117,7 +123,7 @@ export function prepareAdhkarReminder(payload, now = new Date()) {
     const wallMinute = now.getHours() * 60 + now.getMinutes();
     if (lateness < 0) return null;
     refreshAdhkarSchedule(now);
-    if (!settings.enabled || lateness > 60000 ||
+    if (!settings.enabled || lateness > 60000 || alarm.settingsSignature !== JSON.stringify(settings) ||
         alarm.timezoneOffset !== new Date(alarm.occurrenceTime).getTimezoneOffset() ||
         wallMinute < settings.start || wallMinute > settings.end) return null;
     const last = read(LAST_DISPLAY_KEY, null);

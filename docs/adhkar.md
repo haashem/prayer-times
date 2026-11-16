@@ -1,9 +1,8 @@
 # Adhkar reminders
 
 Open Settings → Adhkar. Reminders are off initially. Enabling selects all six
-phrases if none are selected. The collection allows reading each phrase, its
-meaning and source, and changing its inclusion in the reminder sequence.
-“Enable all” selects every phrase without changing the master switch.
+phrases if none are selected. The collection shows each Arabic phrase and its translated meaning with an
+inline checkbox for inclusion in the reminder sequence; there are no phrase subpages.
 Disabling the final phrase turns reminders off and explains why.
 
 Schedules are every 30, 60 or 120 minutes, or three editable daily times
@@ -11,9 +10,20 @@ Schedules are every 30, 60 or 120 minutes, or three editable daily times
 including both endpoints. Intervals are anchored at the window start and restart
 each day. Start must precede end; overnight windows are intentionally unsupported.
 Daily times must be distinct and inside the window when using the daily mode.
-Daily time controls remain accessible in interval mode so users can adjust them
-before switching back. Hour and minute controls save immediately; invalid edits
-leave the existing setting and alarm unchanged.
+The three daily time rows appear only in daily mode. Switching back preserves
+the saved times; if an interval-mode window change excluded them, three evenly
+spaced times inside the new window are restored.
+
+Time selection uses Zepp's API 3.0 `WIDGET_PICKER`, with hours 00–23 and minutes
+00, 15, 30, 45. Wheel selections update a draft only. The visible tick validates
+and saves the complete draft, then returns, including when neither wheel changed.
+Hardware Back and right-swipe Back cancel without saving. The picker overlays the existing settings list. Closing it removes only the
+overlay, restores list input and immediately redraws the existing widgets. There
+is no router navigation or reconstruction of the parent page. Selection callbacks
+are not treated as completion events.
+Invalid choices leave the picker open and the existing setting/alarm unchanged.
+Older individual-minute values are rounded to the nearest quarter hour, with
+collisions repaired so preferences remain editable.
 
 Each reminder shows Arabic and the app-language meaning, vibrates once using
 the notification scene, and returns after 15 seconds. There are no reminder
@@ -30,8 +40,10 @@ settings use the existing blue/gray switches. Schedule choices use native
 uses the same top/bottom focus assets as the other settings screens. Controls,
 alignment and chevrons mirror for RTL languages.
 
-Two-line labels and values are separate text widgets, with reserved control
-space. Reading rows have extra height for translations. The reminder retains
+Single-line and two-line row titles share the 36px settings typography;
+subtitles are 32px. The collection always shows Arabic as the primary text and
+the app-language meaning as its subtitle, with a native checkbox on each row. Two-line labels and values are
+separate text widgets, with reserved control space. Overflowing row titles and subtitles use native scrolling text, so the full phrase and translation can be read. The reminder retains
 its read-only interaction, with a white heading and muted translation.
 Acceptance scenarios compare these visible controls with the app's existing
 Settings appearance on round/square and English/Arabic screens.
@@ -83,13 +95,14 @@ are fixed test fixtures rather than values imported from the production catalog.
 | --- | --- |
 | Explicit opt-in and initial defaults | Navigate from Settings using touch/crown; inspect the initial window, three times and six selected phrases; enable and receive the first reminder. |
 | All four schedules | Deliver the three daily reminders and each interval schedule; edit waking hours and verify delivery at the boundaries and next morning. |
-| Saved settings | Edit all three daily times through their controls, restart the runtime, and receive reminders at the saved times. |
-| Selection and rotation | Select a subset, browse content without advancing it, restart between deliveries, restore all phrases, and cycle past the final phrase. |
+| Saved settings | Choose all three daily times through the system picker, restart the runtime, and receive reminders at the saved times. |
+| Selection and rotation | Toggle a subset directly in the collection, read content without advancing rotation, restart between deliveries, restore all phrases, and cycle past the final phrase. |
 | Disabled reminders | Turn off the master switch or final phrase, check the explanation, reject an already queued alarm, and re-enable. |
 | Read-only alerts | Check the exact Arabic and translated text, notification vibration, absence of interactive controls, and automatic return after 15 seconds, including from an open app. |
 | Missed and outdated delivery | Deliver overdue, superseded and duplicate alarms; verify no backlog or rotation until a reminder displays. Recover failed/expired schedules by reopening Home. |
 | Prayer overlap | Schedule real prayer alerts at the same time and five minutes later; verify both alerts display and future adhkar continue. |
-| Local time and validation | Reject conflicting/out-of-window edits; deliver across year/DST boundaries and skip nonexistent spring times. |
+| Picker navigation | Press the visible tick without moving wheels; select both wheels then confirm or cancel using hardware Back/right swipe; reopen and verify settings input still works; assert the underlying list stays mounted throughout. |
+| Local time and validation | Offer only quarter-hour minutes, cancel unfinished selections, reject conflicting/out-of-window choices; deliver across year/DST boundaries and skip nonexistent spring times. |
 | Languages and shapes | Enable from Settings and read all six Arabic/meaning pairs in every language option on both screen shapes. |
 
 Before release, verify on physical round and square watches:

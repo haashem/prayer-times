@@ -1,5 +1,5 @@
-import { GEOMETRY } from "zosLoader:./index.page.[pf].layout.js";
-import { setStatusBarVisible } from '@zos/ui';
+import { LAYOUT } from "zosLoader:./index.page.[pf].layout.js";
+import { createWidget, widget, setStatusBarVisible } from '@zos/ui';
 import { setPageBrightTime } from '@zos/display';
 import { back } from '@zos/router';
 import { Vibrator, VIBRATOR_SCENE_NOTIFICATION } from '@zos/sensor';
@@ -7,7 +7,6 @@ import { BasePage } from '@zeppos/zml/base-page';
 import { getAppLanguage, t } from '../../../utils/i18n';
 import { getAdhkarMeaning } from '../../../utils/adhkar-content';
 import { parseAdhkarPayload, prepareAdhkarReminder, markAdhkarDisplayed } from '../../../utils/adhkar';
-import { adhkarText } from '../../../utils/adhkar-ui';
 
 Page(BasePage({
     state: { payload: null, timer: null, vibrator: null, built: false },
@@ -25,12 +24,12 @@ Page(BasePage({
         const payload = this.state.payload || parseAdhkarPayload(params);
         const item = prepareAdhkarReminder(payload);
         if (!item) { this.state.timer = setTimeout(() => back(), 0); return; }
-        const g = GEOMETRY;
-        if (g.square) setStatusBarVisible(false);
+        if (LAYOUT.square) setStatusBarVisible(false);
         setPageBrightTime({ brightTime: 15000 });
-        adhkarText(g, t('adhkar'), g.top, 64 * g.scale, g.square ? 34 : 40, 0xffffff);
-        adhkarText(g, item.arabic, g.height * 0.25, g.height * 0.25, 38);
-        adhkarText(g, getAdhkarMeaning(item.id, getAppLanguage()), g.height * 0.51, g.height * 0.30, 28, 0xa6a6a6);
+        const meaning = getAdhkarMeaning(item.id, getAppLanguage());
+        createWidget(widget.TEXT, { ...LAYOUT.title, text: t('adhkar') });
+        createWidget(widget.TEXT, { ...LAYOUT.arabic, text: item.arabic });
+        createWidget(widget.TEXT, { ...LAYOUT.translationStyle(meaning), text: meaning });
         markAdhkarDisplayed(item, payload.occurrenceTime);
         this.state.vibrator = new Vibrator();
         this.state.vibrator.start({ mode: VIBRATOR_SCENE_NOTIFICATION });

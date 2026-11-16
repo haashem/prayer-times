@@ -1,3 +1,3 @@
-import { adhkarGeometry } from "../../../utils/adhkar-ui";
+import { createAdhkarAlertLayout } from "../../../utils/adhkar-ui";
 
-export const GEOMETRY = adhkarGeometry(false);
+export const LAYOUT = createAdhkarAlertLayout(false);

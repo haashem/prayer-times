@@ -1,3 +1,4 @@
+import { SETTINGS_ROW_TITLE_SIZE } from "../../../utils/settings-typography";
 import { align, text_style } from "@zos/ui";
 import { getDeviceInfo } from "@zos/device";
 import { px } from "@zos/utils";
@@ -73,7 +74,7 @@ export function getSettingsRowTextStyle(index, rtl = false) {
             ? DEVICE_WIDTH - textX - ROW_PAD_X
             : DEVICE_WIDTH - ROW_PAD_X - CHEVRON_RIGHT_PAD - CHEVRON_SIZE - px(16),
         h: ROW_HEIGHT,
-        text_size: px(40),
+        text_size: SETTINGS_ROW_TITLE_SIZE,
         color: 0xffffff,
         align_h: rtl ? align.RIGHT : align.LEFT,
         align_v: align.CENTER_V,

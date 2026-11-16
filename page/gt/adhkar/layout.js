@@ -1,17 +1,21 @@
+import { SETTINGS_ROW_TITLE_SIZE, SETTINGS_ROW_SUBTITLE_SIZE } from '../../../utils/settings-typography';
+import { px } from '@zos/utils';
 import { align, text_style } from '@zos/ui';
 
 // Share the existing Settings, Prayer Alerts and Time Format geometry and assets.
 // Only two-line rows and the longer reading rows need additional layout rules.
 export function createAdhkarLayout(settings, notifications, radio, square) {
-    const rowHeight = settings.SCROLL_ITEM_HEIGHT;
+    // Arabic/Persian glyphs extend well below the Latin baseline. Leave
+    // enough room for two full lines rather than cropping to nominal sizes.
+    const rowHeight = px(square ? 112 : 120);
     const start = settings.getSettingsRowBgStyle(0).y;
-    const bodySize = square ? 28 : 32;
+    const bodySize = SETTINGS_ROW_TITLE_SIZE;
     function row(index, height = rowHeight) {
         return { ...settings.getSettingsRowBgStyle(index), y: start + index * height, h: height };
     }
     function text(index, kind, subtitle, rtl, height = rowHeight) {
         const base = kind === 'toggle' ? notifications.getRowTextStyle(index, rtl)
-            : kind === 'radio' ? radio.getTimeFormatRowTextStyle(index, rtl)
+            : (kind === 'radio' || kind === 'checkbox') ? radio.getTimeFormatRowTextStyle(index, rtl)
             : settings.getSettingsRowTextStyle(index, rtl);
         const bounds = row(index, height);
         if (kind === 'info') {
@@ -20,20 +24,29 @@ export function createAdhkarLayout(settings, notifications, radio, square) {
                 h: height, text_size: bodySize, text_style: text_style.WRAP,
                 align_h: rtl ? align.RIGHT : align.LEFT };
         }
-        return { ...base, y: bounds.y + (subtitle ? (square ? 8 : 12) : 0),
-            h: subtitle ? (square ? 38 : 44) : height,
-            text_size: subtitle ? bodySize : base.text_size,
-            text_style: subtitle ? text_style.ELLIPSIS : text_style.WRAP };
+        return { ...base, y: bounds.y + (subtitle ? px(4) : 0),
+            h: subtitle ? px(56) : height,
+            text_size: bodySize,
+            text_style: text_style.NONE };
     }
     return {
         TITLE_STYLE: settings.TITLE_STYLE, rowHeight, start,
-        readingRowHeight: square ? 132 : 156,
+        pickerConfirmButton: {
+            x: 0, y: notifications.DEVICE_HEIGHT - px(square ? 80 : 96),
+            w: settings.DEVICE_WIDTH, h: px(square ? 80 : 96),
+            normal_color: 0x333333, press_color: 0x242424,
+        },
+        pickerConfirmIcon: {
+            x: (settings.DEVICE_WIDTH - px(64)) / 2,
+            y: notifications.DEVICE_HEIGHT - px(square ? 72 : 80), w: px(64), h: px(64),
+        },
+
         row,
         text,
         subtitle(index, kind, rtl, height = rowHeight) {
             const base = text(index, kind, true, rtl, height);
-            return { ...base, y: row(index, height).y + (square ? 48 : 58),
-                h: square ? 32 : 36, text_size: square ? 24 : 28, color: 0xa6a6a6 };
+            return { ...base, y: row(index, height).y + px(60),
+                h: px(48), text_size: SETTINGS_ROW_SUBTITLE_SIZE, color: 0xa6a6a6, text_style: text_style.NONE };
         },
         chevron(index, rtl, height = rowHeight) {
             const base = settings.getSettingsRowChevronStyle(index, rtl);
@@ -52,7 +65,14 @@ export function createAdhkarLayout(settings, notifications, radio, square) {
             return { ...base, y: row(index, height).y + height - base.h };
         },
         radioGroup(rtl, count) { return { ...radio.getRadioGroupStyle(rtl), h: count * rowHeight }; },
-        radioButton: radio.getStateButtonStyle,
+        radioButton(index) {
+            const base = radio.getStateButtonStyle(index);
+            return { ...base, y: index * rowHeight + (rowHeight - base.h) / 2 };
+        },
+        checkboxGroup(index, rtl) {
+            const base = radio.getRadioGroupStyle(rtl);
+            return { ...base, y: row(index).y, h: rowHeight };
+        },
         bottom(count, height = rowHeight) { return { x: 0, y: start + count * height, w: 1, h: square ? 40 : 80, color: 0, alpha: 0 }; },
     };
 }

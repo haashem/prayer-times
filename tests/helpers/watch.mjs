@@ -25,17 +25,30 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
     const vibrations = [];
     const messages = [];
     let nextTimer = 1;
+    let pageBuilds = 0;
+    let redraws = 0;
     let capturedPage;
     let appDefinition;
     let app;
     let current;
     let keyCallback;
+    let gestureCallback;
     let scroll;
     let failNextAlarm = false;
 
     function createWidget(type, properties) {
+        if (type === 'WIDGET_PICKER') {
+            // Full-screen native components own input until the app releases
+            // those handlers. Zepp permits only one key/gesture registration.
+            keyCallback ||= () => true;
+            gestureCallback ||= () => true;
+        }
         const w = { type, ...properties, handlers: {}, children: [],
             setProperty(property, changes) {
+                if (this.type === 'CHECKBOX_GROUP' && ['INIT', 'CHECKED', 'UNCHECKED'].includes(property)) {
+                    changes.selected = property !== 'UNCHECKED';
+                    this.check_func?.(this, this.children.indexOf(changes), changes.selected); return;
+                }
                 if (this.type === 'RADIO_GROUP' && property === 'INIT') {
                     this.children.forEach(child => { child.selected = child === changes; }); return;
                 }
@@ -62,11 +75,15 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
             cancel(id) { device.alarms.delete(id); },
         },
         '@zos/ui': {
-            widget: Object.fromEntries(['TEXT', 'FILL_RECT', 'PAGE_SCROLLBAR', 'IMG', 'BUTTON', 'GROUP', 'CIRCLE', 'RADIO_GROUP', 'STATE_BUTTON'].map(key => [key, key])),
-            prop: { MORE: 'MORE', INIT: 'INIT' }, event: { SELECT: 'SELECT', CLICK_DOWN: 'CLICK_DOWN', MOVE: 'MOVE' },
+            widget: Object.fromEntries(['TEXT', 'FILL_RECT', 'PAGE_SCROLLBAR', 'IMG', 'BUTTON', 'GROUP', 'CIRCLE', 'RADIO_GROUP', 'STATE_BUTTON', 'WIDGET_PICKER', 'CHECKBOX_GROUP'].map(key => [key, key])),
+            prop: { MORE: 'MORE', INIT: 'INIT', CUR_COLUMN: 'CUR_COLUMN', CHECKED: 'CHECKED', UNCHECKED: 'UNCHECKED' }, event: { SELECT: 'SELECT', CLICK_DOWN: 'CLICK_DOWN', MOVE: 'MOVE' },
             align: { CENTER_H: 1, CENTER_V: 2, LEFT: 3, RIGHT: 4 }, text_style: { WRAP: 1, NONE: 2, ELLIPSIS: 3 },
             createWidget, deleteWidget(w) { if (current) current.widgets = current.widgets.filter(item => item !== w); },
-            setStatusBarVisible() {},
+            getTextLayout(text, { text_size, text_width }) {
+                const width = Array.from(text).length * text_size * 0.5;
+                return { width: Math.min(width, text_width), height: Math.ceil(width / text_width) * text_size * 1.25 };
+            },
+            setStatusBarVisible() {}, redraw() { redraws++; },
         },
         '@zos/device': { SCREEN_SHAPE_SQUARE: 1, getDeviceInfo: () => ({ width, height, screenShape: shape === 's' ? 1 : 0 }) },
         '@zos/router': { push: route => navigation.push({ type: 'push', route }), back: () => navigation.push({ type: 'back' }) },
@@ -78,7 +95,9 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
         },
         '@zos/interaction': {
             createModal: ({ content }) => messages.push(content),
-            onKey({ callback }) { keyCallback = callback; }, offKey() { keyCallback = null; },
+            onKey({ callback }) { keyCallback ||= callback; }, offKey() { keyCallback = null; },
+            onGesture({ callback }) { gestureCallback ||= callback; }, offGesture() { gestureCallback = null; },
+            KEY_BACK: 4, GESTURE_RIGHT: 5,
             KEY_HOME: 1, KEY_SELECT: 2, KEY_EVENT_CLICK: 3,
         },
         '@zos/sensor': {
@@ -133,9 +152,10 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
     boot();
     function destroyPage() {
         if (current) current.page.onDestroy?.();
-        current = null; keyCallback = null; scroll = null;
+        current = null; keyCallback = null; gestureCallback = null; scroll = null;
     }
     async function mount(route) {
+        pageBuilds++;
         if (!definitions.has(route.url)) {
             capturedPage = null;
             await load(route.url + '.js');
@@ -206,6 +226,16 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
     }
     return {
         reminders, vibrations, messages,
+        get pageBuildCount() { return pageBuilds; }, get redrawCount() { return redraws; },
+        checkboxState(label) {
+            const group = rowWidgets(label).find(w => w.type === 'CHECKBOX_GROUP');
+            assert.ok(group, `Checkbox for ${label}`); return !!group.children[0].selected;
+        },
+        async tapCheckbox(label) {
+            const group = rowWidgets(label).find(w => w.type === 'CHECKBOX_GROUP');
+            assert.ok(group, `Checkbox for ${label}`);
+            group.check_func(group, 0, !group.children[0].selected); await flush();
+        },
         row(label) { return rowWidgets(label).filter(w => w.type === 'TEXT').map(w => w.text).join('\n'); },
         switchState(label) {
             const track = rowWidgets(label).find(w => w.type === 'FILL_RECT' && w.radius);
@@ -216,6 +246,39 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
             return { title: widgets.find(w => w.type === 'TEXT'), subtitle: widgets.filter(w => w.type === 'TEXT')[1],
                 chevron: widgets.find(w => w.src === 'image/chevron_right.png'),
                 track: widgets.find(w => w.type === 'FILL_RECT' && w.radius), knob: widgets.find(w => w.type === 'CIRCLE') };
+        },
+        get picker() {
+            const picker = current.widgets.find(w => w.type === 'WIDGET_PICKER');
+            assert.ok(picker, 'System picker is open');
+            return { title: picker.title, hours: Array.from(picker.data_config[0].data_array),
+                minutes: Array.from(picker.data_config[1].data_array),
+                initialHour: picker.data_config[0].init_val_index,
+                initialMinute: picker.data_config[1].init_val_index };
+        },
+        async pressTick() {
+            const tick = current.widgets.find(w => w.src === 'image/ic_confirm_64px.png' && w.handlers.SELECT);
+            assert.ok(tick, 'The visible tick has an action bound to it');
+            tick.handlers.SELECT(); await flush();
+        },
+        async pressBackKey() { keyCallback?.(4, 3); await flush(); },
+        async swipeBack() { gestureCallback?.(5); await flush(); },
+        async choosePickerColumn(column, index) {
+            const picker = current.widgets.find(w => w.type === 'WIDGET_PICKER');
+            assert.ok(picker, 'System picker is open');
+            assert.ok(index >= 0 && index < picker.data_config[column].data_array.length, 'Index exists in the system picker');
+            picker.picker_cb(picker, 2, column, index); await flush();
+        },
+        async pickTime(time) {
+            const [hour, minute] = time.split(':').map(Number);
+            const picker = current.widgets.find(w => w.type === 'WIDGET_PICKER');
+            assert.ok(picker, 'System picker is open');
+            const minuteIndex = [0, 15, 30, 45].indexOf(minute);
+            assert.ok(minuteIndex >= 0, 'Only quarter-hour minutes can be selected');
+            picker.picker_cb(picker, 2, 0, hour);
+            picker.picker_cb(picker, 2, 1, minuteIndex); await flush();
+            const tick = current.widgets.find(w => w.src === 'image/ic_confirm_64px.png' && w.handlers.SELECT);
+            assert.ok(tick, 'The picker has an explicit tick action');
+            tick.handlers.SELECT(); await flush();
         },
         get radioOptions() {
             const group = current.widgets.find(w => w.type === 'RADIO_GROUP');
@@ -244,7 +307,11 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
             scroll.modeParams.on_page(Math.floor((w.y - firstRow.y) / scroll.height));
             assert.equal(keyCallback(1, 3), true); await flush();
         },
-        async back() { navigation.push({ type: 'back' }); await flush(); },
+        async back() {
+            if (current?.widgets.some(w => w.type === 'WIDGET_PICKER')) keyCallback?.(4, 3);
+            else navigation.push({ type: 'back' });
+            await flush();
+        },
         advanceTo,
         async elapse(ms) { await advanceTo(new Date(device.now.getTime() + ms)); },
         closeApp() { destroyPage(); stack.length = 0; timers.clear(); },

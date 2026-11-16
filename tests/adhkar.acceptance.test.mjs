@@ -19,16 +19,14 @@ async function enable(watch) { await openAdhkar(watch); await watch.tap('Reminde
 async function chooseSchedule(watch, label) {
     await watch.tap('Schedule'); await watch.tap(new RegExp(label + '$')); await watch.back();
 }
-async function editTime(watch, label, control, count = 1) {
-    await watch.tap(label);
-    for (let n = 0; n < count; n++) await watch.tap(control);
-    await watch.back();
+async function editTime(watch, label, time) {
+    await watch.tap(label); await watch.pickTime(time);
 }
 async function keepOnly(watch, indices) {
     await watch.tap('Collection');
     for (const [index, [arabic]] of phrases.entries()) {
         if (indices.includes(index)) continue;
-        await watch.tap(arabic); await watch.tap('Reminders'); await watch.back();
+        await watch.tap(arabic);
     }
     await watch.back();
 }
@@ -52,7 +50,10 @@ for (const shape of ['r', 's']) {
         }
         assert.equal(watch.alarmCount, 0);
         await watch.tap('Collection');
-        for (const [arabic] of phrases) assert.ok(watch.row(arabic) === arabic + '\nOn');
+        for (const [arabic, meaning] of phrases) {
+            assert.equal(watch.row(arabic), arabic + '\n' + meaning);
+            assert.equal(watch.checkboxState(arabic), true);
+        }
         await watch.back();
         await watch.selectWithCrown('Reminders');
         expectNext(watch, '2026-11-15', '09:00');
@@ -84,8 +85,8 @@ for (const [label, expectedTimes] of [
     test(`choosing ${label} respects edited waking hours and restarts at the next day's start`, async () => {
         const watch = await createWatch(); await enable(watch);
         await chooseSchedule(watch, label);
-        await editTime(watch, 'Start time', 'Hour +', 1);
-        await editTime(watch, 'End time', 'Hour −', 11);
+        await editTime(watch, 'Start time', '09:00');
+        await editTime(watch, 'End time', '11:00');
         assert.ok(watch.row('Start time') === 'Start time\n09:00');
         assert.ok(watch.row('End time') === 'End time\n11:00');
         watch.closeApp();
@@ -104,27 +105,23 @@ for (const [label, expectedTimes] of [
 
 test('edits to all three daily times save immediately and survive restarting the watch', async () => {
     let watch = await createWatch(); await enable(watch);
-    for (let index = 1; index <= 3; index++) await editTime(watch, `Daily times ${index}`, 'Minute +');
+    for (const [index, time] of ['09:15', '14:30', '20:45'].entries()) await editTime(watch, `Daily times ${index + 1}`, time);
     watch = await watch.restart();
     await openAdhkar(watch);
     assert.ok(watch.switchState('Reminders') === true);
-    for (const [index, time] of ['09:01', '14:01', '20:01'].entries()) {
+    for (const [index, time] of ['09:15', '14:30', '20:45'].entries()) {
         assert.ok(watch.row(`Daily times ${index + 1}`) === `Daily times ${index + 1}\n${time}`);
     }
-    expectNext(watch, '2026-11-15', '09:01');
-    await watch.advanceTo(at('2026-11-15', '20:01'));
-    assert.deepEqual(watch.reminders.map(reminder => [reminder.at.getHours(), reminder.at.getMinutes()]), [[9, 1], [14, 1], [20, 1]]);
+    expectNext(watch, '2026-11-15', '09:15');
+    await watch.advanceTo(at('2026-11-15', '20:45'));
+    assert.deepEqual(watch.reminders.map(reminder => [reminder.at.getHours(), reminder.at.getMinutes()]), [[9, 15], [14, 30], [20, 45]]);
 });
 
 test('only selected phrases cycle, browsing does not advance them, and restart preserves the next phrase', async () => {
     let watch = await createWatch(); await enable(watch); await keepOnly(watch, [0, 2]);
     await watch.tap('Collection');
     for (const [arabic, meaning, source] of phrases) {
-        await watch.tap(arabic);
-        assert.ok(watch.screen.includes(arabic));
-        assert.ok(watch.screen.includes(meaning));
-        assert.ok(watch.screen.includes(source));
-        await watch.back();
+        assert.equal(watch.row(arabic), arabic + '\n' + meaning);
     }
     watch.closeApp();
     await watch.advanceTo(at('2026-11-15', '09:00')); expectReminder(watch.reminders[0], 0);
@@ -134,14 +131,18 @@ test('only selected phrases cycle, browsing does not advance them, and restart p
     await watch.advanceTo(at('2026-11-16', '09:00')); expectReminder(watch.reminders[2], 2);
     await openAdhkar(watch); await watch.tap('Collection');
     for (const [index, [arabic]] of phrases.entries()) {
-        assert.ok(watch.row(arabic) === arabic + '\n' + ([0, 2].includes(index) ? 'On' : 'Off'));
+        assert.equal(watch.checkboxState(arabic), [0, 2].includes(index));
     }
 });
 
-test('enable all restores the full collection and the sequence wraps after its final phrase', async () => {
+test('selecting all checkboxes restores the full collection and the sequence wraps after its final phrase', async () => {
     const watch = await createWatch(); await enable(watch); await keepOnly(watch, [0]);
-    await watch.tap('Collection'); await watch.tap('Enable all');
-    for (const [arabic] of phrases) assert.ok(watch.row(arabic) === arabic + '\nOn');
+    await watch.tap('Collection');
+    for (const [arabic] of phrases) if (!watch.checkboxState(arabic)) await watch.tapCheckbox(arabic);
+    for (const [arabic, meaning] of phrases) {
+            assert.equal(watch.row(arabic), arabic + '\n' + meaning);
+            assert.equal(watch.checkboxState(arabic), true);
+        }
     await watch.advanceTo(at('2026-11-17', '09:00'));
     assert.equal(watch.reminders.length, 7);
     watch.reminders.forEach((reminder, index) => expectReminder(reminder, index % 6));
@@ -152,7 +153,8 @@ test('turning off the final phrase explains the change, stops reminders, and can
     assert.deepEqual(watch.messages, ['Reminders turned off: no phrases enabled.']);
     assert.ok(watch.switchState('Reminders') === false);
     assert.equal(watch.nextReminderAt, null);
-    await watch.tap('Collection'); await watch.tap('Enable all'); await watch.back();
+    await watch.tap('Collection');
+    for (const [arabic] of phrases) if (!watch.checkboxState(arabic)) await watch.tapCheckbox(arabic); await watch.back();
     assert.ok(watch.switchState('Reminders') === false, 'Selecting content alone does not enable notifications');
     await watch.advanceTo(at('2026-11-16', '08:00'));
     assert.equal(watch.reminders.length, 0);
@@ -163,7 +165,10 @@ test('turning off the final phrase explains the change, stops reminders, and can
 test('turning the master switch back on with an empty collection selects all phrases', async () => {
     const watch = await createWatch(); await enable(watch); await keepOnly(watch, []);
     await watch.tap('Reminders'); await watch.tap('Collection');
-    for (const [arabic] of phrases) assert.ok(watch.row(arabic) === arabic + '\nOn');
+    for (const [arabic, meaning] of phrases) {
+            assert.equal(watch.row(arabic), arabic + '\n' + meaning);
+            assert.equal(watch.checkboxState(arabic), true);
+        }
     expectNext(watch, '2026-11-15', '09:00');
 });
 
@@ -218,23 +223,21 @@ test('failed alarm creation is recovered when the app is reopened', async () => 
     await watch.advanceTo(at('2026-11-15', '09:00')); expectReminder(watch.reminders[0], 0);
 });
 
-test('invalid clock edits explain the problem and preserve the last valid schedule', async () => {
+test('invalid picker choices explain the problem and preserve the last valid schedule', async () => {
     const watch = await createWatch(); await enable(watch);
-    await watch.tap('Start time');
-    await watch.tap('Hour +'); // 09:00 still contains the first daily reminder.
-    await watch.tap('Hour +'); // 10:00 would exclude it.
-    assert.ok(watch.screen.includes('09:00'));
+    await watch.tap('Start time'); await watch.pickTime('10:00');
     assert.ok(watch.messages.at(-1).includes('within the waking window'));
-    await watch.back(); expectNext(watch, '2026-11-15', '09:00');
-    await watch.tap('Daily times 2');
-    for (let n = 0; n < 5; n++) await watch.tap('Hour −'); // Reject collision with 09:00.
-    assert.ok(watch.screen.includes('10:00'));
+    expectNext(watch, '2026-11-15', '09:00');
+    await watch.pickTime('09:00');
+    assert.equal(watch.row('Start time'), 'Start time\n09:00');
+    await watch.tap('Daily times 2'); await watch.pickTime('09:00');
     assert.equal(watch.messages.length, 2);
+    await watch.pickTime('10:00');
+    assert.equal(watch.row('Daily times 2'), 'Daily times 2\n10:00');
+    await watch.tap('End time'); await watch.pickTime('00:00');
+    assert.equal(watch.messages.length, 3);
     await watch.back();
-    await watch.tap('End time');
-    for (let n = 0; n < 3; n++) await watch.tap('Hour +'); // Reject an end at 00:00.
-    assert.ok(watch.screen.includes('23:00'));
-    assert.equal(watch.messages.length, 4);
+    assert.equal(watch.row('End time'), 'End time\n22:00');
     expectNext(watch, '2026-11-15', '09:00');
 });
 
@@ -270,11 +273,38 @@ for (const [language, title, reminderLabel] of [
         test(`${shape}/${language}: the user enables reminders and reads Arabic with the app-language meaning`, async () => {
             const watch = await createWatch({ shape, language });
             await watch.openSettings(); await watch.tap(title); await watch.tap(reminderLabel);
+            // The collection must show Arabic primary text and native-language
+            // meaning, rather than replacing the meaning with an On/Off status.
+            const collectionLabel = {
+                english: 'Collection', arabic: 'مجموعة الأذكار', 'arabic-latin': 'مجموعة الأذكار',
+                farsi: 'مجموعهٔ اذکار', indonesian: 'Kumpulan zikir', turkish: 'Zikir listesi',
+                urdu: 'اذکار کا مجموعہ', malay: 'Koleksi zikir', bengali: 'যিকির সংগ্রহ',
+                french: 'Collection', russian: 'Сборник',
+            }[language];
+            await watch.tap(collectionLabel);
+            for (const [index, [arabic]] of phrases.entries()) {
+                assert.equal(watch.row(arabic), arabic + '\n' + meanings[language === 'arabic-latin' ? 'arabic' : language][index]);
+                const appearance = watch.appearance(arabic);
+                assert.equal(appearance.title.text_size, 36);
+                assert.equal(appearance.subtitle.text_size, 32);
+                assert.ok(appearance.title.h >= appearance.title.text_size * 1.5, 'Title has room for Arabic descenders and vowel marks');
+                assert.ok(appearance.subtitle.h >= appearance.subtitle.text_size * 1.5, 'Subtitle has room below the baseline');
+                assert.ok(appearance.title.y + appearance.title.h <= appearance.subtitle.y, 'Expanded text boxes do not overlap');
+                assert.equal(appearance.title.align_h, 4, 'Arabic remains right-aligned in every app language');
+            }
+            await watch.back();
             for (const { x, w } of watch.textBounds) assert.ok(x >= 0 && x + w <= (shape === 'r' ? 480 : 390));
             for (const [index, time] of ['09:00', '14:00', '20:00', '09:00', '14:00', '20:00'].entries()) {
                 await watch.advanceTo(at(index < 3 ? '2026-11-15' : '2026-11-16', time));
                 assert.deepEqual(watch.screen, [title, phrases[index][0], meanings[language === 'arabic-latin' ? 'arabic' : language][index]]);
                 assert.equal(watch.reminders[index].interactive, 0);
+                const [heading, arabicText, translation] = watch.scene.filter(w => w.type === 'TEXT');
+                assert.ok(arabicText.text_size >= (shape === 'r' ? 64 : 56), 'Arabic is the large primary content');
+                assert.ok(arabicText.text_size > heading.text_size * 1.8);
+                assert.ok(arabicText.text_size > translation.text_size * 1.7);
+                assert.ok(heading.y + heading.h <= arabicText.y);
+                assert.ok(arabicText.y + arabicText.h <= translation.y);
+                assert.ok(translation.y + translation.h <= (shape === 'r' ? 480 : 390));
                 await watch.elapse(15000); assert.deepEqual(watch.screen, []);
             }
         });
@@ -294,8 +324,8 @@ for (const [before, after] of [['2026-12-31', '2027-01-01'], ['2026-03-28', '202
 test('half-hour reminders skip nonexistent spring clock times without duplicate catch-up alerts', async () => {
     const watch = await createWatch({ now: at('2026-03-28', '23:00') });
     await enable(watch); await chooseSchedule(watch, 'Every 30 minutes');
-    await editTime(watch, 'Start time', 'Hour −', 8);
-    await editTime(watch, 'End time', 'Hour −', 19);
+    await editTime(watch, 'Start time', '00:00');
+    await editTime(watch, 'End time', '03:00');
     for (const [index, time] of ['00:00', '00:30', '02:00', '02:30', '03:00'].entries()) {
         expectNext(watch, '2026-03-29', time);
         await watch.advanceTo(at('2026-03-29', time));
@@ -309,9 +339,8 @@ test('half-hour reminders skip nonexistent spring clock times without duplicate 
 test('the collection can be read with reminders off and browsing schedules nothing', async () => {
     const watch = await createWatch(); await openAdhkar(watch); await watch.tap('Collection');
     for (const [arabic, meaning, source] of phrases) {
-        await watch.tap(arabic);
-        assert.deepEqual(watch.screen, ['Adhkar', arabic, meaning, source, 'Reminders']);
-        await watch.back();
+        assert.equal(watch.row(arabic), arabic + '\n' + meaning);
+        assert.equal(watch.checkboxState(arabic), true);
     }
     assert.equal(watch.alarmCount, 0);
     watch.closeApp(); await watch.advanceTo(at('2026-11-16', '23:00'));
@@ -351,7 +380,10 @@ for (const shape of ['r', 's']) {
             assert.equal(nav.chevron.angle, existingRow.chevron.angle);
             assert.equal(nav.title.align_h, existingRow.title.align_h);
             assert.equal(nav.subtitle.color, 0xa6a6a6);
-            assert.ok(nav.subtitle.text_size < nav.title.text_size);
+            assert.equal(nav.title.text_size, 36);
+            assert.equal(nav.subtitle.text_size, 32);
+            assert.equal(watch.appearance(labels[1]).title.text_size, nav.title.text_size);
+            assert.equal(existingRow.title.text_size, nav.title.text_size);
             assert.ok(nav.title.y + nav.title.h <= nav.subtitle.y);
             if (rtl) assert.ok(nav.chevron.x + nav.chevron.w <= nav.title.x);
             else assert.ok(nav.title.x + nav.title.w <= nav.chevron.x);
@@ -374,4 +406,125 @@ for (const shape of ['r', 's']) {
             assert.equal(timeRow.subtitle.text, rtl ? '٠٨:٠٠' : '08:00');
         });
     }
+}
+
+
+for (const shape of ['r', 's']) {
+    test(`${shape}: daily time rows are shown only for the three-times-daily schedule`, async () => {
+        const watch = await createWatch({ shape }); await enable(watch);
+        await editTime(watch, 'Daily times 1', '09:15');
+        for (const schedule of ['Every 30 minutes', 'Every hour', 'Every two hours']) {
+            await chooseSchedule(watch, schedule);
+            assert.equal(watch.screen.filter(text => text.startsWith('Daily times')).length, 0);
+            assert.ok(watch.screen.includes('Start time'));
+            assert.ok(watch.screen.includes('End time'));
+            await chooseSchedule(watch, 'Three times daily');
+            assert.deepEqual(watch.screen.filter(text => text.startsWith('Daily times')), ['Daily times 1', 'Daily times 2', 'Daily times 3']);
+            assert.equal(watch.row('Daily times 1'), 'Daily times 1\n09:15');
+        }
+    });
+
+    test(`${shape}: the system picker offers only quarter hours and saves when the tick confirms the draft`, async () => {
+        let watch = await createWatch({ shape }); await enable(watch);
+        await watch.tap('Daily times 1');
+        assert.equal(watch.picker.title, 'Daily times 1');
+        assert.deepEqual(watch.picker.hours, Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0')));
+        assert.deepEqual(watch.picker.minutes, ['00', '15', '30', '45']);
+        assert.equal(watch.picker.initialHour, 9); assert.equal(watch.picker.initialMinute, 0);
+        await watch.choosePickerColumn(0, 10);
+        expectNext(watch, '2026-11-15', '09:00'); // Selecting only an hour does not save.
+        await watch.back(); // Cancel unfinished selection.
+        assert.equal(watch.row('Daily times 1'), 'Daily times 1\n09:00');
+        await watch.tap('Daily times 1'); await watch.pickTime('10:45');
+        assert.equal(watch.row('Daily times 1'), 'Daily times 1\n10:45');
+        expectNext(watch, '2026-11-15', '10:45');
+        watch = await watch.restart(); await openAdhkar(watch); await watch.tap('Daily times 1');
+        assert.equal(watch.picker.initialHour, 10); assert.equal(watch.picker.initialMinute, 3);
+        await watch.back();
+        await watch.advanceTo(at('2026-11-15', '10:45')); expectReminder(watch.reminders[0], 0);
+    });
+}
+
+test('returning to daily reminders after narrowing the interval window restores three editable times inside it', async () => {
+    const watch = await createWatch(); await enable(watch); await chooseSchedule(watch, 'Every hour');
+    await editTime(watch, 'Start time', '09:00'); await editTime(watch, 'End time', '11:00');
+    await chooseSchedule(watch, 'Three times daily');
+    assert.equal(watch.row('Daily times 1'), 'Daily times 1\n09:00');
+    assert.equal(watch.row('Daily times 2'), 'Daily times 2\n10:00');
+    assert.equal(watch.row('Daily times 3'), 'Daily times 3\n11:00');
+    await watch.advanceTo(at('2026-11-15', '11:00'));
+    assert.deepEqual(watch.reminders.map(reminder => reminder.at.getHours()), [9, 10, 11]);
+});
+
+
+for (const shape of ['r', 's']) {
+    test(`${shape}: pressing the time picker's tick returns even without changing either wheel`, async () => {
+        const watch = await createWatch({ shape }); await enable(watch);
+        await watch.tap('Daily times 1'); await watch.pressTick();
+        assert.equal(watch.row('Daily times 1'), 'Daily times 1\n09:00');
+        expectNext(watch, '2026-11-15', '09:00');
+    });
+    test(`${shape}: hardware Back and swipe Back leave the time picker without saving`, async () => {
+        const watch = await createWatch({ shape }); await enable(watch);
+        await watch.tap('Daily times 1'); await watch.choosePickerColumn(0, 10);
+        await watch.choosePickerColumn(1, 2);
+        await watch.pressBackKey();
+        assert.equal(watch.row('Daily times 1'), 'Daily times 1\n09:00');
+        await watch.tap('Daily times 1'); await watch.choosePickerColumn(0, 11);
+        await watch.swipeBack();
+        assert.equal(watch.row('Daily times 1'), 'Daily times 1\n09:00');
+    });
+}
+
+
+test('changing both time wheels does not save or navigate until the tick is pressed', async () => {
+    const watch = await createWatch(); await enable(watch);
+    await watch.tap('Daily times 1');
+    await watch.choosePickerColumn(0, 10); await watch.choosePickerColumn(1, 2);
+    assert.equal(watch.picker.title, 'Daily times 1');
+    expectNext(watch, '2026-11-15', '09:00');
+    await watch.pressTick();
+    assert.equal(watch.row('Daily times 1'), 'Daily times 1\n10:30');
+    expectNext(watch, '2026-11-15', '10:30');
+    await watch.tap('Daily times 1'); await watch.pressBackKey();
+    await watch.tap('Schedule'); await watch.selectWithCrown('Every hour');
+    await watch.back(); assert.equal(watch.row('Schedule'), 'Schedule\nEvery hour');
+});
+
+
+for (const shape of ['r', 's']) {
+    test(`${shape}: time picker confirmation and cancellation keep the settings page mounted`, async () => {
+        const watch = await createWatch({ shape }); await enable(watch);
+        const builds = watch.pageBuildCount;
+        await watch.tap('Daily times 1');
+        assert.equal(watch.pageBuildCount, builds, 'Picker overlays the existing list');
+        await watch.pickTime('10:15');
+        assert.equal(watch.pageBuildCount, builds, 'Confirm does not rebuild the previous page');
+        assert.equal(watch.row('Daily times 1'), 'Daily times 1\n10:15');
+        await watch.tap('Daily times 1'); await watch.pressBackKey();
+        assert.equal(watch.pageBuildCount, builds);
+        assert.ok(watch.redrawCount >= 2, 'Underlying widgets redraw immediately after removing the overlay');
+    });
+    test(`${shape}: dhikr rows toggle inline checkboxes and scroll long translations`, async () => {
+        const watch = await createWatch({ shape }); await enable(watch); await watch.tap('Collection');
+        const builds = watch.pageBuildCount;
+        const [arabic, meaning] = phrases[3];
+        assert.equal(watch.checkboxState(arabic), true);
+        await watch.tap(arabic);
+        assert.equal(watch.checkboxState(arabic), false);
+        assert.equal(watch.pageBuildCount, builds, 'No dhikr subpage');
+        await watch.tapCheckbox(arabic);
+        assert.equal(watch.checkboxState(arabic), true);
+        const appearance = watch.appearance(arabic);
+        assert.equal(appearance.chevron, undefined);
+        assert.equal(appearance.subtitle.text, meaning);
+        assert.equal(appearance.subtitle.text_style, 2, 'Native scrolling text instead of ellipsis');
+        assert.equal(appearance.title.text_style, 2, 'Long Arabic titles scroll too');
+        assert.deepEqual(watch.screen, ['Collection', ...phrases.flatMap(([arabic, meaning]) => [arabic, meaning])], 'Collection contains only dhikr rows');
+        await watch.back(); await watch.tap('Schedule');
+        await watch.tap('Every two hours'); await watch.back();
+        assert.equal(watch.appearance('Schedule').subtitle.text_style, 2);
+        assert.equal(watch.appearance('Schedule').title.text_style, 2);
+        assert.equal(watch.appearance('Reminders').title.text_style, 2);
+    });
 }
