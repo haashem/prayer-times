@@ -34,6 +34,7 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
     let keyCallback;
     let gestureCallback;
     let scroll;
+    let scrollIndex = 0;
     let failNextAlarm = false;
 
     function createWidget(type, properties) {
@@ -91,7 +92,7 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
         '@zos/display': { setPageBrightTime({ brightTime }) { current.brightTime = brightTime; } },
         '@zos/page': { SCROLL_MODE_SWIPER: 1, SCROLL_ANIMATION_NONE: 0,
             setScrollMode(options) { scroll = options.options; },
-            swipeToIndex({ index }) { scroll?.modeParams?.on_page?.(index); },
+            swipeToIndex({ index }) { scrollIndex = index; scroll?.modeParams?.on_page?.(index); },
         },
         '@zos/interaction': {
             createModal: ({ content }) => messages.push(content),
@@ -226,7 +227,7 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
     }
     return {
         reminders, vibrations, messages,
-        get pageBuildCount() { return pageBuilds; }, get redrawCount() { return redraws; },
+        get pageBuildCount() { return pageBuilds; }, get scrollIndex() { return scrollIndex; }, get redrawCount() { return redraws; },
         checkboxState(label) {
             const group = rowWidgets(label).find(w => w.type === 'CHECKBOX_GROUP');
             assert.ok(group, `Checkbox for ${label}`); return !!group.children[0].selected;

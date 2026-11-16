@@ -493,17 +493,28 @@ test('changing both time wheels does not save or navigate until the tick is pres
 
 
 for (const shape of ['r', 's']) {
-    test(`${shape}: time picker confirmation and cancellation keep the settings page mounted`, async () => {
+    test(`${shape}: time rows push the dedicated picker page and pop back to their original row`, async () => {
         const watch = await createWatch({ shape }); await enable(watch);
-        const builds = watch.pageBuildCount;
-        await watch.tap('Daily times 1');
-        assert.equal(watch.pageBuildCount, builds, 'Picker overlays the existing list');
-        await watch.pickTime('10:15');
-        assert.equal(watch.pageBuildCount, builds, 'Confirm does not rebuild the previous page');
+        for (const [label, title, focus] of [
+            ['Start time', 'Start time', 2], ['End time', 'End time', 3],
+            ['Daily times 1', 'Daily times 1', 4], ['Daily times 2', 'Daily times 2', 5], ['Daily times 3', 'Daily times 3', 6],
+        ]) {
+            const builds = watch.pageBuildCount;
+            await watch.tap(label);
+            assert.equal(watch.route, 'page/gt/adhkar-time-picker/index.page');
+            assert.equal(watch.picker.title, title);
+            assert.equal(watch.pageBuildCount, builds + 1, 'Picker gets its own page lifecycle');
+            await watch.pressTick();
+            assert.equal(watch.route, 'page/gt/adhkar/index.page');
+            assert.equal(watch.scrollIndex, focus, 'Return restores crown and scroll position');
+            assert.equal(watch.pageBuildCount, builds + 2);
+        }
+        await watch.tap('Daily times 1'); await watch.pickTime('10:15');
         assert.equal(watch.row('Daily times 1'), 'Daily times 1\n10:15');
-        await watch.tap('Daily times 1'); await watch.pressBackKey();
-        assert.equal(watch.pageBuildCount, builds);
-        assert.ok(watch.redrawCount >= 2, 'Underlying widgets redraw immediately after removing the overlay');
+        await watch.tap('Daily times 1'); await watch.choosePickerColumn(0, 11); await watch.pressBackKey();
+        assert.equal(watch.route, 'page/gt/adhkar/index.page');
+        assert.equal(watch.row('Daily times 1'), 'Daily times 1\n10:15');
+        assert.equal(watch.scrollIndex, 4);
     });
     test(`${shape}: dhikr rows toggle inline checkboxes and scroll long translations`, async () => {
         const watch = await createWatch({ shape }); await enable(watch); await watch.tap('Collection');

@@ -31,16 +31,6 @@ export function createAdhkarLayout(settings, notifications, radio, square) {
     }
     return {
         TITLE_STYLE: settings.TITLE_STYLE, rowHeight, start,
-        pickerConfirmButton: {
-            x: 0, y: notifications.DEVICE_HEIGHT - px(square ? 80 : 96),
-            w: settings.DEVICE_WIDTH, h: px(square ? 80 : 96),
-            normal_color: 0x333333, press_color: 0x242424,
-        },
-        pickerConfirmIcon: {
-            x: (settings.DEVICE_WIDTH - px(64)) / 2,
-            y: notifications.DEVICE_HEIGHT - px(square ? 72 : 80), w: px(64), h: px(64),
-        },
-
         row,
         text,
         subtitle(index, kind, rtl, height = rowHeight) {

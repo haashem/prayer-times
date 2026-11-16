@@ -1,28 +1,34 @@
 import { LAYOUT } from "zosLoader:./index.page.[pf].layout.js";
-import { createWidget, deleteWidget, widget, prop, event, align, setStatusBarVisible, redraw } from '@zos/ui';
+import { createWidget, widget, prop, event, align, setStatusBarVisible } from '@zos/ui';
 import { push } from '@zos/router';
 import { setPageBrightTime } from '@zos/display';
-import { createModal, onKey, offKey, onGesture, offGesture, GESTURE_RIGHT, KEY_BACK, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK } from '@zos/interaction';
-import { setScrollMode, SCROLL_MODE_SWIPER } from '@zos/page';
+import { createModal, onKey, offKey, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK } from '@zos/interaction';
+import { setScrollMode, swipeToIndex, SCROLL_ANIMATION_NONE, SCROLL_MODE_SWIPER } from '@zos/page';
 import { BasePage } from '@zeppos/zml/base-page';
 import { t, getAppLanguage, localizeDigits, isRtl } from '../../../utils/i18n';
 import { ADHKAR, getAdhkarMeaning } from '../../../utils/adhkar-content';
 import { ADHKAR_MODES, getAdhkarSettings, saveAdhkarSettings } from '../../../utils/adhkar';
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from '@zos/device';
+import { getAppCache } from '../../../utils/location-storage';
 
-const MINUTES = [0, 15, 30, 45];
 const MODE_KEYS = ['adhkarDaily', 'adhkar30', 'adhkar60', 'adhkar120'];
 function timeLabel(value) {
     return localizeDigits(('0' + Math.floor(value / 60)).slice(-2) + ':' + ('0' + value % 60).slice(-2));
 }
 
 Page(BasePage({
-    state: { view: 'main', id: null, settings: null, rows: [], labels: [], focus: 0, focusTop: null, focusBottom: null, title: null, radioGroup: null, radioButtons: [], updatingRadio: false, picker: null, pickerWidgets: [], pickerClosing: false, timeId: null, updatingCheckbox: false },
+    state: { view: 'main', id: null, settings: null, rows: [], labels: [], focus: 0, focusTop: null, focusBottom: null, title: null, radioGroup: null, radioButtons: [], updatingRadio: false, updatingCheckbox: false },
     onInit(params) {
         try {
             const data = typeof params === 'string' ? JSON.parse(params) : params;
             if (data) { this.state.view = data.view || 'main'; this.state.id = data.id; }
         } catch (e) { /* Use the main screen for malformed route parameters. */ }
+        const cache = getAppCache();
+        const saved = cache && cache.adhkarReturnFocus;
+        if (saved && saved.view === this.state.view) {
+            this.state.focus = saved.index;
+            delete cache.adhkarReturnFocus;
+        }
     },
     build() {
         this.state.settings = getAdhkarSettings();
@@ -42,6 +48,8 @@ Page(BasePage({
         this.state.focusTop = createWidget(widget.IMG, { ...LAYOUT.focusTop(0, this.rowHeight), src: 'image/focus_line_top.png' });
         this.state.focusBottom = createWidget(widget.IMG, { ...LAYOUT.focusBottom(0, this.rowHeight), src: 'image/focus_line_bottom.png' });
         createWidget(widget.FILL_RECT, LAYOUT.bottom(this.state.rows.length, this.rowHeight));
+        this.focus(this.state.focus);
+        swipeToIndex({ index: this.state.focus, animation: SCROLL_ANIMATION_NONE });
         this.registerListKeys();
     },
     registerListKeys() {
@@ -125,14 +133,12 @@ Page(BasePage({
         } finally { this.state.updatingRadio = false; }
     },
     open(view, id) {
-        if (view === 'time') {
-            this.state.timeId = id;
-            this.state.pickerClosing = false;
-            offKey(); offGesture();
-            this.renderTimePicker();
-            return;
-        }
-        push({ url: 'page/gt/adhkar/index.page', params: JSON.stringify({ view, id }) });
+        const cache = getAppCache();
+        if (cache) cache.adhkarReturnFocus = { view: this.state.view, index: this.state.focus };
+        push({
+            url: view === 'time' ? 'page/gt/adhkar-time-picker/index.page' : 'page/gt/adhkar/index.page',
+            params: JSON.stringify(view === 'time' ? { id } : { view, id }),
+        });
     },
     syncCheckbox(entry, checked) {
         this.state.updatingCheckbox = true;
@@ -181,85 +187,6 @@ Page(BasePage({
             { text: () => t('adhkarCollection'), action: () => this.open('collection') },
         ];
     },
-    timeValue() {
-        const id = this.state.timeId;
-        return id === 'start' || id === 'end' ? this.state.settings[id] : this.state.settings.times[Number(id)] || 0;
-    },
-    renderTimePicker() {
-        const value = this.timeValue();
-        const id = this.state.timeId;
-        const title = id === 'start' ? t('adhkarStart') : id === 'end' ? t('adhkarEnd')
-            : t('adhkarTimes') + ' ' + localizeDigits(Number(id) + 1);
-        let hour = Math.floor(value / 60);
-        let minute = value % 60;
-        this.state.picker = createWidget(widget.WIDGET_PICKER, {
-            title, nb_of_columns: 2, init_col_index: 0,
-            normal_color: 0x4a4a4d, select_color: 0x078bd1,
-            done_icon: 'image/ic_confirm_64px.png',
-            data_config: [
-                { data_array: Array.from({ length: 24 }, (_, index) => localizeDigits(('0' + index).slice(-2))),
-                    init_val_index: hour, connector: ':', support_loop: true,
-                    font_size: 64, select_font_size: 80, connector_font_size: 64 },
-                { data_array: MINUTES.map(value => localizeDigits(('0' + value).slice(-2))),
-                    init_val_index: MINUTES.indexOf(minute), support_loop: true,
-                    font_size: 64, select_font_size: 80 },
-            ],
-            picker_cb: (picker, eventType, column, index) => {
-                // Column selection updates the draft; it is not completion.
-                if (eventType !== 2 || !Number.isInteger(index)) return;
-                if (column === 0 && index >= 0 && index < 24) hour = index;
-                else if (column === 1 && index >= 0 && index < MINUTES.length) minute = MINUTES[index];
-            },
-        });
-        const confirm = () => {
-            if (this.state.pickerClosing) return;
-            const next = { ...this.state.settings, times: this.state.settings.times.slice() };
-            if (id === 'start' || id === 'end') next[id] = hour * 60 + minute;
-            else next.times[Number(id)] = hour * 60 + minute;
-            if (!saveAdhkarSettings(next)) { this.message('adhkarInvalidTime'); return; }
-            this.closeTimePicker();
-        };
-        // Own the visible tick instead of treating a wheel callback as a
-        // completion event. Both its image and background receive taps.
-        const confirmButton = createWidget(widget.BUTTON, { ...LAYOUT.pickerConfirmButton, text: '', click_func: confirm });
-        const tick = createWidget(widget.IMG, { ...LAYOUT.pickerConfirmIcon, src: 'image/ic_confirm_64px.png' });
-        tick.addEventListener(event.SELECT, confirm);
-        this.state.pickerWidgets = [confirmButton, tick];
-
-        // Native full-screen widgets can install input listeners. Zepp allows
-        // one listener per kind, so release those before registering ours.
-        offKey();
-        onKey({ callback: (key, keyEvent) => {
-            if (keyEvent !== KEY_EVENT_CLICK) return false;
-            if (key === KEY_BACK) { this.closeTimePicker(); return true; }
-            if (key === KEY_SELECT) { confirm(); return true; }
-            return false;
-        } });
-        offGesture();
-        onGesture({ callback: (gesture) => {
-            if (gesture !== GESTURE_RIGHT) return false;
-            this.closeTimePicker(); return true;
-        } });
-    },
-    closeTimePicker() {
-        if (this.state.pickerClosing) return;
-        this.state.pickerClosing = true;
-        this.releaseTimePicker();
-        this.state.settings = getAdhkarSettings();
-        this.refreshRows();
-        this.registerListKeys();
-        redraw();
-    },
-    releaseTimePicker() {
-        if (!this.state.picker) return;
-        const picker = this.state.picker;
-        this.state.picker = null;
-        offKey(); offGesture();
-        deleteWidget(picker);
-        for (const widget of this.state.pickerWidgets) deleteWidget(widget);
-        this.state.pickerWidgets = [];
-    },
-
     selectMode(mode) {
         const next = { ...this.state.settings, mode };
         // Daily controls are hidden in interval mode. If its window changed,
@@ -294,5 +221,5 @@ Page(BasePage({
         if (this.state.focusTop) this.state.focusTop.setProperty(prop.MORE, LAYOUT.focusTop(this.state.focus, this.rowHeight));
         if (this.state.focusBottom) this.state.focusBottom.setProperty(prop.MORE, LAYOUT.focusBottom(this.state.focus, this.rowHeight));
     },
-    onDestroy() { this.releaseTimePicker(); offKey(); this.state.labels = []; },
+    onDestroy() { offKey(); this.state.labels = []; },
 }));

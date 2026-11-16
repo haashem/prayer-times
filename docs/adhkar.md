@@ -17,10 +17,11 @@ spaced times inside the new window are restored.
 Time selection uses Zepp's API 3.0 `WIDGET_PICKER`, with hours 00–23 and minutes
 00, 15, 30, 45. Wheel selections update a draft only. The visible tick validates
 and saves the complete draft, then returns, including when neither wheel changed.
-Hardware Back and right-swipe Back cancel without saving. The picker overlays the existing settings list. Closing it removes only the
-overlay, restores list input and immediately redraws the existing widgets. There
-is no router navigation or reconstruction of the parent page. Selection callbacks
-are not treated as completion events.
+Hardware Back and right-swipe Back cancel without saving. Start time, End time and each daily time row push the dedicated
+`page/gt/adhkar-time-picker/index.page` route with the selected setting ID.
+Tick saves and pops that page; hardware Back or a right-swipe pops without saving.
+The adhkar list reloads saved values and restores focus/scroll to the selected row.
+Selection callbacks are not treated as completion events.
 Invalid choices leave the picker open and the existing setting/alarm unchanged.
 Older individual-minute values are rounded to the nearest quarter hour, with
 collisions repaired so preferences remain editable.
@@ -101,7 +102,7 @@ are fixed test fixtures rather than values imported from the production catalog.
 | Read-only alerts | Check the exact Arabic and translated text, notification vibration, absence of interactive controls, and automatic return after 15 seconds, including from an open app. |
 | Missed and outdated delivery | Deliver overdue, superseded and duplicate alarms; verify no backlog or rotation until a reminder displays. Recover failed/expired schedules by reopening Home. |
 | Prayer overlap | Schedule real prayer alerts at the same time and five minutes later; verify both alerts display and future adhkar continue. |
-| Picker navigation | Press the visible tick without moving wheels; select both wheels then confirm or cancel using hardware Back/right swipe; reopen and verify settings input still works; assert the underlying list stays mounted throughout. |
+| Picker navigation | Press the visible tick without moving wheels; select both wheels then confirm or cancel using hardware Back/right swipe; reopen and verify settings input still works; assert all five time rows push the dedicated page and pop back with their original scroll/focus position. |
 | Local time and validation | Offer only quarter-hour minutes, cancel unfinished selections, reject conflicting/out-of-window choices; deliver across year/DST boundaries and skip nonexistent spring times. |
 | Languages and shapes | Enable from Settings and read all six Arabic/meaning pairs in every language option on both screen shapes. |
 
