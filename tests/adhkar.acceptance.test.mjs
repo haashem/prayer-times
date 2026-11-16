@@ -60,7 +60,7 @@ for (const shape of ['r', 's']) {
         assert.equal(watch.reminders.length, 0);
         await watch.advanceTo(at('2026-11-15', '09:00'));
         expectReminder(watch.reminders[0], 0);
-        assert.deepEqual(watch.vibrations.map(event => event.mode), ['notification']);
+        assert.deepEqual(watch.vibrations.map(event => event.mode), ['notification'], 'Adhkar uses the regular prayer notification pattern');
         await watch.elapse(4999);
         assert.ok(watch.screen.includes(phrases[0][0]));
         await watch.elapse(1);

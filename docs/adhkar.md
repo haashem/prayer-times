@@ -27,8 +27,8 @@ Invalid choices leave the picker open and the existing setting/alarm unchanged.
 Older individual-minute values are rounded to the nearest quarter hour, with
 collisions repaired so preferences remain editable.
 
-Each reminder shows Arabic and the app-language meaning, vibrates once using
-the notification scene, and returns after 5 seconds. The watch Back button dismisses it immediately; there is no onscreen dismiss button.
+Each reminder shows Arabic and the app-language meaning and returns after 5 seconds.
+It uses `VIBRATOR_SCENE_NOTIFICATION`, matching regular prayer alerts. The watch Back button dismisses it immediately; there is no onscreen dismiss button.
 There are no counts or completion states. It does not inspect or suppress prayer
 alerts. Reading the collection does not advance the reminder sequence.
 
@@ -121,7 +121,7 @@ are fixed test fixtures rather than values imported from the production catalog.
 Before release, verify on physical round and square watches:
 
 - Arabic shaping, diacritics, font coverage and wrapping in every language.
-- A single vibration and automatic return after 5 seconds.
+- Notification vibration and automatic return after 5 seconds.
 - Delivery after reboot, while the app is closed, and under DND/sleep modes.
 - Back-to-back and simultaneous prayer/adhkar alerts. No priority policy is
   imposed by this feature; actual arbitration belongs to the watch OS.
