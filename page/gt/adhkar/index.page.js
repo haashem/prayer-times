@@ -134,9 +134,13 @@ Page(BasePage({
     open(view, id) {
         const cache = getAppCache();
         if (cache) cache.adhkarReturnFocus = { view: this.state.view, index: this.state.focus };
+        const previewIds = this.state.settings.enabledIds.length
+            ? this.state.settings.enabledIds : ADHKAR.map(item => item.id);
         push({
-            url: view === 'time' ? 'page/gt/adhkar-time-picker/index.page' : 'page/gt/adhkar/index.page',
-            params: JSON.stringify(view === 'time' ? { id } : { view, id }),
+            url: view === 'time' ? 'page/gt/adhkar-time-picker/index.page'
+                : view === 'test' ? 'page/gt/adhkar-alert/index.page' : 'page/gt/adhkar/index.page',
+            params: JSON.stringify(view === 'time' ? { id } : view === 'test'
+                ? { adhkar: true, test: true, id: previewIds[Math.floor(Math.random() * previewIds.length)] } : { view, id }),
         });
     },
     syncCheckbox(entry, checked) {
@@ -176,6 +180,7 @@ Page(BasePage({
                 text: () => t('adhkarTimes') + ' ' + localizeDigits(index + 1), subtitle: () => timeLabel(this.state.settings.times[index]),
                 action: () => this.open('time', index),
             })) : []),
+            { text: () => t('adhkarTest'), action: () => this.open('test') },
             { text: () => t('adhkarCollection'), kind: 'section' },
             ...ADHKAR.map((item) => ({ text: () => item.arabic, subtitle: () => getAdhkarMeaning(item.id, getAppLanguage()),
                 kind: 'checkbox', checked: () => this.state.settings.enabledIds.indexOf(item.id) !== -1,

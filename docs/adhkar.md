@@ -28,9 +28,14 @@ Older individual-minute values are rounded to the nearest quarter hour, with
 collisions repaired so preferences remain editable.
 
 Each reminder shows Arabic and the app-language meaning, vibrates once using
-the notification scene, and returns after 15 seconds. There are no reminder
-buttons, counts or completion states. It does not inspect or suppress prayer
+the notification scene, and returns after 5 seconds. The watch Back button dismisses it immediately; there is no onscreen dismiss button.
+There are no counts or completion states. It does not inspect or suppress prayer
 alerts. Reading the collection does not advance the reminder sequence.
+
+To preview an alert immediately, tap **Test reminder** on the Adhkar page.
+It shows a random selected phrase (or a random phrase from the full collection if none are selected),
+vibrates and closes after 5 seconds. Testing works while reminders are off and
+never changes the scheduled alarm, enabled settings or reminder rotation.
 
 ## Watch design
 
@@ -45,8 +50,8 @@ alignment and chevrons mirror for RTL languages.
 Single-line and two-line row titles share the 36px settings typography;
 subtitles are 32px. The collection always shows Arabic as the primary text and
 the app-language meaning as its subtitle, with a native checkbox on each row. Two-line labels and values are
-separate text widgets, with reserved control space. Overflowing row titles and subtitles use native scrolling text, so the full phrase and translation can be read. The reminder retains
-its read-only interaction, with a white heading and muted translation.
+separate text widgets, with reserved control space. Overflowing row titles and subtitles use native scrolling text, so the full phrase and translation can be read. The reminder presents a large Arabic phrase and muted translation using the full screen, without repetition counts or completion tracking. Its heading,
+Arabic phrase and translation all use native scrolling text for overflow.
 Acceptance scenarios compare these visible controls with the app's existing
 Settings appearance on round/square and English/Arabic screens.
 
@@ -100,7 +105,7 @@ are fixed test fixtures rather than values imported from the production catalog.
 | Saved settings | Choose all three daily times through the system picker, restart the runtime, and receive reminders at the saved times. |
 | Selection and rotation | Toggle a subset directly in the collection, read content without advancing rotation, restart between deliveries, restore all phrases, and cycle past the final phrase. |
 | Disabled reminders | Turn off the master switch or final phrase, check the explanation, reject an already queued alarm, and re-enable. |
-| Read-only alerts | Check the exact Arabic and translated text, notification vibration, absence of interactive controls, and automatic return after 15 seconds, including from an open app. |
+| Reminder display | Check the exact Arabic and translated text, notification vibration, hardware Back dismissal with timer cleanup, and automatic return after 5 seconds, including from an open app. |
 | Missed and outdated delivery | Deliver overdue, superseded and duplicate alarms; verify no backlog or rotation until a reminder displays. Recover failed/expired schedules by reopening Home. |
 | Prayer overlap | Schedule real prayer alerts at the same time and five minutes later; verify both alerts display and future adhkar continue. |
 | Picker navigation | Press the visible tick without moving wheels; select both wheels then confirm or cancel using hardware Back/right swipe; reopen and verify settings input still works; assert all five time rows push the dedicated page and pop back with their original scroll/focus position. |
@@ -110,7 +115,7 @@ are fixed test fixtures rather than values imported from the production catalog.
 Before release, verify on physical round and square watches:
 
 - Arabic shaping, diacritics, font coverage and wrapping in every language.
-- A single vibration and automatic return after 15 seconds.
+- A single vibration and automatic return after 5 seconds.
 - Delivery after reboot, while the app is closed, and under DND/sleep modes.
 - Back-to-back and simultaneous prayer/adhkar alerts. No priority policy is
   imposed by this feature; actual arbitration belongs to the watch OS.

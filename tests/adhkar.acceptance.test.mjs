@@ -31,8 +31,8 @@ async function keepOnly(watch, indices) {
 function expectNext(watch, day, time) { assert.equal(watch.nextReminderAt?.getTime(), at(day, time).getTime()); }
 function expectReminder(reminder, index) {
     assert.deepEqual(reminder.texts, ['Adhkar', phrases[index][0], phrases[index][1]]);
-    assert.equal(reminder.interactive, 0, 'No dismiss, completion, count or other interactive control');
-    assert.equal(reminder.brightTime, 15000);
+    assert.equal(reminder.interactive, 0, 'Alert has no onscreen buttons');
+    assert.equal(reminder.brightTime, 5000);
 }
 
 for (const shape of ['r', 's']) {
@@ -61,7 +61,7 @@ for (const shape of ['r', 's']) {
         await watch.advanceTo(at('2026-11-15', '09:00'));
         expectReminder(watch.reminders[0], 0);
         assert.deepEqual(watch.vibrations.map(event => event.mode), ['notification']);
-        await watch.elapse(14999);
+        await watch.elapse(4999);
         assert.ok(watch.screen.includes(phrases[0][0]));
         await watch.elapse(1);
         assert.deepEqual(watch.screen, [], 'Screen closes without user interaction');
@@ -187,7 +187,7 @@ test('changing schedules rejects the old alarm and never delivers the same occur
     assert.equal(watch.reminders.length, 0); expectNext(watch, '2026-11-15', '09:00');
     const current = watch.captureNextAlarm();
     await watch.advanceTo(at('2026-11-15', '09:00')); expectReminder(watch.reminders[0], 0);
-    await watch.elapse(15000); await watch.deliverSavedAlarm(current);
+    await watch.elapse(5000); await watch.deliverSavedAlarm(current);
     assert.equal(watch.reminders.length, 1); assert.equal(watch.vibrations.length, 1);
     await watch.advanceTo(at('2026-11-15', '10:00')); expectReminder(watch.reminders[1], 1);
 });
@@ -291,13 +291,17 @@ for (const [language, title, reminderLabel] of [
                 assert.deepEqual(watch.screen, [title, phrases[index][0], meanings[language === 'arabic-latin' ? 'arabic' : language][index]]);
                 assert.equal(watch.reminders[index].interactive, 0);
                 const [heading, arabicText, translation] = watch.scene.filter(w => w.type === 'TEXT');
+                for (const text of [heading, arabicText, translation]) {
+                    assert.equal(text.text_style, 2, 'Alert text uses native overflow scrolling');
+                }
                 assert.ok(arabicText.text_size >= (shape === 'r' ? 64 : 56), 'Arabic is the large primary content');
                 assert.ok(arabicText.text_size > heading.text_size * 1.8);
                 assert.ok(arabicText.text_size > translation.text_size * 1.7);
                 assert.ok(heading.y + heading.h <= arabicText.y);
                 assert.ok(arabicText.y + arabicText.h <= translation.y);
-                assert.ok(translation.y + translation.h <= (shape === 'r' ? 480 : 390));
-                await watch.elapse(15000); assert.deepEqual(watch.screen, []);
+                assert.equal(watch.scene.some(w => w.type === 'BUTTON'), false);
+                assert.ok(translation.y + translation.h <= (shape === 'r' ? 480 : 390), 'Translation fits on screen');
+                await watch.elapse(5000); assert.deepEqual(watch.screen, []);
             }
         });
     }
@@ -344,7 +348,7 @@ test('a reminder while the app is open returns to the previous screen automatica
     const previousScreen = watch.screen;
     await watch.deliverNextReminderInForeground();
     expectReminder(watch.reminders[0], 0);
-    await watch.elapse(15000);
+    await watch.elapse(5000);
     assert.deepEqual(watch.screen, previousScreen);
     await watch.tap('Reminders'); // Turn off without losing the chosen collection.
     await watch.tap('Reminders'); // Turn back on.
@@ -535,5 +539,26 @@ for (const shape of ['r', 's']) {
         assert.equal(watch.appearance('Schedule').subtitle.text_style, 2);
         assert.equal(watch.appearance('Schedule').title.text_style, 2);
         assert.equal(watch.appearance('Reminders').title.text_style, 2);
+    });
+}
+
+
+for (const shape of ['r', 's']) {
+    test(`${shape}: hardware Back dismisses the alert immediately and cancels its automatic return timer`, async () => {
+        const watch = await createWatch({ shape }); await enable(watch);
+        await watch.deliverNextReminderInForeground();
+        const alarm = watch.captureNextAlarm();
+        assert.equal(watch.scene.some(w => w.type === 'BUTTON' || w.type === 'IMG'), false);
+        await watch.elapse(1000); await watch.pressBackKey();
+        assert.equal(watch.route, 'page/gt/adhkar/index.page');
+        assert.deepEqual(watch.captureNextAlarm(), alarm);
+        await watch.tap('Schedule');
+        await watch.elapse(5000);
+        assert.equal(watch.screen[0], 'Schedule', 'Dismissed alerts cannot trigger a second back navigation');
+        await watch.back(); await watch.advanceTo(at('2026-11-15', '14:00'));
+        expectReminder(watch.reminders.at(-1), 1);
+        await watch.pressBackKey();
+        await watch.advanceTo(at('2026-11-15', '20:00'));
+        expectReminder(watch.reminders.at(-1), 2);
     });
 }
