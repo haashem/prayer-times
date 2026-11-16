@@ -32,11 +32,6 @@ the notification scene, and returns after 5 seconds. The watch Back button dismi
 There are no counts or completion states. It does not inspect or suppress prayer
 alerts. Reading the collection does not advance the reminder sequence.
 
-To preview an alert immediately, tap **Test reminder** on the Adhkar page.
-It shows a random selected phrase (or a random phrase from the full collection if none are selected),
-vibrates and closes after 5 seconds. Testing works while reminders are off and
-never changes the scheduled alarm, enabled settings or reminder rotation.
-
 ## Watch design
 
 Adhkar reuses the existing Settings, Prayer Alerts and Time Format layout
@@ -51,7 +46,8 @@ Single-line and two-line row titles share the 36px settings typography;
 subtitles are 32px. The collection always shows Arabic as the primary text and
 the app-language meaning as its subtitle, with a native checkbox on each row. Two-line labels and values are
 separate text widgets, with reserved control space. Overflowing row titles and subtitles use native scrolling text, so the full phrase and translation can be read. The reminder presents a large Arabic phrase and muted translation using the full screen, without repetition counts or completion tracking. Its heading,
-Arabic phrase and translation all use native scrolling text for overflow.
+Arabic phrase and translation wrap into at most two lines; font sizes adapt using
+native text measurements rather than scrolling or clipping.
 Acceptance scenarios compare these visible controls with the app's existing
 Settings appearance on round/square and English/Arabic screens.
 
@@ -72,6 +68,14 @@ month/year and DST transitions; nonexistent local times are skipped.
 
 Zepp passes alarm parameters through app `onCreate`, so `app.js` retains a pending
 adhkar payload for the alert page, independently of prayer payloads.
+
+## Alert border
+
+The alert uses the Woven Ribbon design: two thin continuous strands in the app’s
+warm gold (`#D4A843`) around a pure-black center. Round and rounded-square assets
+are rendered by `scripts/generate_adhkar_border.py`. The background is a static,
+non-interactive image behind all text and scales to the device bounds. No change
+to the five-second timeout, Back dismissal, or two-line text fitting.
 
 ## Content provenance
 

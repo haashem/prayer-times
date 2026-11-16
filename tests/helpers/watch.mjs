@@ -80,9 +80,10 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
             prop: { MORE: 'MORE', INIT: 'INIT', CUR_COLUMN: 'CUR_COLUMN', CHECKED: 'CHECKED', UNCHECKED: 'UNCHECKED' }, event: { SELECT: 'SELECT', CLICK_DOWN: 'CLICK_DOWN', MOVE: 'MOVE' },
             align: { CENTER_H: 1, CENTER_V: 2, LEFT: 3, RIGHT: 4 }, text_style: { WRAP: 1, NONE: 2, ELLIPSIS: 3 },
             createWidget, deleteWidget(w) { if (current) current.widgets = current.widgets.filter(item => item !== w); },
-            getTextLayout(text, { text_size, text_width }) {
-                const width = Array.from(text).length * text_size * 0.5;
-                return { width: Math.min(width, text_width), height: Math.ceil(width / text_width) * text_size * 1.25 };
+            getTextLayout(text, { text_size, text_width, wrapped }) {
+                const width = Array.from(text.replace(/\p{Mark}/gu, '')).length * text_size * 0.5;
+                return { width: wrapped ? Math.min(width, text_width) : width,
+                    height: (wrapped ? Math.ceil(width / text_width) : 1) * text_size * 1.25 };
             },
             setStatusBarVisible() {}, redraw() { redraws++; },
         },
@@ -299,6 +300,14 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
         get nextReminderAt() { const alarm = [...device.alarms.values()].filter(isReminder).sort((a, b) => a.time - b.time)[0]; return alarm ? new Date(alarm.time * 1000) : null; },
         get alarmCount() { return device.alarms.size; },
         get persistentAlarms() { return [...device.alarms.values()].every(alarm => alarm.store === true); },
+        get textLineCounts() {
+            return current.widgets.filter(w => w.type === 'TEXT').map(w => {
+                const options = { text_size: w.text_size, text_width: w.w };
+                const line = mocks['@zos/ui'].getTextLayout(w.text, { ...options, wrapped: 0 });
+                const wrapped = mocks['@zos/ui'].getTextLayout(w.text, { ...options, wrapped: 1 });
+                return Math.round(wrapped.height / line.height);
+            });
+        },
         get textBounds() { return current.widgets.filter(w => w.type === 'TEXT').map(({ x, y, w, h }) => ({ x, y, w, h })); },
         openSettings: () => open(SETTINGS), openHome: () => open(HOME),
         async tap(label) { control(label).handlers.SELECT(); await flush(); },

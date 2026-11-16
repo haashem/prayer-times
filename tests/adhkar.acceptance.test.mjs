@@ -290,13 +290,19 @@ for (const [language, title, reminderLabel] of [
                 await watch.advanceTo(at(index < 3 ? '2026-11-15' : '2026-11-16', time));
                 assert.deepEqual(watch.screen, [title, phrases[index][0], meanings[language === 'arabic-latin' ? 'arabic' : language][index]]);
                 assert.equal(watch.reminders[index].interactive, 0);
+                const background = watch.scene[0];
+                assert.equal(background.type, 'IMG');
+                assert.equal(background.src, 'image/adhkar_border.png');
+                assert.equal(background.w, shape === 'r' ? 480 : 390);
+                assert.equal(background.h, shape === 'r' ? 480 : 390);
                 const [heading, arabicText, translation] = watch.scene.filter(w => w.type === 'TEXT');
                 for (const text of [heading, arabicText, translation]) {
-                    assert.equal(text.text_style, 2, 'Alert text uses native overflow scrolling');
+                    assert.equal(text.text_style, 1, 'Alert text wraps instead of scrolling');
                 }
-                assert.ok(arabicText.text_size >= (shape === 'r' ? 64 : 56), 'Arabic is the large primary content');
-                assert.ok(arabicText.text_size > heading.text_size * 1.8);
-                assert.ok(arabicText.text_size > translation.text_size * 1.7);
+                assert.ok(arabicText.text_size >= 48, 'Arabic remains prominent while fitting the text');
+                assert.ok(watch.textLineCounts.every(count => count <= 2), 'Each alert text block fits within two lines');
+                assert.ok(arabicText.text_size > heading.text_size * 1.5);
+                assert.ok(arabicText.text_size > translation.text_size * 1.5);
                 assert.ok(heading.y + heading.h <= arabicText.y);
                 assert.ok(arabicText.y + arabicText.h <= translation.y);
                 assert.equal(watch.scene.some(w => w.type === 'BUTTON'), false);
@@ -548,7 +554,8 @@ for (const shape of ['r', 's']) {
         const watch = await createWatch({ shape }); await enable(watch);
         await watch.deliverNextReminderInForeground();
         const alarm = watch.captureNextAlarm();
-        assert.equal(watch.scene.some(w => w.type === 'BUTTON' || w.type === 'IMG'), false);
+        assert.equal(watch.scene.some(w => w.type === 'BUTTON'), false);
+        assert.deepEqual(watch.scene.filter(w => w.type === 'IMG').map(w => w.src), ['image/adhkar_border.png']);
         await watch.elapse(1000); await watch.pressBackKey();
         assert.equal(watch.route, 'page/gt/adhkar/index.page');
         assert.deepEqual(watch.captureNextAlarm(), alarm);
