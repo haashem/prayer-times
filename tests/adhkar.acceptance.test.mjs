@@ -569,3 +569,25 @@ for (const shape of ['r', 's']) {
         expectReminder(watch.reminders.at(-1), 2);
     });
 }
+
+
+for (const shape of ['r', 's']) {
+    test(`${shape}: all five prayer alerts use the shared woven background behind the prayer content`, async () => {
+        const watch = await createWatch({ shape, now: at('2026-11-15', '05:00') });
+        await watch.providePrayerTimes({});
+        await watch.openSettings(); await watch.tap('Prayer Alerts');
+        await watch.tap('Fajr'); await watch.runPendingTasks();
+        await watch.tap('Fajr'); await watch.runPendingTasks();
+        for (const [prayer, time] of [['Fajr', '06:00'], ['Dhuhr', '12:00'], ['Asr', '15:00'], ['Maghrib', '17:00'], ['Isha', '19:00']]) {
+            await watch.advanceTo(at('2026-11-15', time));
+            assert.equal(watch.route, 'page/gt/prayer-alert/index.page');
+            assert.ok(watch.screen.includes(prayer));
+            const borderIndex = watch.scene.findIndex(w => w.src === 'image/adhkar_border.png');
+            assert.ok(borderIndex >= 0 && borderIndex < watch.scene.findIndex(w => w.type === 'TEXT'));
+            const border = watch.scene[borderIndex];
+            assert.equal(border.w, shape === 'r' ? 480 : 390);
+            assert.equal(border.h, shape === 'r' ? 480 : 390);
+            assert.equal(watch.scene.some(w => w.type === 'BUTTON'), prayer === 'Fajr', 'Fajr retains its alarm-dismiss control');
+        }
+    });
+}

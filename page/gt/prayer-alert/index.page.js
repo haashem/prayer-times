@@ -1,3 +1,4 @@
+import { getAlertBackgroundStyle } from '../../../utils/alert-background';
 import { createWidget, widget, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { back } from "@zos/router";
@@ -92,6 +93,7 @@ Page(
                 return;
             }
 
+            createWidget(widget.IMG, getAlertBackgroundStyle());
             const display = getPrayerNotificationPayloadDisplay(payload);
             const isAlarmAlert = isFajrAlert(payload);
             createWidget(widget.TEXT, {

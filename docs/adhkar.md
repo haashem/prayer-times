@@ -74,7 +74,9 @@ adhkar payload for the alert page, independently of prayer payloads.
 The alert uses the Woven Ribbon design: two thin continuous strands in the app’s
 warm gold (`#D4A843`) around a pure-black center. Round and rounded-square assets
 are rendered by `scripts/generate_adhkar_border.py`. The background is a static,
-non-interactive image behind all text and scales to the device bounds. No change
+non-interactive image behind all text and scales to the device bounds. Prayer
+alerts reuse the same asset through `utils/alert-background.js`, including Fajr
+with its existing dismiss control. No change
 to the five-second timeout, Back dismissal, or two-line text fitting.
 
 ## Content provenance

@@ -1,8 +1,9 @@
 import { align, text_style, getTextLayout } from '@zos/ui';
-import { getDeviceInfo } from '@zos/device';
+import { getAlertBackgroundStyle } from './alert-background';
 
 export function createAdhkarAlertLayout(square) {
-    const { width, height: contentHeight } = getDeviceInfo();
+    const background = getAlertBackgroundStyle();
+    const { w: width, h: contentHeight } = background;
     const scale = width / (square ? 390 : 480);
     const text = (margin, y, h, size, color) => ({
         x: margin * scale, y: contentHeight * y, w: width - margin * scale * 2, h: contentHeight * h,
@@ -25,10 +26,7 @@ export function createAdhkarAlertLayout(square) {
     const arabic = text(square ? 24 : 48, 0.20, 0.40, square ? 56 : 64, 0xffffff);
     return {
         square,
-        background: {
-            x: 0, y: 0, w: width, h: contentHeight,
-            src: 'image/adhkar_border.png', auto_scale: true, auto_scale_obj_fit: true,
-        },
+        background,
         titleStyle(value) { return fitTwoLines(value, title); },
         arabicStyle(value) { return fitTwoLines(value, arabic); },
         translationStyle(value) { return fitTwoLines(value, translation); },
