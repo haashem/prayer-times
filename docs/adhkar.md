@@ -1,6 +1,6 @@
 # Adhkar reminders
 
-Open Settings → Adhkar. Reminders are off initially. Enabling selects all six
+Open Settings → Adhkar. Reminders are off initially. Enabling selects all seven
 phrases if none are selected. The Collection section is directly below the reminder settings on the Adhkar
 page. Each Arabic phrase and its translated meaning has an inline checkbox for
 inclusion in the reminder sequence; there are no collection or phrase subpages.
@@ -87,6 +87,7 @@ Arabic phrases and the English meanings were checked against:
   Alhamdulillah, Allahu akbar, La ilaha illa Allah.
 - [Sahih Muslim 2702a](https://sunnah.com/muslim:2702a): seeking forgiveness.
 - [Sahih Muslim 2691](https://sunnah.com/muslim:2691): Subhan Allahi wa bihamdihi.
+- [Sahih Muslim 405](https://sunnah.com/muslim:405): Allahumma salli ala Muhammad (opening of the longer salawat).
 
 `utils/adhkar-content.js` retains a reference and URL per phrase. The app does
 not reproduce repetition counts or reward claims from those narrations, and
@@ -106,7 +107,7 @@ are fixed test fixtures rather than values imported from the production catalog.
 
 | Behaviour | Acceptance scenarios |
 | --- | --- |
-| Explicit opt-in and initial defaults | Navigate from Settings using touch/crown; inspect the initial window, three times and six selected phrases; enable and receive the first reminder. |
+| Explicit opt-in and initial defaults | Navigate from Settings using touch/crown; inspect the initial window, three times and seven selected phrases; enable and receive the first reminder. |
 | All four schedules | Deliver the three daily reminders and each interval schedule; edit waking hours and verify delivery at the boundaries and next morning. |
 | Saved settings | Choose all three daily times through the system picker, restart the runtime, and receive reminders at the saved times. |
 | Selection and rotation | Toggle a subset directly in the collection, read content without advancing rotation, restart between deliveries, restore all phrases, and cycle past the final phrase. |
@@ -116,7 +117,7 @@ are fixed test fixtures rather than values imported from the production catalog.
 | Prayer overlap | Schedule real prayer alerts at the same time and five minutes later; verify both alerts display and future adhkar continue. |
 | Picker navigation | Press the visible tick without moving wheels; select both wheels then confirm or cancel using hardware Back/right swipe; reopen and verify settings input still works; assert all five time rows push the dedicated page and pop back with their original scroll/focus position. |
 | Local time and validation | Offer only quarter-hour minutes, cancel unfinished selections, reject conflicting/out-of-window choices; deliver across year/DST boundaries and skip nonexistent spring times. |
-| Languages and shapes | Enable from Settings and read all six Arabic/meaning pairs in every language option on both screen shapes. |
+| Languages and shapes | Enable from Settings and read all seven Arabic/meaning pairs in every language option on both screen shapes. |
 
 Before release, verify on physical round and square watches:
 

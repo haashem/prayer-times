@@ -13,6 +13,7 @@ const phrases = [
     ['لَا إِلَهَ إِلَّا اللَّهُ', 'There is no deity but Allah', 'Muslim 2137a'],
     ['أَسْتَغْفِرُ اللَّهَ', 'I seek forgiveness from Allah', 'Muslim 2702a'],
     ['سُبْحَانَ اللَّهِ وَبِحَمْدِهِ', 'Glory and praise be to Allah', 'Muslim 2691'],
+    ['اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ', 'O Allah, bless Muhammad', 'Muslim 405'],
 ];
 async function openAdhkar(watch) { await watch.openSettings(); await watch.tap('Adhkar'); }
 async function enable(watch) { await openAdhkar(watch); await watch.tap('Reminders'); }
@@ -36,7 +37,7 @@ function expectReminder(reminder, index) {
 }
 
 for (const shape of ['r', 's']) {
-    test(`${shape}: reminders require opt-in, default to three daily times and all six phrases`, async () => {
+    test(`${shape}: reminders require opt-in, default to three daily times and all seven phrases`, async () => {
         const watch = await createWatch({ shape });
         await watch.openSettings(); await watch.selectWithCrown('Adhkar');
         assert.ok(watch.switchState('Reminders') === false);
@@ -95,7 +96,7 @@ for (const [label, expectedTimes] of [
         assert.equal(watch.reminders.length, expectedTimes.length);
         expectNext(watch, '2026-11-16', '09:00');
         await watch.advanceTo(at('2026-11-16', '09:00'));
-        expectReminder(watch.reminders.at(-1), expectedTimes.length % 6);
+        expectReminder(watch.reminders.at(-1), expectedTimes.length % phrases.length);
     });
 }
 
@@ -139,7 +140,7 @@ test('selecting all checkboxes restores the full collection and the sequence wra
         }
     await watch.advanceTo(at('2026-11-17', '09:00'));
     assert.equal(watch.reminders.length, 7);
-    watch.reminders.forEach((reminder, index) => expectReminder(reminder, index % 6));
+    watch.reminders.forEach((reminder, index) => expectReminder(reminder, index % phrases.length));
 });
 
 test('turning off the final phrase explains the change, stops reminders, and can be reversed', async () => {
@@ -286,8 +287,8 @@ for (const [language, title, reminderLabel] of [
                 assert.equal(appearance.title.align_h, 4, 'Arabic remains right-aligned in every app language');
             }
             for (const { x, w } of watch.textBounds) assert.ok(x >= 0 && x + w <= (shape === 'r' ? 480 : 390));
-            for (const [index, time] of ['09:00', '14:00', '20:00', '09:00', '14:00', '20:00'].entries()) {
-                await watch.advanceTo(at(index < 3 ? '2026-11-15' : '2026-11-16', time));
+            for (const [index, time] of ['09:00', '14:00', '20:00', '09:00', '14:00', '20:00', '09:00'].entries()) {
+                await watch.advanceTo(at(['2026-11-15', '2026-11-16', '2026-11-17'][Math.floor(index / 3)], time));
                 assert.deepEqual(watch.screen, [title, phrases[index][0], meanings[language === 'arabic-latin' ? 'arabic' : language][index]]);
                 assert.equal(watch.reminders[index].interactive, 0);
                 const background = watch.scene[0];

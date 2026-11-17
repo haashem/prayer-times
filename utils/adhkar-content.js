@@ -7,19 +7,20 @@ export const ADHKAR = [
     { id: 'tahlil', arabic: 'لَا إِلَهَ إِلَّا اللَّهُ', source: 'Muslim 2137a', url: 'https://sunnah.com/muslim:2137a' },
     { id: 'forgiveness', arabic: 'أَسْتَغْفِرُ اللَّهَ', source: 'Muslim 2702a', url: 'https://sunnah.com/muslim:2702a' },
     { id: 'praise', arabic: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ', source: 'Muslim 2691', url: 'https://sunnah.com/muslim:2691' },
+    { id: 'salawat', arabic: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ', source: 'Muslim 405', url: 'https://sunnah.com/muslim:405' },
 ];
 
 export const ADHKAR_MEANINGS = {
-    english: ['Glory be to Allah', 'All praise is due to Allah', 'Allah is the Greatest', 'There is no deity but Allah', 'I seek forgiveness from Allah', 'Glory and praise be to Allah'],
-    arabic: ['تنزيه الله عن كل نقص', 'الثناء على الله بجميع المحامد', 'الله أعظم من كل شيء', 'لا معبود بحق إلا الله', 'أطلب المغفرة من الله', 'أنزّه الله عن كل نقص وأحمده'],
-    farsi: ['خداوند از هر نقصی پاک است', 'همهٔ ستایش‌ها از آنِ خداست', 'خداوند بزرگ‌تر از همه چیز است', 'هیچ معبود برحقی جز الله نیست', 'از خداوند آمرزش می‌خواهم', 'خداوند پاک و منزّه است و او را می‌ستایم'],
-    indonesian: ['Mahasuci Allah', 'Segala puji bagi Allah', 'Allah Mahabesar', 'Tidak ada tuhan yang berhak disembah selain Allah', 'Aku memohon ampun kepada Allah', 'Mahasuci Allah dan segala puji bagi-Nya'],
-    turkish: ['Allah her türlü eksiklikten uzaktır', 'Bütün övgüler Allah’a aittir', 'Allah en büyüktür', 'Allah’tan başka ibadete layık ilah yoktur', 'Allah’tan bağışlanma dilerim', 'Allah’ı eksikliklerden uzak tutar, O’na hamd ederim'],
-    urdu: ['اللہ ہر عیب سے پاک ہے', 'سب تعریفیں اللہ کے لیے ہیں', 'اللہ سب سے بڑا ہے', 'اللہ کے سوا کوئی معبودِ برحق نہیں', 'میں اللہ سے بخشش مانگتا ہوں', 'اللہ پاک ہے اور سب تعریفیں اسی کے لیے ہیں'],
-    malay: ['Maha Suci Allah', 'Segala puji bagi Allah', 'Allah Maha Besar', 'Tiada tuhan yang berhak disembah selain Allah', 'Aku memohon keampunan daripada Allah', 'Maha Suci Allah dan segala puji bagi-Nya'],
-    bengali: ['আল্লাহ সব ত্রুটি থেকে পবিত্র', 'সমস্ত প্রশংসা আল্লাহর', 'আল্লাহ সর্বশ্রেষ্ঠ', 'আল্লাহ ছাড়া কোনো সত্য উপাস্য নেই', 'আমি আল্লাহর কাছে ক্ষমা চাই', 'আল্লাহ পবিত্র এবং সমস্ত প্রশংসা তাঁর'],
-    french: ['Gloire à Allah', 'Toute louange revient à Allah', 'Allah est le plus grand', 'Nulle divinité ne mérite l’adoration sauf Allah', 'Je demande pardon à Allah', 'Gloire et louange à Allah'],
-    russian: ['Аллах пречист', 'Вся хвала принадлежит Аллаху', 'Аллах превелик', 'Нет божества, достойного поклонения, кроме Аллаха', 'Прошу у Аллаха прощения', 'Аллах пречист, и Ему хвала'],
+    english: ['Glory be to Allah', 'All praise is due to Allah', 'Allah is the Greatest', 'There is no deity but Allah', 'I seek forgiveness from Allah', 'Glory and praise be to Allah', 'O Allah, bless Muhammad'],
+    arabic: ['تنزيه الله عن كل نقص', 'الثناء على الله بجميع المحامد', 'الله أعظم من كل شيء', 'لا معبود بحق إلا الله', 'أطلب المغفرة من الله', 'أنزّه الله عن كل نقص وأحمده', 'اللهم أثنِ على محمد وارفع درجته'],
+    farsi: ['خداوند از هر نقصی پاک است', 'همهٔ ستایش‌ها از آنِ خداست', 'خداوند بزرگ‌تر از همه چیز است', 'هیچ معبود برحقی جز الله نیست', 'از خداوند آمرزش می‌خواهم', 'خداوند پاک و منزّه است و او را می‌ستایم', 'خدایا بر محمد درود فرست'],
+    indonesian: ['Mahasuci Allah', 'Segala puji bagi Allah', 'Allah Mahabesar', 'Tidak ada tuhan yang berhak disembah selain Allah', 'Aku memohon ampun kepada Allah', 'Mahasuci Allah dan segala puji bagi-Nya', 'Ya Allah, limpahkanlah selawat kepada Muhammad'],
+    turkish: ['Allah her türlü eksiklikten uzaktır', 'Bütün övgüler Allah’a aittir', 'Allah en büyüktür', 'Allah’tan başka ibadete layık ilah yoktur', 'Allah’tan bağışlanma dilerim', 'Allah’ı eksikliklerden uzak tutar, O’na hamd ederim', 'Allah’ım, Muhammed’e salât eyle'],
+    urdu: ['اللہ ہر عیب سے پاک ہے', 'سب تعریفیں اللہ کے لیے ہیں', 'اللہ سب سے بڑا ہے', 'اللہ کے سوا کوئی معبودِ برحق نہیں', 'میں اللہ سے بخشش مانگتا ہوں', 'اللہ پاک ہے اور سب تعریفیں اسی کے لیے ہیں', 'اے اللہ، محمد پر رحمت نازل فرما'],
+    malay: ['Maha Suci Allah', 'Segala puji bagi Allah', 'Allah Maha Besar', 'Tiada tuhan yang berhak disembah selain Allah', 'Aku memohon keampunan daripada Allah', 'Maha Suci Allah dan segala puji bagi-Nya', 'Ya Allah, limpahkanlah selawat kepada Muhammad'],
+    bengali: ['আল্লাহ সব ত্রুটি থেকে পবিত্র', 'সমস্ত প্রশংসা আল্লাহর', 'আল্লাহ সর্বশ্রেষ্ঠ', 'আল্লাহ ছাড়া কোনো সত্য উপাস্য নেই', 'আমি আল্লাহর কাছে ক্ষমা চাই', 'আল্লাহ পবিত্র এবং সমস্ত প্রশংসা তাঁর', 'হে আল্লাহ, মুহাম্মদের ওপর রহমত বর্ষণ করুন'],
+    french: ['Gloire à Allah', 'Toute louange revient à Allah', 'Allah est le plus grand', 'Nulle divinité ne mérite l’adoration sauf Allah', 'Je demande pardon à Allah', 'Gloire et louange à Allah', 'Ô Allah, bénis Muhammad'],
+    russian: ['Аллах пречист', 'Вся хвала принадлежит Аллаху', 'Аллах превелик', 'Нет божества, достойного поклонения, кроме Аллаха', 'Прошу у Аллаха прощения', 'Аллах пречист, и Ему хвала', 'О Аллах, благослови Мухаммада'],
 };
 
 export function getAdhkarMeaning(id, language = 'english') {
