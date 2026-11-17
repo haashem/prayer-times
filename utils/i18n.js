@@ -1,3 +1,4 @@
+import { PRAYER_VIBRATION_TRANSLATIONS } from "./prayer-vibration-locales";
 import { ADHKAR_TRANSLATIONS } from "./adhkar-locales";
 import { localStorage } from "@zos/storage";
 import { getDisplayHijriDate } from "./hijri-settings";
@@ -483,6 +484,7 @@ export function t(key, language = getAppLanguage()) {
     const normalized = normalizeLanguage(language);
     const textLanguage = getTextLanguage(normalized);
     const text = (
+        (PRAYER_VIBRATION_TRANSLATIONS[textLanguage] && PRAYER_VIBRATION_TRANSLATIONS[textLanguage][key]) ||
         (ADHKAR_TRANSLATIONS[textLanguage] && ADHKAR_TRANSLATIONS[textLanguage][key]) ||
         (TRANSLATIONS[textLanguage] && TRANSLATIONS[textLanguage][key]) ||
         TRANSLATIONS[DEFAULT_LANGUAGE][key] ||

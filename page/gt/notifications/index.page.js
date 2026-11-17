@@ -4,6 +4,7 @@ import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
 import { createModal, onKey, offKey, KEY_HOME, KEY_SELECT, KEY_EVENT_CLICK } from "@zos/interaction";
 import { setScrollMode, SCROLL_MODE_SWIPER } from "@zos/page";
 import { getSystemMode } from "@zos/settings";
+import { push } from "@zos/router";
 import { BasePage } from "@zeppos/zml/base-page";
 import { getPrayerLabel, isRtl, t } from "../../../utils/i18n";
 import {
@@ -16,6 +17,8 @@ import {
     SCROLL_ITEM_HEIGHT,
     getRowBgStyle,
     getRowTextStyle,
+    getVibrationTextStyle,
+    getVibrationArrowStyle,
     getToggleTrackStyle,
     getToggleKnobStyle,
     getFocusLineTopStyle,
@@ -24,7 +27,7 @@ import {
     getBottomPaddingStyle,
 } from "zosLoader:./index.page.[pf].layout.js";
 
-const ROW_COUNT = PRAYER_NOTIFICATION_KEYS.length;
+const ROW_COUNT = PRAYER_NOTIFICATION_KEYS.length + 1;
 const FAJR_PRAYER_KEY = "Fajr";
 
 Page(
@@ -53,7 +56,7 @@ Page(
                     count: ROW_COUNT + 1,
                     modeParams: {
                         crown_enable: true,
-                        on_page: (pageIndex) => this.moveFocus(pageIndex - this.state.focusIndex),
+                        on_page: (pageIndex) => this.setFocusedIndex(pageIndex),
                     },
                 },
             });
@@ -67,6 +70,7 @@ Page(
             for (let i = 0; i < PRAYER_NOTIFICATION_KEYS.length; i++) {
                 this.renderRow(PRAYER_NOTIFICATION_KEYS[i], i);
             }
+            this.renderVibrationRow();
             this.trackWidget(createWidget(widget.TEXT, {
                 ...getInfoTextStyle(ROW_COUNT, isRtl()),
                 text: t("prayerAlertInfo"),
@@ -111,7 +115,23 @@ Page(
             }
         },
 
+        renderVibrationRow() {
+            const index = PRAYER_NOTIFICATION_KEYS.length;
+            const bg = this.trackWidget(createWidget(widget.FILL_RECT, getRowBgStyle(index)));
+            const label = this.trackWidget(createWidget(widget.TEXT, {
+                ...getVibrationTextStyle(index, isRtl()), text: t("prayerVibration"),
+            }));
+            const arrow = this.trackWidget(createWidget(widget.IMG, {
+                ...getVibrationArrowStyle(index, isRtl()), src: "image/chevron_right.png",
+            }));
+            for (const w of [bg, label, arrow]) w.addEventListener(event.SELECT, () => this.toggleIndex(index));
+        },
+
         toggleIndex(index) {
+            if (index === PRAYER_NOTIFICATION_KEYS.length) {
+                push({ url: "page/gt/prayer-vibration/index.page" });
+                return;
+            }
             const prayerKey = PRAYER_NOTIFICATION_KEYS[index];
             if (!prayerKey) return;
 

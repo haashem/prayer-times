@@ -39,6 +39,7 @@
             "page/gt/adhkar-alert/index.page",
             "page/gt/settings/index.page",
             "page/gt/notifications/index.page",
+            "page/gt/prayer-vibration/index.page",
             "page/gt/school/index.page",
             "page/gt/prayer-highlight/index.page",
             "page/gt/time-format/index.page",

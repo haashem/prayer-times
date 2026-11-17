@@ -1,9 +1,11 @@
+import { getPrayerVibration } from "../../../utils/prayer-vibration";
+import { onKey, offKey, KEY_BACK, KEY_EVENT_CLICK } from "@zos/interaction";
 import { getAlertBackgroundStyle } from '../../../utils/alert-background';
 import { createWidget, widget, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { back } from "@zos/router";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
-import { Vibrator, VIBRATOR_SCENE_NOTIFICATION, VIBRATOR_SCENE_TIMER, SystemSounds } from "@zos/sensor";
+import { Vibrator, VIBRATOR_SCENE_NOTIFICATION, VIBRATOR_SCENE_TIMER, VIBRATOR_SCENE_STRONG_REMINDER, SystemSounds } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
 import { getPrayerLabel, t } from "../../../utils/i18n";
 import {
@@ -56,6 +58,7 @@ Page(
             stopTimer: null,
             dismissButton: null,
             stopped: false,
+            built: false,
         },
 
         onInit(params) {
@@ -63,13 +66,17 @@ Page(
         },
 
         build(params) {
+            if (this.state.built) return;
+            this.state.built = true;
             if (!this.state.payload) {
                 this.state.payload = parsePayload(params) || this.takePendingPayload();
             }
 
             const payload = this.state.payload;
+            const vibration = getPrayerVibration();
+            const continuous = !isFajrAlert(payload) && vibration === "continuous";
             const alertDuration = getAlertDurationMs(payload);
-            setPageBrightTime({ brightTime: alertDuration });
+            setPageBrightTime({ brightTime: continuous ? FAJR_ALERT_DURATION_MS : alertDuration });
             const { screenShape } = getDeviceInfo();
             if (screenShape === SCREEN_SHAPE_SQUARE) {
                 setStatusBarVisible(false);
@@ -96,6 +103,7 @@ Page(
             createWidget(widget.IMG, getAlertBackgroundStyle());
             const display = getPrayerNotificationPayloadDisplay(payload);
             const isAlarmAlert = isFajrAlert(payload);
+            const needsDismiss = isAlarmAlert || continuous;
             createWidget(widget.TEXT, {
                 ...getEyebrowStyle(isAlarmAlert),
                 text: t("timeForPrayer"),
@@ -108,7 +116,7 @@ Page(
                 ...getTimeStyle(isAlarmAlert),
                 text: display.time,
             });
-            if (isAlarmAlert) {
+            if (needsDismiss) {
                 this.renderDismissButton();
             }
 
@@ -116,20 +124,23 @@ Page(
                 scheduleNextPrayerNotification(payload.prayerKey, payload.context, new Date());
             }
 
+            onKey({ callback: (key, keyEvent) => {
+                if (key !== KEY_BACK || keyEvent !== KEY_EVENT_CLICK) return false;
+                this.dismissAlert();
+                return true;
+            } });
             this.state.vibrator = new Vibrator();
-            if (isAlarmAlert) {
-                this.startVibrationPattern();
-                this.startAlarmSound(alertDuration);
-            } else {
-                this.startSubtleVibration();
+            const mode = isAlarmAlert ? VIBRATOR_SCENE_TIMER
+                : continuous ? VIBRATOR_SCENE_STRONG_REMINDER
+                : vibration === "strong" ? VIBRATOR_SCENE_TIMER : VIBRATOR_SCENE_NOTIFICATION;
+            this.state.vibrator.start({ mode });
+            if (isAlarmAlert) this.startAlarmSound(alertDuration);
+            if (!continuous) {
+                this.state.stopTimer = setTimeout(() => {
+                    if (isAlarmAlert) this.stopAlert();
+                    else this.dismissAlert();
+                }, alertDuration);
             }
-            this.state.stopTimer = setTimeout(() => {
-                if (isAlarmAlert) {
-                    this.stopAlert();
-                } else {
-                    this.dismissAlert();
-                }
-            }, alertDuration);
         },
 
         renderDismissButton() {
@@ -143,18 +154,6 @@ Page(
                 src: "image/ic_cancel_64px.png",
             });
             this.state.dismissIcon.addEventListener(event.SELECT, () => this.dismissAlert());
-        },
-
-        startVibrationPattern() {
-            if (!this.state.vibrator || this.state.stopped) return;
-            this.state.vibrator.stop();
-            this.state.vibrator.start({ mode: VIBRATOR_SCENE_TIMER });
-        },
-
-        startSubtleVibration() {
-            if (!this.state.vibrator || this.state.stopped) return;
-            this.state.vibrator.stop();
-            this.state.vibrator.start({ mode: VIBRATOR_SCENE_NOTIFICATION });
         },
 
         startAlarmSound(durationMs) {
@@ -209,6 +208,7 @@ Page(
         },
 
         onDestroy() {
+            offKey();
             this.stopAlert();
             this.state.vibrator = null;
             this.state.systemSounds = null;

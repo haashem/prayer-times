@@ -1,3 +1,4 @@
+import { getSettingsRowChevronStyle, getSettingsRowTextStyle } from "../settings/index.page.r.layout";
 import { SETTINGS_ROW_TITLE_SIZE } from "../../../utils/settings-typography";
 import { align, text_style } from "@zos/ui";
 import { getDeviceInfo } from "@zos/device";
@@ -139,4 +140,13 @@ export function getBottomPaddingStyle(rowCount) {
         y: getRowY(rowCount) + INFO_TOP_GAP + INFO_HEIGHT,
         h: DEVICE_HEIGHT / 2,
     };
+}
+
+export function getVibrationTextStyle(index, rtl = false) {
+    return { ...getSettingsRowTextStyle(index, rtl), y: getRowY(index), h: ROW_HEIGHT, text_style: text_style.NONE };
+}
+
+export function getVibrationArrowStyle(index, rtl = false) {
+    const style = getSettingsRowChevronStyle(index, rtl);
+    return { ...style, y: getRowY(index) + (ROW_HEIGHT - style.h) / 2 };
 }

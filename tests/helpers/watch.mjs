@@ -23,6 +23,7 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
     const stack = [];
     const reminders = [];
     const vibrations = [];
+    const activeVibrators = new Set();
     const messages = [];
     let nextTimer = 1;
     let pageBuilds = 0;
@@ -108,8 +109,8 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
                 getDate() { return device.now.getDate(); } getHours() { return device.now.getHours(); } getMinutes() { return device.now.getMinutes(); }
             },
             Compass: class { stop() {} offChange() {} },
-            Vibrator: class { start({ mode }) { vibrations.push({ mode, at: new Date(device.now) }); } stop() {} },
-            VIBRATOR_SCENE_NOTIFICATION: 'notification', VIBRATOR_SCENE_TIMER: 'timer', VIBRATOR_SCENE_SHORT_LIGHT: 'short',
+            Vibrator: class { start({ mode }) { activeVibrators.add(this); vibrations.push({ mode, at: new Date(device.now) }); } stop() { activeVibrators.delete(this); } },
+            VIBRATOR_SCENE_STRONG_REMINDER: 'strong', VIBRATOR_SCENE_NOTIFICATION: 'notification', VIBRATOR_SCENE_TIMER: 'timer', VIBRATOR_SCENE_SHORT_LIGHT: 'short',
             SystemSounds: class { getEnabled() { return false; } },
         },
         '@zos/utils': { px: n => n, log: { getLogger: () => quiet } },
@@ -228,6 +229,12 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
     }
     return {
         reminders, vibrations, messages,
+        get activeVibrationCount() { return activeVibrators.size; },
+        async dismissPrayerAlert() {
+            const button = current.widgets.find(w => w.type === 'BUTTON');
+            assert.ok(button, 'Prayer alert has a dismiss button');
+            button.click_func(); await flush();
+        },
         get pageBuildCount() { return pageBuilds; }, get scrollIndex() { return scrollIndex; }, get redrawCount() { return redraws; },
         checkboxState(label) {
             const group = rowWidgets(label).find(w => w.type === 'CHECKBOX_GROUP');
