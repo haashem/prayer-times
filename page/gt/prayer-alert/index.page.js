@@ -5,7 +5,7 @@ import { createWidget, widget, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { back } from "@zos/router";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
-import { Vibrator, VIBRATOR_SCENE_NOTIFICATION, VIBRATOR_SCENE_TIMER, VIBRATOR_SCENE_STRONG_REMINDER, SystemSounds } from "@zos/sensor";
+import { Vibrator, VIBRATOR_SCENE_NOTIFICATION, VIBRATOR_SCENE_TIMER, VIBRATOR_SCENE_DURATION_LONG, SystemSounds } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
 import { getPrayerLabel, t } from "../../../utils/i18n";
 import {
@@ -131,8 +131,8 @@ Page(
             } });
             this.state.vibrator = new Vibrator();
             const mode = isAlarmAlert ? VIBRATOR_SCENE_TIMER
-                : continuous ? VIBRATOR_SCENE_STRONG_REMINDER
-                : vibration === "strong" ? VIBRATOR_SCENE_TIMER : VIBRATOR_SCENE_NOTIFICATION;
+                : continuous ? VIBRATOR_SCENE_TIMER
+                : vibration === "strong" ? VIBRATOR_SCENE_DURATION_LONG : VIBRATOR_SCENE_NOTIFICATION;
             this.state.vibrator.start({ mode });
             if (isAlarmAlert) this.startAlarmSound(alertDuration);
             if (!continuous) {

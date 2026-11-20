@@ -28,7 +28,7 @@ for (const shape of ['r', 's']) {
         assert.notEqual(watch.route, 'page/gt/prayer-alert/index.page');
     });
 
-    test(`${shape}: stronger multiple vibration saves through reboot and applies to prayer alerts`, async () => {
+    test(`${shape}: strong long-duration vibration saves through reboot and applies to prayer alerts`, async () => {
         let watch = await createWatch({ shape, now: at('2026-11-15', '05:00') });
         await schedule(watch);
         await watch.tap('Vibration'); await watch.selectWithCrown('Strong');
@@ -40,7 +40,7 @@ for (const shape of ['r', 's']) {
         await watch.pressBackKey();
         assert.equal(watch.activeVibrationCount, 0);
         await watch.advanceTo(at('2026-11-15', '12:00'));
-        assert.equal(watch.vibrations.at(-1).mode, 'timer');
+        assert.equal(watch.vibrations.at(-1).mode, 'duration-long');
         await watch.elapse(10000);
         assert.equal(watch.activeVibrationCount, 0);
     });
@@ -57,14 +57,14 @@ for (const shape of ['r', 's']) {
         await watch.dismissPrayerAlert();
         assert.equal(watch.activeVibrationCount, 0);
         await watch.advanceTo(at('2026-11-15', '12:00'));
-        assert.equal(watch.vibrations.at(-1).mode, 'strong');
+        assert.equal(watch.vibrations.at(-1).mode, 'timer');
         await watch.elapse(6 * 60 * 1000);
         assert.equal(watch.route, 'page/gt/prayer-alert/index.page');
         assert.equal(watch.activeVibrationCount, 1);
         await watch.dismissPrayerAlert();
         assert.equal(watch.activeVibrationCount, 0);
         await watch.advanceTo(at('2026-11-15', '15:00'));
-        assert.equal(watch.vibrations.at(-1).mode, 'strong');
+        assert.equal(watch.vibrations.at(-1).mode, 'timer');
         await watch.elapse(20000);
         await watch.pressBackKey();
         assert.equal(watch.activeVibrationCount, 0);
@@ -81,10 +81,10 @@ for (const shape of ['r', 's']) {
         await watch.tap('Notification');
         assert.equal(watch.vibrations.at(-1).mode, 'notification');
         await watch.tap('Strong');
-        assert.equal(watch.vibrations.at(-1).mode, 'timer');
+        assert.equal(watch.vibrations.at(-1).mode, 'duration-long');
         assert.equal(watch.activeVibrationCount, 1);
         await watch.selectWithCrown('Continuous');
-        assert.equal(watch.vibrations.at(-1).mode, 'strong');
+        assert.equal(watch.vibrations.at(-1).mode, 'timer');
         await watch.elapse(2000);
         assert.equal(watch.activeVibrationCount, 1);
         await watch.tap('Continuous');
