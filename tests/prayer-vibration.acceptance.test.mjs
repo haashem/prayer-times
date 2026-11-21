@@ -28,7 +28,7 @@ for (const shape of ['r', 's']) {
         assert.notEqual(watch.route, 'page/gt/prayer-alert/index.page');
     });
 
-    test(`${shape}: strong long-duration vibration saves through reboot and applies to prayer alerts`, async () => {
+    test(`${shape}: strong reminder vibration saves through reboot and applies to prayer alerts`, async () => {
         let watch = await createWatch({ shape, now: at('2026-11-15', '05:00') });
         await schedule(watch);
         await watch.tap('Vibration'); await watch.selectWithCrown('Strong');
@@ -40,7 +40,7 @@ for (const shape of ['r', 's']) {
         await watch.pressBackKey();
         assert.equal(watch.activeVibrationCount, 0);
         await watch.advanceTo(at('2026-11-15', '12:00'));
-        assert.equal(watch.vibrations.at(-1).mode, 'duration-long');
+        assert.equal(watch.vibrations.at(-1).mode, 'strong');
         await watch.elapse(10000);
         assert.equal(watch.activeVibrationCount, 0);
     });
@@ -81,7 +81,7 @@ for (const shape of ['r', 's']) {
         await watch.tap('Notification');
         assert.equal(watch.vibrations.at(-1).mode, 'notification');
         await watch.tap('Strong');
-        assert.equal(watch.vibrations.at(-1).mode, 'duration-long');
+        assert.equal(watch.vibrations.at(-1).mode, 'strong');
         assert.equal(watch.activeVibrationCount, 1);
         await watch.selectWithCrown('Continuous');
         assert.equal(watch.vibrations.at(-1).mode, 'timer');

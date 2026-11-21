@@ -1,4 +1,4 @@
-import { Vibrator, VIBRATOR_SCENE_NOTIFICATION, VIBRATOR_SCENE_DURATION_LONG, VIBRATOR_SCENE_TIMER } from "@zos/sensor";
+import { Vibrator, VIBRATOR_SCENE_NOTIFICATION, VIBRATOR_SCENE_STRONG_REMINDER, VIBRATOR_SCENE_TIMER } from "@zos/sensor";
 import { createWidget, deleteWidget, widget, prop, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
@@ -260,7 +260,7 @@ Page(
         previewVibration(value) {
             this.stopPreview();
             const mode = value === "continuous" ? VIBRATOR_SCENE_TIMER
-                : value === "strong" ? VIBRATOR_SCENE_DURATION_LONG : VIBRATOR_SCENE_NOTIFICATION;
+                : value === "strong" ? VIBRATOR_SCENE_STRONG_REMINDER : VIBRATOR_SCENE_NOTIFICATION;
             this.state.previewVibrator.start({ mode });
             this.state.previewTimer = setTimeout(() => this.stopPreview(), 3000);
         },
