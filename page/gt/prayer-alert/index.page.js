@@ -1,3 +1,4 @@
+import { startPrayerVibration } from "../../../utils/prayer-vibrator";
 import { getPrayerVibration } from "../../../utils/prayer-vibration";
 import { onKey, offKey, KEY_BACK, KEY_EVENT_CLICK } from "@zos/interaction";
 import { getAlertBackgroundStyle } from '../../../utils/alert-background';
@@ -5,7 +6,7 @@ import { createWidget, widget, event, setStatusBarVisible } from "@zos/ui";
 import { setPageBrightTime } from "@zos/display";
 import { back } from "@zos/router";
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from "@zos/device";
-import { Vibrator, VIBRATOR_SCENE_NOTIFICATION, VIBRATOR_SCENE_TIMER, VIBRATOR_SCENE_STRONG_REMINDER, SystemSounds } from "@zos/sensor";
+import { Vibrator, SystemSounds } from "@zos/sensor";
 import { BasePage } from "@zeppos/zml/base-page";
 import { getPrayerLabel, t } from "../../../utils/i18n";
 import {
@@ -130,10 +131,7 @@ Page(
                 return true;
             } });
             this.state.vibrator = new Vibrator();
-            const mode = isAlarmAlert ? VIBRATOR_SCENE_TIMER
-                : continuous ? VIBRATOR_SCENE_TIMER
-                : vibration === "strong" ? VIBRATOR_SCENE_STRONG_REMINDER : VIBRATOR_SCENE_NOTIFICATION;
-            this.state.vibrator.start({ mode });
+            startPrayerVibration(this.state.vibrator, vibration, isAlarmAlert);
             if (isAlarmAlert) this.startAlarmSound(alertDuration);
             if (!continuous) {
                 this.state.stopTimer = setTimeout(() => {

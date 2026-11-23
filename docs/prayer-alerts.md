@@ -3,7 +3,7 @@
 Settings → Prayer Alerts → Vibration offers three saved choices:
 
 - **Notification:** existing notification vibration for regular prayers and the existing continuous Fajr alarm, with its five-minute limit.
-- **Strong:** the strong-reminder vibration preset.
+- **Strong:** the long-duration vibration preset.
 - **Continuous:** vibration repeats until the user dismisses the alert. There is no automatic vibration timeout for this choice.
 
 The selected option applies only to Dhuhr, Asr, Maghrib, and Isha. Fajr always retains its existing continuous vibration, alarm sound, dismiss control, and five-minute limit. Regular default/strong alerts still close after ten seconds. Continuous alerts show the same dismiss control as Fajr; hardware Back also dismisses them. Dismissal or leaving the page stops vibration and sound and clears pending timers.
@@ -16,4 +16,4 @@ System patterns: https://docs.zepp.com/docs/reference/device-app-api/newAPI/sens
 
 Selecting any choice previews its vibration immediately, including reselecting the current choice. Preview stops after three seconds, when another choice is selected, or when leaving the page. Opening the picker does not start a preview.
 
-Strong uses `VIBRATOR_SCENE_STRONG_REMINDER` and Continuous uses `VIBRATOR_SCENE_TIMER`, in both previews and regular prayer alerts. Fajr continues to use its original timer preset.
+Strong uses `VIBRATOR_SCENE_DURATION_LONG` and Continuous uses `VIBRATOR_SCENE_TIMER`, in both previews and regular prayer alerts. Fajr continues to use its original timer preset.
