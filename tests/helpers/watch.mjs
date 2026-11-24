@@ -110,7 +110,7 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
             },
             Compass: class { stop() {} offChange() {} },
             Vibrator: class { start({ mode }) { activeVibrators.add(this); vibrations.push({ mode, at: new Date(device.now) }); } stop() { activeVibrators.delete(this); } },
-            VIBRATOR_SCENE_DURATION_LONG: 'duration-long', VIBRATOR_SCENE_STRONG_REMINDER: 'strong', VIBRATOR_SCENE_NOTIFICATION: 'notification', VIBRATOR_SCENE_TIMER: 'timer', VIBRATOR_SCENE_SHORT_LIGHT: 'short',
+            VIBRATOR_SCENE_DURATION: 'duration', VIBRATOR_SCENE_DURATION_LONG: 'duration-long', VIBRATOR_SCENE_STRONG_REMINDER: 'strong', VIBRATOR_SCENE_NOTIFICATION: 'notification', VIBRATOR_SCENE_TIMER: 'timer', VIBRATOR_SCENE_SHORT_LIGHT: 'short',
             SystemSounds: class { getEnabled() { return false; } },
         },
         '@zos/utils': { px: n => n, log: { getLogger: () => quiet } },

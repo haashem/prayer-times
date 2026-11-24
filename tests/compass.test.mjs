@@ -19,8 +19,8 @@ async function runtime() {
             createWidget() {}, deleteWidget(w) { assert.ok(!deleted.has(w)); deleted.add(w); } },
         '@zos/sensor': {
             Compass: class { constructor() { sensor = this; this.angle = 0; this.valid = true; } start() {} stop() {} onChange(cb) { this.cb = cb; } offChange() {} getStatus() { return this.valid; } getDirectionAngle() { return this.angle; } },
-            Vibrator: class { stop() {} setMode(mode) { assert.equal(mode, 1); } start() { vibrations++; } },
-            VIBRATOR_SCENE_SHORT_LIGHT: 1,
+            Vibrator: class { stop() {} start({ mode }) { assert.equal(mode, 1); vibrations++; } },
+            VIBRATOR_SCENE_DURATION: 1,
         },
         '@zos/utils': { log: { getLogger: () => ({ error() {} }) } },
         '../../../utils/i18n': { t: key => key },

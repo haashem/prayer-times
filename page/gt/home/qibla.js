@@ -1,5 +1,5 @@
 import { deleteWidget, widget, prop } from "@zos/ui";
-import { Compass, Vibrator, VIBRATOR_SCENE_SHORT_LIGHT } from "@zos/sensor";
+import { Compass, Vibrator, VIBRATOR_SCENE_DURATION } from "@zos/sensor";
 import { log as Logger } from "@zos/utils";
 import { smoothHeading, isQiblaAligned } from "../../../utils/compass-motion";
 import { t } from "../../../utils/i18n";
@@ -181,7 +181,7 @@ export function createQiblaCompass(container) {
             });
         }
 
-        // Gentle vibration when facing Qibla (within ±5°)
+        // Vibrate when facing Qibla (within ±5°)
         const diff = Math.abs(arrowAngle <= 180 ? arrowAngle : 360 - arrowAngle);
         const isFacing = isQiblaAligned(diff, state.visualAligned);
         if (isFacing !== state.visualAligned) {
@@ -196,7 +196,7 @@ export function createQiblaCompass(container) {
         state.visualAligned = isFacing;
 
         {
-            // Gentle vibration when facing Qibla (within ±5°)
+            // Vibrate when facing Qibla (within ±5°)
             const vibrationAngle = (state.qiblaBearing - angle + 360) % 360;
             const diff = Math.abs(vibrationAngle <= 180 ? vibrationAngle : 360 - vibrationAngle);
             const isFacing = diff < 5;
@@ -207,8 +207,7 @@ export function createQiblaCompass(container) {
                     state.lastVibrateTime = now;
                     if (state.vibrate) {
                         state.vibrate.stop();
-                        state.vibrate.setMode(VIBRATOR_SCENE_SHORT_LIGHT);
-                        state.vibrate.start();
+                        state.vibrate.start({ mode: VIBRATOR_SCENE_DURATION });
                     }
                 }
             }
