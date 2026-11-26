@@ -592,3 +592,21 @@ for (const shape of ['r', 's']) {
         }
     });
 }
+
+
+for (const shape of ['r', 's']) {
+    test(`${shape}: repeated reminder edits update labels when page state is reused`, async () => {
+        const watch = await createWatch({ shape, reusePageState: true });
+        await enable(watch);
+        const edits = [
+            ['Daily times 1', '10:15'], ['Daily times 2', '15:30'],
+            ['Daily times 3', '21:45'], ['Daily times 1', '11:00'],
+        ];
+        for (const [label, time] of edits) {
+            await editTime(watch, label, time);
+            assert.equal(watch.route, 'page/gt/adhkar/index.page');
+            assert.equal(watch.row(label), `${label}\n${time}`);
+        }
+        expectNext(watch, '2026-11-15', '11:00');
+    });
+}

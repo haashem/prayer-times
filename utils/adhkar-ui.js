@@ -1,5 +1,10 @@
 import { align, text_style, getTextLayout } from '@zos/ui';
 import { getAlertBackgroundStyle } from './alert-background';
+import { localizeDigits } from './i18n';
+
+export function timeLabel(value) {
+    return localizeDigits(('0' + Math.floor(value / 60)).slice(-2) + ':' + ('0' + value % 60).slice(-2));
+}
 
 export function createAdhkarAlertLayout(square) {
     const background = getAlertBackgroundStyle();

@@ -11,7 +11,7 @@ export const at = (day, time) => new Date(`${day}T${time}:00`);
 
 // Only Zepp/phone boundaries are faked. Pages, layouts, routing parameters,
 // app startup, persistence, content and both schedulers execute production code.
-export async function createWatch({ shape = 'r', language = 'english', now = at('2026-11-15', '08:00'), device } = {}) {
+export async function createWatch({ shape = 'r', language = 'english', now = at('2026-11-15', '08:00'), device, reusePageState = false } = {}) {
     device ||= { now, storage: new Map(), alarms: new Map(), nextAlarmId: 1 };
     if (!device.storage.has('appLanguage')) device.storage.set('appLanguage', language);
     const width = shape === 'r' ? 480 : 390;
@@ -166,7 +166,7 @@ export async function createWatch({ shape = 'r', language = 'english', now = at(
             definitions.set(route.url, capturedPage);
         }
         const definition = definitions.get(route.url);
-        const page = { ...definition, state: structuredClone(definition.state) };
+        const page = reusePageState ? definition : { ...definition, state: structuredClone(definition.state) };
         current = { page, widgets: [], route };
         page.onInit?.(route.params);
         page.build(route.params);

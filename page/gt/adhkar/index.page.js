@@ -8,17 +8,21 @@ import { BasePage } from '@zeppos/zml/base-page';
 import { t, getAppLanguage, localizeDigits, isRtl } from '../../../utils/i18n';
 import { ADHKAR, getAdhkarMeaning } from '../../../utils/adhkar-content';
 import { ADHKAR_MODES, getAdhkarSettings, saveAdhkarSettings } from '../../../utils/adhkar';
+import { timeLabel } from '../../../utils/adhkar-ui';
 import { getDeviceInfo, SCREEN_SHAPE_SQUARE } from '@zos/device';
 import { getAppCache } from '../../../utils/location-storage';
 
 const MODE_KEYS = ['adhkarDaily', 'adhkar30', 'adhkar60', 'adhkar120'];
-function timeLabel(value) {
-    return localizeDigits(('0' + Math.floor(value / 60)).slice(-2) + ':' + ('0' + value % 60).slice(-2));
+function initialState() {
+    return { view: 'main', id: null, settings: null, rows: [], labels: [], focus: 0, focusTop: null, focusBottom: null, title: null, radioGroup: null, radioButtons: [], updatingRadio: false, updatingCheckbox: false };
 }
 
 Page(BasePage({
-    state: { view: 'main', id: null, settings: null, rows: [], labels: [], focus: 0, focusTop: null, focusBottom: null, title: null, radioGroup: null, radioButtons: [], updatingRadio: false, updatingCheckbox: false },
+    state: initialState(),
     onInit(params) {
+        // Page definitions can survive navigation; discard the previous visit's
+        // closing flags and references to destroyed widgets.
+        this.state = initialState();
         try {
             const data = typeof params === 'string' ? JSON.parse(params) : params;
             if (data) { this.state.view = data.view === 'schedule' ? 'schedule' : 'main'; this.state.id = data.id; }
